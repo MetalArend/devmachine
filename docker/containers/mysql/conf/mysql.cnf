@@ -1,0 +1,4 @@
+[mysqld]
+log_error = /log/error.log
+bind-address = 0.0.0.0
+init_file = /etc/mysql/conf.d/mysql.sql
