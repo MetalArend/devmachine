@@ -4,10 +4,10 @@ MAINTAINER Bart Reunes aka MetalArend
 # RUN dpkg-divert --local --rename --add /sbin/initctl
 # RUN ln -s /bin/true /sbin/initctl
 
-# RUN echo "deb http://archive.ubuntu.com/ubuntu precise main universe" > /etc/apt/sources.list
-ENV DEBIAN_FRONTEND noninteractive
-
+RUN echo "deb http://archive.ubuntu.com/ubuntu precise main universe multiverse" >> /etc/apt/sources.list
 RUN apt-get update
+
+ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get install -y php5 php5-fpm php5-xdebug php5-mysql
 
 #RUN touch /log/error.fpm.log
