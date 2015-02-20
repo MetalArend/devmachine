@@ -38,8 +38,8 @@ vm:
             functional_vboxsf: false
     provision:
         shell:
-            path: ./provision.sh
-            upload_path: /env/provision.sh
+            path: ../vagrant/provision.sh
+            upload_path: /env/vagrant/provision.sh
             keep_color: true
     synced_folder:
         # Having the /environment folder with the same group setting as that

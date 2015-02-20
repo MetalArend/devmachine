@@ -6,22 +6,26 @@
 
 # Check current directory
 CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_DIR="${CWD}/../config"
+SHELL_SCRIPTS_DIR="${CWD}/../shell/scripts"
 
 # Set timezone
-# TODO sudo cp /usr/share/zoneinfo/Europe/Brussels /etc/localtime
+cp /usr/share/zoneinfo/Europe/Brussels /etc/localtime
 
 # fix command crashed
 # TODO http://ivaniliev.com/sorry-command-not-found-has-crashed/
 
 # Variables
-source "${CWD}/config/config.sh"
+source "${CONFIG_DIR}/config.sh"
 
 # Run docker
-bash "${CWD}/shell/scripts/docker/install-docker.sh"
-bash "${CWD}/shell/scripts/docker/run-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
+bash "${SHELL_SCRIPTS_DIR}/devmachine/install-composer.sh" -d "${COMPOSER_DIR}"
+bash "${SHELL_SCRIPTS_DIR}/docker/install-docker.sh"
+bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
 
 # Print branding, environment and containers
-bash "${CWD}/shell/scripts/branding/print-branding.sh"
-bash "${CWD}/shell/scripts/os/report-os.sh"
-bash "${CWD}/shell/scripts/docker/report-docker.sh"
-bash "${CWD}/shell/scripts/docker/report-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
+bash "${SHELL_SCRIPTS_DIR}/branding/print-branding.sh"
+bash "${SHELL_SCRIPTS_DIR}/os/report-os.sh"
+bash "${SHELL_SCRIPTS_DIR}/devmachine/report-composer.sh"
+bash "${SHELL_SCRIPTS_DIR}/docker/report-docker.sh"
+bash "${SHELL_SCRIPTS_DIR}/docker/report-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
