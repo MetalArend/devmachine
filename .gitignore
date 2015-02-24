@@ -1,3 +1,5 @@
 /vagrant/.vagrant
-/cache
+/docker/.docker
+/composer
 /todo
+/php
