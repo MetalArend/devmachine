@@ -22,8 +22,11 @@ fi
 
 # Install
 if ! which php &> /dev/null; then
+    add-apt-repository ppa:ondrej/php5
     apt-get update
-    apt-get -y install php5-fpm php5-cli
+    apt-get -y install python-software-properties
+    apt-get update
+    apt-get -y install php5-fpm php5-cli php5-mcrypt php5-mysql
 fi
 
 if which php &> /dev/null; then
