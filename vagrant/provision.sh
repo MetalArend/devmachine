@@ -10,7 +10,7 @@ CONFIG_DIR="${CWD}/../config"
 SHELL_SCRIPTS_DIR="${CWD}/../shell/scripts"
 
 # Set timezone
-cp /usr/share/zoneinfo/Europe/Brussels /etc/localtime
+# TODO cp /usr/share/zoneinfo/Europe/Brussels /etc/localtime
 
 # fix command crashed
 # TODO http://ivaniliev.com/sorry-command-not-found-has-crashed/
