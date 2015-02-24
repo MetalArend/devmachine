@@ -24,9 +24,9 @@ bash "${SHELL_SCRIPTS_DIR}/docker/install-docker.sh"
 bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
 
 # Run application provision
-if test -f "/app/provision.sh"; then
+if test -f "/app/devmachine/provision.sh"; then
     echo " "
-    (cd "/app"; bash "/app/provision.sh")
+    (cd "/app"; bash "/app/devmachine/provision.sh")
 fi
 
 # Print branding, environment and containers
