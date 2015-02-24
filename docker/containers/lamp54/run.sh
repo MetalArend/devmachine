@@ -7,7 +7,7 @@
 CONTAINER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONTAINER_NAME="$(basename "${CONTAINER_DIR}")"
 
-DB_CONTAINER_NAME="mysql"
+DB_CONTAINER_NAME="mysql56"
 PHP_FPM_CONTAINER_NAME="php54-fpm"
 PHP_FPM_HOST_PORT="$(sudo docker inspect --format="{{.NetworkSettings.IPAddress}}:9000" "${PHP_FPM_CONTAINER_NAME}")"
 
