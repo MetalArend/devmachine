@@ -23,6 +23,12 @@ bash "${SHELL_SCRIPTS_DIR}/devmachine/install-composer.sh" -d "${COMPOSER_DIR}"
 bash "${SHELL_SCRIPTS_DIR}/docker/install-docker.sh"
 bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
 
+# Run application provision
+if test -f "/app/provision.sh"; then
+    echo " "
+    (cd "/app"; bash "/app/provision.sh")
+fi
+
 # Print branding, environment and containers
 bash "${SHELL_SCRIPTS_DIR}/branding/print-branding.sh"
 bash "${SHELL_SCRIPTS_DIR}/os/report-os.sh"
