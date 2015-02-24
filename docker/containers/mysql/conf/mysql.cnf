@@ -1,4 +1,7 @@
 [mysqld]
-log_error = /log/error.log
+general_log_file = /log/mysql56_general_log.log
+log_error = /log/mysql56_error.log
 bind-address = 0.0.0.0
 init_file = /etc/mysql/conf.d/mysql.sql
+[mysqld_safe]
+log-error=/log/mysqld56_error.log
