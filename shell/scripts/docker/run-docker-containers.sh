@@ -112,8 +112,8 @@ if which docker &> /dev/null; then
             fi #/ has old images
 
             # Save tag
-            mkdir -p "${CONTAINER_DIRECTORY}/data/cache"
-            echo "${TAG}" > "${CONTAINER_DIRECTORY}/data/cache/${CONTAINER_NAME}.version"
+            mkdir -p "/env/docker/.docker/cache"
+            echo "${TAG}" > "/env/docker/.docker/cache/${CONTAINER_NAME}.version"
 
             # Remove containers based on images that are not present anymore
             if test -n "$(sudo docker ps --all --quiet --no-trunc)"; then

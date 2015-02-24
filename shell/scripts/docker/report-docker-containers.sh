@@ -23,9 +23,9 @@ if which docker &> /dev/null; then
 
                 CONTAINER_NAME="$(basename "${CONTAINER_DIRECTORY}")"
 
-                mkdir -p "${CONTAINER_DIRECTORY}/data/log"
-                if test -f "${CONTAINER_DIRECTORY}/data/log/docker.log"; then
-                    rm "${CONTAINER_DIRECTORY}/data/log/docker.log"
+                mkdir -p "/env/docker/.docker/log"
+                if test -f "/env/docker/.docker/log/${CONTAINER_DIRECTORY}.log"; then
+                    rm "/env/docker/.docker/log/${CONTAINER_DIRECTORY}.log"
                 fi
 
                 if test -z "$(sudo docker ps --all --quiet --no-trunc)"; then
@@ -75,8 +75,8 @@ if which docker &> /dev/null; then
                             fi
                         fi
                         DATETIME=$(date +"%Y/%m/%d %H:%M")
-                        echo "--- ${DATETIME} ---" >> "${CONTAINER_DIRECTORY}/data/log/docker.log"
-                        sudo docker logs "${CONTAINER_ID}" >> "${CONTAINER_DIRECTORY}/data/log/docker.log"
+                        echo "--- ${DATETIME} ---" >> "/env/docker/.docker/log/${CONTAINER_DIRECTORY}.log"
+                        sudo docker logs "${CONTAINER_ID}" >> "/env/docker/.docker/log/${CONTAINER_DIRECTORY}.log"
                     fi
                 fi
                 echo " "
