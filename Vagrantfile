@@ -1,6 +1,6 @@
 require 'yaml'
 
-configVagrant = YAML.load_file('../config/config.yml')
+configVagrant = YAML.load_file('./config/config.yml')
 
 Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
 
