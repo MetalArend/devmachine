@@ -4,6 +4,7 @@
 /todo
 !/php/adminer
 !/php/devmachine
+!/php/index.html
 /php
 /log
 *.bak
