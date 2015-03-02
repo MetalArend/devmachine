@@ -1,6 +1,9 @@
-/vagrant/.vagrant
-/docker/.docker
+/.vagrant
+/.docker
 /composer
 /todo
+!/php/adminer
+!/php/devmachine
 /php
+/log
 *.bak
