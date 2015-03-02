@@ -16,6 +16,7 @@ sudo docker run --name "${CONTAINER_NAME}" -p 8054:80 -p 80:80 -d -t --volumes-f
 --link "${PHP_FPM_CONTAINER_NAME}":"php" --link "${DB_CONTAINER_NAME}":"db" \
 "devmachine:${CONTAINER_NAME}-image" -DFOREGROUND \
 -c "FastCgiWrapper Off" \
+-c "SetEnv DOCKER_CONTAINER ${PHP_FPM_CONTAINER_NAME}" \
 -c "<IfModule mod_fastcgi.c>" \
 -c "    DirectoryIndex index.html index.shtml index.cgi index.php" \
 -c "    # http://www.webmasterworld.com/apache/4557229.htm - this approach is deprecated in favor of using AddHandler" \
