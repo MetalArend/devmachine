@@ -10,6 +10,8 @@ CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Load configuration
 CONFIG_DIR="${CWD}/config"
 SHELL_SCRIPTS_DIR="${CWD}/shell/scripts"
+DOCKER_CONTAINERS_DIR="${CWD}/docker/containers"
+PHP_PROJECTS_DIR="${CWD}/php"
 
 # Set timezone
 # TODO cp /usr/share/zoneinfo/Europe/Brussels /etc/localtime
@@ -26,10 +28,8 @@ bash "${SHELL_SCRIPTS_DIR}/docker/install-docker.sh"
 bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
 
 # Run application provision
-if test -f "/app/devmachine/provision.sh"; then
-    echo " "
-    (cd "/app"; bash "/app/devmachine/provision.sh")
-fi
+# TODO check the php dir for provision.sh files
+find "${PHP_PROJECTS_DIR}" -name "provision.sh" -exec bash "{}" \;
 
 # Print branding, environment and containers
 bash "${SHELL_SCRIPTS_DIR}/branding/print-branding.sh"
