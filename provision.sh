@@ -8,8 +8,8 @@
 CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Load configuration
-CONFIG_DIR="${CWD}/../config"
-SHELL_SCRIPTS_DIR="${CWD}/../shell/scripts"
+CONFIG_DIR="${CWD}/config"
+SHELL_SCRIPTS_DIR="${CWD}/shell/scripts"
 
 # Set timezone
 # TODO cp /usr/share/zoneinfo/Europe/Brussels /etc/localtime
