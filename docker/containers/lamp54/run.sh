@@ -12,7 +12,7 @@ PHP_FPM_CONTAINER_NAME="php54-fpm"
 PHP_FPM_HOST_PORT="$(sudo docker inspect --format="{{.NetworkSettings.IPAddress}}:9000" "${PHP_FPM_CONTAINER_NAME}")"
 
 # TODO multiple ports 80 don't show up in the reporting
-sudo docker run --name "${CONTAINER_NAME}" -p 8054:80 -p 80:80 -d -t --volumes-from "app" \
+sudo docker run --name "${CONTAINER_NAME}" -p 8054:80 -p 80:80 -d -t --volumes-from "data" \
 --link "${PHP_FPM_CONTAINER_NAME}":"php" --link "${DB_CONTAINER_NAME}":"db" \
 "devmachine:${CONTAINER_NAME}-image" -DFOREGROUND \
 -c "FastCgiWrapper Off" \

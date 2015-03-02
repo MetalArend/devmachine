@@ -11,7 +11,7 @@ DB_CONTAINER_NAME="mysql56"
 PHP_FPM_CONTAINER_NAME="php55-fpm"
 PHP_FPM_HOST_PORT="$(sudo docker inspect --format="{{.NetworkSettings.IPAddress}}:9000" "${PHP_FPM_CONTAINER_NAME}")"
 
-sudo docker run --name "${CONTAINER_NAME}" -p 8055:80 -d -t --volumes-from "app" \
+sudo docker run --name "${CONTAINER_NAME}" -p 8055:80 -d -t --volumes-from "data" \
 --link "${PHP_FPM_CONTAINER_NAME}":"php" --link "${DB_CONTAINER_NAME}":"db" \
 "devmachine:${CONTAINER_NAME}-image" -DFOREGROUND \
 -c "FastCgiWrapper Off" \

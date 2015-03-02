@@ -17,4 +17,4 @@ CONTAINER_NAME="$(basename "${CONTAINER_DIR}")"
 
 #sudo docker run --name "${CONTAINER_NAME}" -it -e MYSQL_ROOT_PASSWORD=root "mysql:5.6" "/usr/bin/mysqld_safe"
 #sudo docker run --name "${CONTAINER_NAME}" -t -c 'exec mysql -h"$MYSQL_PORT_3306_TCP_ADDR" -P"$MYSQL_PORT_3306_TCP_PORT" -uroot -p"$MYSQL_ENV_MYSQL_ROOT_PASSWORD"'
-sudo docker run --name "${CONTAINER_NAME}" -d -p 3306:3306 -t --volumes-from "app" "devmachine:${CONTAINER_NAME}-image" ""
+sudo docker run --name "${CONTAINER_NAME}" -d -p 3306:3306 -t --volumes-from "data" "devmachine:${CONTAINER_NAME}-image" ""
