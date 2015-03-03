@@ -2,7 +2,7 @@
 /.docker
 /composer
 /todo
-/php
+/php/*
 !/php/adminer
 !/php/devmachine
 !/php/index.html
