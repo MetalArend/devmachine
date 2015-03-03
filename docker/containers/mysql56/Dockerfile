@@ -39,7 +39,7 @@ RUN cp /container/conf/mysql.sql /etc/mysql/conf.d/mysql.sql
 #RUN chgrp -R mysql /var/lib/mysql
 #RUN mysql_install_db
 
-VOLUME /var/lib/mysql
+#VOLUME /var/lib/mysql
 
 EXPOSE 3306
 
