@@ -44,6 +44,7 @@ ARCH=$(uname -m)
 #IP=$(ifconfig eth1 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
 IP=$(ip addr show | grep "state UP" -A2 | grep "scope global" | grep -v "docker" | awk '{print $2}' | cut -f1 -d'/' | tr '\n' ' ')
 
+echo -e "\e[92m$(date +"%d/%m/%Y %H:%M:%S")\e[0m"
 echo -e "\e[92m${ID} ${RELEASE} (${CODENAME}) on ${IP}\e[0m"
 echo " "
 
