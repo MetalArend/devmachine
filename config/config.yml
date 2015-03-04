@@ -39,12 +39,15 @@ vm:
     provision:
         dos2unix:
             type: shell
+            windows_only: true
             inline: 'apt-get install -y dos2unix'
         convert-shellbefore:
             type: shell
+            windows_only: true
             inline: 'find /env/config/* /env/shell/scripts/* /env/docker/containers/* -name "*.sh" -exec dos2unix --keepdate --quiet {} \;'
         convert-provisionbefore:
             type: shell
+            windows_only: true
             inline: 'find /env/php/* -name "provision.sh" -exec dos2unix --keepdate --quiet {} \;'
         provision:
             type: shell
@@ -53,9 +56,11 @@ vm:
             keep_color: true
         convert-shellafter:
             type: shell
+            windows_only: true
             inline: 'find /env/config/* /env/shell/scripts/* /env/docker/containers/* -name "*.sh" -exec unix2dos --keepdate --quiet {} \;'
         convert-provisionbefore:
             type: shell
+            windows_only: true
             inline: 'find /env/php/* -name "provision.sh" -exec unix2dos --keepdate --quiet {} \;'
     synced_folder:
         # TODO http://jeremykendall.net/2013/08/09/vagrant-synced-folders-permissions/
