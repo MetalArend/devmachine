@@ -27,11 +27,12 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
                 # Read more: https://coderwall.com/p/ydma0q
                 elsif 'network' == vm_name
                     if vm_value['private_network'].to_s != ''
-                        if Vagrant::Util::Platform.windows?
-                            config.vm.network "private_network", ip: "#{vm_value['private_network']}", type: "dhcp"
-                        else
+                        # TIP Sometimes Windows gives problems with the private network
+                        # if Vagrant::Util::Platform.windows?
+                        #     config.vm.network "private_network", ip: "#{vm_value['private_network']}", type: "dhcp"
+                        # else
                             config.vm.network "private_network", ip: "#{vm_value['private_network']}"
-                        end
+                        # end
                     end
                     if !vm_value['forwarded_ports'].empty?
                         vm_value['forwarded_ports'].each do |port_id, port_config|
