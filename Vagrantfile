@@ -2,6 +2,8 @@ require 'yaml'
 
 configVagrant = YAML.load_file('./config/config.yml')
 
+Vagrant.require_version '>= 1.6.0'
+
 Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
 
     if !configVagrant['vagrant']['host'].nil?
@@ -27,11 +29,12 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
                 # Read more: https://coderwall.com/p/ydma0q
                 elsif 'network' == vm_name
                     if vm_value['private_network'].to_s != ''
-                        if Vagrant::Util::Platform.windows?
-                            config.vm.network "private_network", ip: "#{vm_value['private_network']}", type: "dhcp"
-                        else
+                        # TIP Sometimes Windows gives problems with the private network
+                        # if Vagrant::Util::Platform.windows?
+                        #     config.vm.network "private_network", ip: "#{vm_value['private_network']}", type: "dhcp"
+                        # else
                             config.vm.network "private_network", ip: "#{vm_value['private_network']}"
-                        end
+                        # end
                     end
                     if !vm_value['forwarded_ports'].empty?
                         vm_value['forwarded_ports'].each do |port_id, port_config|
@@ -80,7 +83,7 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
 
                 elsif 'provision' == vm_name
                     vm_value.each do |provision_name, provision_config|
-                        if provision_config['windows_only'].nil? || !provision_config['windows_only'] || (provision_config['windows_only'] && Gem.win_platform?)
+                        if provision_config['windows_only'].nil? || !provision_config['windows_only'] || (provision_config['windows_only'] && Vagrant::Util::Platform.windows?)
                             config.vm.provision "#{provision_config['type']}" do |provision_name|
                                 provision_config.each do |provision_config_key, provision_config_value|
                                     if 'type' == provision_config_key or 'windows_only' == provision_config_key
