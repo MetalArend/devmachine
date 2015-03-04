@@ -2,6 +2,8 @@ require 'yaml'
 
 configVagrant = YAML.load_file('./config/config.yml')
 
+Vagrant.require_version '>= 1.6.0'
+
 Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
 
     if !configVagrant['vagrant']['host'].nil?
