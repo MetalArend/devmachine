@@ -112,7 +112,7 @@ if which docker &> /dev/null; then
             fi #/ has old images
 
             # Save tag
-            mkdir -p "/env/.docker"
+            mkdir -p "/env/.docker/"
             echo "${TAG}" > "/env/.docker/${CONTAINER_NAME}.version"
 
             # Remove containers based on images that are not present anymore
