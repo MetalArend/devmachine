@@ -40,10 +40,10 @@ vm:
         dos2unix:
             type: shell
             inline: 'apt-get install -y dos2unix'
-        convert-before:
+        convert-shellbefore:
             type: shell
             inline: 'find /env/config/* /env/shell/scripts/* /env/docker/containers/* -name "*.sh" -exec dos2unix --keepdate --quiet {} \;'
-        convert-project-before:
+        convert-provisionbefore:
             type: shell
             inline: 'find /env/php/* -name "provision.sh" -exec dos2unix --keepdate --quiet {} \;'
         provision:
@@ -51,10 +51,10 @@ vm:
             path: ./provision.sh
             upload_path: /env/provision.sh
             keep_color: true
-        convert-after:
+        convert-shellafter:
             type: shell
             inline: 'find /env/config/* /env/shell/scripts/* /env/docker/containers/* -name "*.sh" -exec unix2dos --keepdate --quiet {} \;'
-        convert-project-before:
+        convert-provisionbefore:
             type: shell
             inline: 'find /env/php/* -name "provision.sh" -exec unix2dos --keepdate --quiet {} \;'
     synced_folder:
