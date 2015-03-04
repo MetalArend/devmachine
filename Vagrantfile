@@ -83,7 +83,7 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
 
                 elsif 'provision' == vm_name
                     vm_value.each do |provision_name, provision_config|
-                        if provision_config['windows_only'].nil? || !provision_config['windows_only'] || (provision_config['windows_only'] && Gem.win_platform?)
+                        if provision_config['windows_only'].nil? || !provision_config['windows_only'] || (provision_config['windows_only'] && Vagrant::Util::Platform.windows?)
                             config.vm.provision "#{provision_config['type']}" do |provision_name|
                                 provision_config.each do |provision_config_key, provision_config_value|
                                     if 'type' == provision_config_key or 'windows_only' == provision_config_key
