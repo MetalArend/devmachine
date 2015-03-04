@@ -80,8 +80,11 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
 
                 elsif 'provision' == vm_name
                     vm_value.each do |provision_name, provision_config|
-                        config.vm.provision "#{provision_name}" do |provision_name|
+                        config.vm.provision "#{provision_config['type']}" do |provision_name|
                             provision_config.each do |provision_config_key, provision_config_value|
+                                if 'type' == provision_config_key
+                                    next
+                                end
                                 provision_name.send("#{provision_config_key}=", provision_config_value)
                             end
                         end
