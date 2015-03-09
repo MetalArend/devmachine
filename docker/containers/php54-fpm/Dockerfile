@@ -11,7 +11,7 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get install -y python-software-properties
 RUN add-apt-repository ppa:ondrej/php5-oldstable
 RUN apt-get update
-RUN apt-get install -y php5 php5-fpm php5-xdebug php5-mysqlnd php5-mcrypt
+RUN apt-get install -y php5 php5-fpm php5-xdebug php5-mysqlnd php5-sqlite php5-mcrypt
 
 RUN sed -i 's/display_errors = Off/display_errors = On/' /etc/php5/fpm/php.ini && \
     sed -i '/^error_log = /c\error_log = \/log\/\error54.log' /etc/php5/fpm/php-fpm.conf && \
