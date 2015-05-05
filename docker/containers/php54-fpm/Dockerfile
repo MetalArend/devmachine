@@ -1,5 +1,6 @@
 FROM ubuntu:12.04
 MAINTAINER Bart Reunes aka MetalArend
+ENV LAST_UPDATED 2015-04-27
 
 # RUN dpkg-divert --local --rename --add /sbin/initctl
 # RUN ln -s /bin/true /sbin/initctl
@@ -10,8 +11,7 @@ RUN apt-get update
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get install -y python-software-properties
 RUN add-apt-repository ppa:ondrej/php5-oldstable
-RUN apt-get update
-RUN apt-get install -y php5 php5-fpm php5-xdebug php5-mysqlnd php5-sqlite php5-mcrypt
+RUN apt-get update && apt-get install -y php5 php5-fpm php5-xdebug php5-mysqlnd php5-sqlite php5-mcrypt php5-curl
 
 RUN sed -i 's/display_errors = Off/display_errors = On/' /etc/php5/fpm/php.ini && \
     sed -i '/^error_log = /c\error_log = \/log\/\error54.log' /etc/php5/fpm/php-fpm.conf && \
