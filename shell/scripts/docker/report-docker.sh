@@ -11,4 +11,3 @@ if which docker &> /dev/null; then
 else
     echo -e "\e[91m- docker not found\e[0m"
 fi
-echo " "

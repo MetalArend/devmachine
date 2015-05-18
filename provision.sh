@@ -26,9 +26,11 @@ bash "${SHELL_SCRIPTS_DIR}/devmachine/fix-command-not-found.sh"
 bash "${SHELL_SCRIPTS_DIR}/devmachine/install-composer.sh" -d "/env/composer"
 bash "${SHELL_SCRIPTS_DIR}/devmachine/install-gulp.sh"
 bash "${SHELL_SCRIPTS_DIR}/docker/install-docker.sh"
+bash "${SHELL_SCRIPTS_DIR}/docker/install-docker-compose.sh"
 
 # Run docker containers
 bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
+bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-compose.sh"
 
 # Run application provision
 # TODO check the php dir for provision.sh files
@@ -44,6 +46,8 @@ bash "${SHELL_SCRIPTS_DIR}/os/report-os.sh"
 bash "${SHELL_SCRIPTS_DIR}/devmachine/report-composer.sh"
 bash "${SHELL_SCRIPTS_DIR}/devmachine/report-gulp.sh"
 bash "${SHELL_SCRIPTS_DIR}/docker/report-docker.sh"
+bash "${SHELL_SCRIPTS_DIR}/docker/report-docker-compose.sh"
+echo " "
 
 # Report docker containers
 bash "${SHELL_SCRIPTS_DIR}/docker/report-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
