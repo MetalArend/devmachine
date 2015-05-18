@@ -26,8 +26,10 @@ RUN a2enmod rewrite env actions fastcgi alias
 #COPY ./conf/apache2.conf /etc/apache2/sites-available/001-docker.conf
 #RUN ln -s /etc/apache2/sites-available/001-docker.conf /etc/apache2/sites-enabled/
 COPY ./conf/apache2.conf /etc/apache2/sites-enabled/000-default
-COPY ./conf/httpd.conf /usr/local/apache2/conf/httpd.conf
-
+#COPY ./conf/httpd.conf /usr/local/apache2/conf/httpd.conf
+#COPY ./conf/httpd.conf /etc/apache2/conf.d/php5-fpm.conf
+#COPY ./conf/httpd.conf /etc/apache2/conf-available/001-docker.conf
+#RUN ln -s /etc/apache2/conf-available/001-docker.conf /etc/apache2/conf-enabled/
 
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data
