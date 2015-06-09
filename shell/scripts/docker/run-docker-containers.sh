@@ -18,7 +18,6 @@ if which docker &> /dev/null; then
     IFS=',' read -ra DOCKER_CONTAINER_FILEPATHS <<< "${DOCKER_CONTAINER_FILEPATHS}"
     if test -n "${DOCKER_CONTAINER_FILEPATHS}"; then
 
-        BUILDSCRIPT_FILENAME="build.sh"
         RUNSCRIPT_FILENAME="run.sh"
 
         for CONTAINER_DIRECTORY in "${DOCKER_CONTAINER_FILEPATHS[@]}"; do
@@ -31,14 +30,14 @@ if which docker &> /dev/null; then
             # Get image
             IMAGE_ID_TAGGED="$(sudo docker images --all --no-trunc | grep "^devmachine " | awk '{print $3, $2}' | grep " ${CONTAINER_NAME}-${TAG}-image" | awk '{print $1}')"
 
-            # Check build script
-            if test -f "/env/docker/containers/${CONTAINER_DIRECTORY}/${BUILDSCRIPT_FILENAME}"; then
+            # Check Dockerfile
+            if test -f "/env/docker/containers/${CONTAINER_DIRECTORY}/Dockerfile"; then
                 # Create image if not found
                 if test -z "${IMAGE_ID_TAGGED}"; then
                     # Build new image
                     echo -e "\e[93mBuild new image for container '${CONTAINER_NAME}'\e[0m"
                     exec 5>&1
-                    BUILD_OUTPUT=$(source "/env/docker/containers/${CONTAINER_DIRECTORY}/${BUILDSCRIPT_FILENAME}" | tee >(cat - >&5))
+                    BUILD_OUTPUT=$(sudo docker build --tag "devmachine:${CONTAINER_NAME}-image" "/env/docker/containers/${CONTAINER_DIRECTORY}" | tee >(cat - >&5))
                     IMAGE_ID_CREATED="$(echo "${BUILD_OUTPUT}" | sed "s/\x1B\[[0-9;]*[a-zA-Z]//g" | grep "Successfully built " | tr -d '\011\012\015' | sed -r "s/Successfully built ([a-z0-9]+)/\1/")"
                     IMAGE_ID_CREATED="$(sudo docker images --all --quiet --no-trunc | grep "${IMAGE_ID_CREATED}" | uniq)"
                     if test -n "${IMAGE_ID_CREATED}"; then

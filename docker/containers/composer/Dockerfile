@@ -1,5 +1,7 @@
 FROM ubuntu:14.04
 
+# http://marmelab.com/blog/2014/09/10/make-docker-command.html
+
 ENV HOME /root
 
 RUN apt-get update -qq && apt-get install -y -qq git curl wget
