@@ -27,7 +27,7 @@ RUN a2enmod rewrite env actions fastcgi alias
 #RUN ln -s /etc/apache2/sites-available/001-docker.conf /etc/apache2/sites-enabled/
 COPY ./conf/apache2.conf /etc/apache2/sites-enabled/000-default
 #COPY ./conf/httpd.conf /usr/local/apache2/conf/httpd.conf
-#COPY ./conf/httpd.conf /etc/apache2/conf.d/php5-fpm.conf
+COPY ./conf/httpd.conf /etc/apache2/conf.d/php5-fpm.conf
 #COPY ./conf/httpd.conf /etc/apache2/conf-available/001-docker.conf
 #RUN ln -s /etc/apache2/conf-available/001-docker.conf /etc/apache2/conf-enabled/
 
@@ -44,9 +44,11 @@ ENV APACHE_HOST *
 ENV APACHE_PORT 80
 ENV APACHE_DOCUMENTROOT /var/www
 
-#RUN service apache2 restart # preferred instead of "/etc/init.d/apache2 restart" # apache2 didn't even start yet
+#RUN service apache2 restart # preferred instead of "/etc/init.d/apache2 restart" # apache2 should not be running here
 
-EXPOSE 80
+EXPOSE 80 443
 
-ENTRYPOINT ["/usr/sbin/apache2"]
+VOLUME ["/var/www", "/var/log/apache2", "/etc/apache2"]
+
+ENTRYPOINT ["/usr/sbin/apache2ctl"]
 CMD ["-help"]
