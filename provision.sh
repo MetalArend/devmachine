@@ -25,6 +25,7 @@ bash "${SHELL_SCRIPTS_DIR}/devmachine/install-gulp.sh"
 bash "${SHELL_SCRIPTS_DIR}/docker/install-docker.sh"
 
 # Run docker containers
+#bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-compose-farm.sh"
 bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
 
 # Print branding, environment and containers
@@ -40,6 +41,7 @@ bash "${SHELL_SCRIPTS_DIR}/docker/report-docker.sh"
 echo " "
 
 # Report docker containers
+#bash "${SHELL_SCRIPTS_DIR}/docker/report-docker-compose-farm.sh"
 bash "${SHELL_SCRIPTS_DIR}/docker/report-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
 echo " "
 

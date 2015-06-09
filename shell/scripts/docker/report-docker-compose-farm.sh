@@ -8,7 +8,7 @@ if which docker-compose &> /dev/null; then
 
     CWD=$(pwd)
     cd "/env/"
-    docker-compose up
+    docker-compose ps
     cd "${CWD}"
 
 fi
