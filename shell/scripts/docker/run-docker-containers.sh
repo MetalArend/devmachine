@@ -10,6 +10,9 @@ fi
 
 if which docker &> /dev/null; then
 
+    # Cleanup dead images
+    sudo docker rm -f $(sudo docker ps -a --no-trunc | grep " Dead " | awk '{print $1}')
+
     REPOSITORY="devmachine"
 
     IFS=',' read -ra DOCKER_CONTAINER_FILEPATHS <<< "${DOCKER_CONTAINER_FILEPATHS}"
@@ -28,10 +31,10 @@ if which docker &> /dev/null; then
             # Get image
             IMAGE_ID_TAGGED="$(sudo docker images --all --no-trunc | grep "^devmachine " | awk '{print $3, $2}' | grep " ${CONTAINER_NAME}-${TAG}-image" | awk '{print $1}')"
 
-            # Create image if not found
-            if test -z "${IMAGE_ID_TAGGED}"; then
-                # Check build script
-                if test -f "/env/docker/containers/${CONTAINER_DIRECTORY}/${BUILDSCRIPT_FILENAME}"; then
+            # Check build script
+            if test -f "/env/docker/containers/${CONTAINER_DIRECTORY}/${BUILDSCRIPT_FILENAME}"; then
+                # Create image if not found
+                if test -z "${IMAGE_ID_TAGGED}"; then
                     # Build new image
                     echo -e "\e[93mBuild new image for container '${CONTAINER_NAME}'\e[0m"
                     exec 5>&1
@@ -46,8 +49,8 @@ if which docker &> /dev/null; then
                         echo "${REPOSITORY}:${CONTAINER_NAME}-${TAG}-image"
                         IMAGE_ID_TAGGED="$(sudo docker inspect --format="{{.Id}}" "${REPOSITORY}:${CONTAINER_NAME}-${TAG}-image")"
                     fi
-                fi #/ check build script
-            fi #/ has no tagged image
+                fi #/ has no tagged image
+            fi #/ check build script
 
             # Gather old images tagged with the name (direct)
             IMAGE_IDS_OLD="$(sudo docker images --all --no-trunc | grep "^devmachine " | awk '{print $3, $2}' | grep " ${CONTAINER_NAME}-[^\-]*-image" | grep -v " ${CONTAINER_NAME}-${TAG}-image" | awk '{print $1}')"
@@ -150,10 +153,10 @@ if which docker &> /dev/null; then
                 fi
             elif test "[true] 0" != "$(sudo docker inspect --format='{{.Name}} {{.Config.Cmd}} {{.State.ExitCode}}' $(sudo docker ps --all --quiet --no-trunc) | grep "^/${CONTAINER_NAME} " | awk '{print $2, $3}')"; then
                 # Don't restart, but run again, see docker issue #3155
-#                echo -e "\e[93mRestart container '${CONTAINER_NAME}'\e[0m"
-#                sudo docker restart "${CONTAINER_ID}"
+                #echo -e "\e[93mRestart container '${CONTAINER_NAME}'\e[0m"
+                #sudo docker restart "${CONTAINER_ID}"
                 echo -e "\e[93mRerun container '${CONTAINER_NAME}' (docker issue #3155)\e[0m"
-                docker rm "${CONTAINER_NAME}"
+                docker rm -f "${CONTAINER_NAME}"
                 source "/env/docker/containers/${CONTAINER_DIRECTORY}/${RUNSCRIPT_FILENAME}"
             else
                 echo -e "\e[93mLet data container '${CONTAINER_NAME}'\e[0m"

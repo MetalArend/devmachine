@@ -16,11 +16,8 @@ PHP_PROJECTS_DIR="${CWD}/php"
 # Variables
 source "${CONFIG_DIR}/config.sh"
 
-# Set timezone
-bash "${SHELL_SCRIPTS_DIR}/devmachine/update-time.sh"
-
-# Fix command-not-found
-bash "${SHELL_SCRIPTS_DIR}/devmachine/fix-command-not-found.sh"
+# Configure system
+bash "${SHELL_SCRIPTS_DIR}/devmachine/configure-system.sh"
 
 # Install programs
 bash "${SHELL_SCRIPTS_DIR}/devmachine/install-composer.sh" -d "/env/composer"
@@ -28,11 +25,8 @@ bash "${SHELL_SCRIPTS_DIR}/devmachine/install-gulp.sh"
 bash "${SHELL_SCRIPTS_DIR}/docker/install-docker.sh"
 
 # Run docker containers
+#bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-compose-farm.sh"
 bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
-
-# Run application provision
-# TODO check the php dir for provision.sh files
-find "${PHP_PROJECTS_DIR}" -name "provision.sh" -exec bash "{}" \;
 
 # Print branding, environment and containers
 bash "${SHELL_SCRIPTS_DIR}/branding/print-branding.sh"
@@ -44,6 +38,14 @@ bash "${SHELL_SCRIPTS_DIR}/os/report-os.sh"
 bash "${SHELL_SCRIPTS_DIR}/devmachine/report-composer.sh"
 bash "${SHELL_SCRIPTS_DIR}/devmachine/report-gulp.sh"
 bash "${SHELL_SCRIPTS_DIR}/docker/report-docker.sh"
+echo " "
 
 # Report docker containers
+#bash "${SHELL_SCRIPTS_DIR}/docker/report-docker-compose-farm.sh"
 bash "${SHELL_SCRIPTS_DIR}/docker/report-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
+echo " "
+
+# Run application provision
+# TODO check the php dir for provision.sh files
+find "${PHP_PROJECTS_DIR}" -name "provision.sh" -exec bash "{}" \;
+echo " "

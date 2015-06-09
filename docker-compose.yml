@@ -1,0 +1,62 @@
+data:
+  image: busybox
+  volumes:
+    - /var/lib/mysql:/mysql
+    - /var/www:/var/www
+    - /env/log:/log
+  command: true
+
+mysql56:
+  build: docker/containers/mysql56
+  ports:
+    - "3306:3306"
+  volumes_from:
+    - data
+  # -d -t
+  command: ""
+
+#mysql56:
+#  image: mysql:5.6
+#  environment:
+#    MYSQL_ROOT_PASSWORD: supersecret
+#    MYSQL_USER: docker
+#    MYSQL_PASSWORD: docker
+#    MYSQL_DATABASE: stagesol
+#  ports:
+#    - "3306:3306"
+#  volumes_from:
+#    - data
+#  command: ""
+
+php54:
+  build: docker/containers/php54-fpm
+  ports:
+    - "9000:9000"
+  volumes_from:
+    - data
+  # -d -t
+
+lamp54:
+  build: docker/containers/lamp54
+  links:
+    - php54:php
+#    - mysql56:db
+  ports:
+    - "8054:80"
+    - "80:80"
+    - "443:443"
+  volumes_from:
+    - data
+  environment:
+    - APACHE_RUN_USER="www-data"
+    - APACHE_RUN_GROUP="www-data"
+    - APACHE_PID_FILE="/var/run/apache2.pid"
+    - APACHE_RUN_DIR="/var/run/apache2"
+    - APACHE_LOCK_DIR="/var/lock/apache2"
+    - APACHE_LOG_DIR="/log"
+    - APACHE_SERVERADMIN="admin@localhost"
+    - APACHE_SERVERNAME="localhost"
+    - APACHE_HOST="*"
+    - APACHE_PORT="80"
+    - APACHE_DOCUMENTROOT="/var/www"
+  command: -DFOREGROUND
