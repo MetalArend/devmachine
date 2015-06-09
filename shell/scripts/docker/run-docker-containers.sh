@@ -153,7 +153,7 @@ if which docker &> /dev/null; then
                 #echo -e "\e[93mRestart container '${CONTAINER_NAME}'\e[0m"
                 #sudo docker restart "${CONTAINER_ID}"
                 echo -e "\e[93mRerun container '${CONTAINER_NAME}' (docker issue #3155)\e[0m"
-                docker rm "${CONTAINER_NAME}"
+                docker rm -f "${CONTAINER_NAME}"
                 source "/env/docker/containers/${CONTAINER_DIRECTORY}/${RUNSCRIPT_FILENAME}"
             else
                 echo -e "\e[93mLet data container '${CONTAINER_NAME}'\e[0m"
