@@ -27,10 +27,6 @@ bash "${SHELL_SCRIPTS_DIR}/docker/install-docker.sh"
 # Run docker containers
 bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
 
-# Run application provision
-# TODO check the php dir for provision.sh files
-find "${PHP_PROJECTS_DIR}" -name "provision.sh" -exec bash "{}" \;
-
 # Print branding, environment and containers
 bash "${SHELL_SCRIPTS_DIR}/branding/print-branding.sh"
 
@@ -45,3 +41,9 @@ echo " "
 
 # Report docker containers
 bash "${SHELL_SCRIPTS_DIR}/docker/report-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
+echo " "
+
+# Run application provision
+# TODO check the php dir for provision.sh files
+find "${PHP_PROJECTS_DIR}" -name "provision.sh" -exec bash "{}" \;
+echo " "
