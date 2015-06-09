@@ -10,6 +10,9 @@ fi
 
 if which docker &> /dev/null; then
 
+    # Cleanup dead images
+    sudo docker rm -f $(sudo docker ps -a --no-trunc | grep " Dead " | awk '{print $1}')
+
     REPOSITORY="devmachine"
 
     IFS=',' read -ra DOCKER_CONTAINER_FILEPATHS <<< "${DOCKER_CONTAINER_FILEPATHS}"
