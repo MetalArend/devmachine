@@ -16,11 +16,8 @@ PHP_PROJECTS_DIR="${CWD}/php"
 # Variables
 source "${CONFIG_DIR}/config.sh"
 
-# Set timezone
-bash "${SHELL_SCRIPTS_DIR}/devmachine/update-time.sh"
-
-# Fix command-not-found
-bash "${SHELL_SCRIPTS_DIR}/devmachine/fix-command-not-found.sh"
+# Configure system
+bash "${SHELL_SCRIPTS_DIR}/devmachine/configure-system.sh"
 
 # Install programs
 bash "${SHELL_SCRIPTS_DIR}/devmachine/install-composer.sh" -d "/env/composer"
