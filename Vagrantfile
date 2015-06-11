@@ -1,6 +1,6 @@
 require 'yaml'
 
-configVagrant = YAML.load_file('./config/config.yml')
+configVagrant = YAML.load_file('./vagrant.yml')
 
 Vagrant.require_version '>= 1.6.0'
 
