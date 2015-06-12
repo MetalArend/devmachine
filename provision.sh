@@ -27,7 +27,7 @@ bash "${SHELL_SCRIPTS_DIR}/docker/cleanup-docker.sh"
 echo " "
 
 # Run docker containers
-#bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-compose-farm.sh"
+#bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-compose-farm.sh" -d "${CWD}"
 for DOCKER_CONTAINER_DIRECTORY in "${DOCKER_CONTAINERS_DIRECTORIES[@]}"; do
     bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-container.sh" -d "${DOCKER_CONTAINER_DIRECTORY}"
 done
@@ -48,7 +48,6 @@ bash "${SHELL_SCRIPTS_DIR}/docker/report-docker.sh"
 echo " "
 
 # Report docker containers
-#bash "${SHELL_SCRIPTS_DIR}/docker/report-docker-compose-farm.sh"
 #bash "${SHELL_SCRIPTS_DIR}/docker/report-docker-compose-farm.sh" -d "${CWD}"
 for DOCKER_CONTAINER_DIRECTORY in "${DOCKER_CONTAINERS_DIRECTORIES[@]}"; do
     bash "${SHELL_SCRIPTS_DIR}/docker/report-docker-container.sh" -d "${DOCKER_CONTAINER_DIRECTORY}"
