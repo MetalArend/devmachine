@@ -43,5 +43,5 @@ bash "${SHELL_SCRIPTS_DIR}/docker/report-docker-containers.sh" "${DOCKER_CONTAIN
 echo " "
 
 # Run application provision
-find "${PHP_PROJECTS_DIR}" -name "provision.sh" -exec bash "{}" \;
+find "${PHP_PROJECTS_DIR}" -iname "provision.sh" -exec echo -e "\e[93mRunning provisioning file \"{}\"\e[0m" \; -exec bash "{}" \; -exec echo "" \;
 echo " "
