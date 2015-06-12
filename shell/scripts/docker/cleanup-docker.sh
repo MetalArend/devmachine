@@ -49,9 +49,9 @@ if test -n "${IMAGE_IDS_ALL_UNUSED}"; then
 fi
 
 # Remove container directories
-if test -d "/var/lib/docker/containers"; then
+if sudo test -d "/var/lib/docker/containers"; then
     CONTAINERS_DIRECTORIES=$(sudo find /var/lib/docker/containers -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | sort -u | grep -E "^[0-9a-f]{64}$")
-    CONTAINERS_USED=$(sudo docker ps --all --quiet --no-trunc | sort -u)
+    CONTAINERS_USED=$(sudo docker ps --all --quiet --no-trunc | grep -v " DEAD " | sort -u)
     CONTAINERS_DIRECTORIES_TO_DELETE=$(comm -23 <(echo -e "${CONTAINERS_DIRECTORIES}" | sort -u) <(echo -e "${CONTAINERS_USED}" | sort -u))
     if test -n "${CONTAINERS_DIRECTORIES_TO_DELETE}"; then
         echo -e "\e[93mRemove unused container directories\e[0m"
@@ -62,7 +62,7 @@ if test -d "/var/lib/docker/containers"; then
 fi
 
 # Remove volumes directories
-if test -d "/var/lib/docker/volumes"; then
+if sudo test -d "/var/lib/docker/volumes"; then
     VOLUMES_DIRECTORIES=$(sudo find /var/lib/docker/volumes -maxdepth 1 -mindepth 1 -type d -printf '%p\n' | sort -u | grep -E "/[0-9a-f]{64}$")
     VOLUMES_USED=$(sudo docker inspect --format="$(echo '{{range $p, $conf := .Volumes}}{{if $conf}}{{$conf}}{{end}}\n{{end}}' | sed 's/\\n/\n/g')" $(sudo docker ps --all --quiet) | sort -u | grep -v "^$")
     VOLUMES_DIRECTORIES_TO_DELETE=$(comm -23 <(echo -e "${VOLUMES_DIRECTORIES}" | sort -u) <(echo -e "${VOLUMES_USED}" | sort -u))
@@ -75,7 +75,7 @@ if test -d "/var/lib/docker/volumes"; then
 fi
 
 # Remove vfs directories
-if test -d "/var/lib/docker/vfs/dir"; then
+if sudo test -d "/var/lib/docker/vfs/dir"; then
     VFS_DIRECTORIES=$(sudo find /var/lib/docker/vfs/dir -maxdepth 1 -mindepth 1 -type d -printf '%p\n' | sort -u | grep -E "/[0-9a-f]{64}$")
     VFS_USED=$(sudo docker inspect --format="$(echo '{{range $p, $conf := .Volumes}}{{if $conf}}{{$conf}}{{end}}\n{{end}}' | sed 's/\\n/\n/g')" $(sudo docker ps --all --quiet) | sort -u | grep -v "^$")
     VFS_DIRECTORIES_TO_DELETE=$(comm -23 <(echo -e "${VFS_DIRECTORIES}" | sort -u) <(echo -e "${VFS_USED}" | sort -u))
