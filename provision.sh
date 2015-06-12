@@ -21,6 +21,9 @@ bash "${SHELL_SCRIPTS_DIR}/devmachine/install-composer.sh" -d "/env/composer"
 bash "${SHELL_SCRIPTS_DIR}/devmachine/install-gulp.sh"
 bash "${SHELL_SCRIPTS_DIR}/docker/install-docker.sh"
 
+# Cleanup docker
+bash "${SHELL_SCRIPTS_DIR}/docker/cleanup-docker.sh"
+
 # Run docker containers
 #bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-compose-farm.sh"
 bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
