@@ -20,9 +20,11 @@ bash "${SHELL_SCRIPTS_DIR}/devmachine/configure-system.sh"
 bash "${SHELL_SCRIPTS_DIR}/devmachine/install-composer.sh" -d "/env/composer"
 bash "${SHELL_SCRIPTS_DIR}/devmachine/install-gulp.sh"
 bash "${SHELL_SCRIPTS_DIR}/docker/install-docker.sh"
+echo " "
 
 # Cleanup docker
 bash "${SHELL_SCRIPTS_DIR}/docker/cleanup-docker.sh"
+echo " "
 
 # Run docker containers
 #bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-compose-farm.sh"
@@ -30,9 +32,11 @@ bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-containers.sh" "${DOCKER_CONTAINER_
 
 # Print branding, environment and containers
 bash "${SHELL_SCRIPTS_DIR}/branding/print-branding.sh"
+echo " "
 
 # Print environment
 bash "${SHELL_SCRIPTS_DIR}/os/report-os.sh"
+echo " "
 
 # Report programs
 bash "${SHELL_SCRIPTS_DIR}/devmachine/report-composer.sh"

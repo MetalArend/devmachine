@@ -46,5 +46,4 @@ IP=$(ip addr show | grep "state UP" -A2 | grep "scope global" | grep -v "docker"
 
 echo -e "\e[92m$(date +"%d/%m/%Y %H:%M:%S")\e[0m"
 echo -e "\e[92m${ID} ${RELEASE} (${CODENAME}) on ${IP}\e[0m"
-echo " "
 
