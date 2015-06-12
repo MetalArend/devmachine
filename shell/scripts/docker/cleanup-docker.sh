@@ -62,7 +62,7 @@ if sudo test -d "/var/lib/docker/containers"; then
     if test -n "${CONTAINERS_DIRECTORIES_TO_DELETE}"; then
         for CONTAINER_DIRECTORY_TO_DELETE in ${CONTAINERS_DIRECTORIES_TO_DELETE}; do
             echo -e "\e[93mRemove unused container directory \"/var/lib/docker/containers/${CONTAINER_DIRECTORY_TO_DELETE}\"\e[0m"
-            sudo rm -rf "/var/lib/docker/containers/${CONTAINER_DIRECTORY_TO_DELETE}"
+            sudo rm -rfv "/var/lib/docker/containers/${CONTAINER_DIRECTORY_TO_DELETE}"
         done
     fi
 fi
@@ -75,7 +75,7 @@ if sudo test -d "/var/lib/docker/volumes"; then
     if test -n "${VOLUMES_DIRECTORIES_TO_DELETE}"; then
         for VOLUME_DIRECTORY_TO_DELETE in ${VOLUMES_DIRECTORIES_TO_DELETE}; do
             echo -e "\e[93mRemove unused volume directory \"${VOLUME_DIRECTORY_TO_DELETE}\"\e[0m"
-            sudo rm -rf "${VOLUME_DIRECTORY_TO_DELETE}"
+            sudo rm -rfv "${VOLUME_DIRECTORY_TO_DELETE}"
         done
     fi
 fi
@@ -88,7 +88,7 @@ if sudo test -d "/var/lib/docker/vfs/dir"; then
     if test -n "${VFS_DIRECTORIES_TO_DELETE}"; then
         for VFS_DIRECTORY_TO_DELETE in ${VFS_DIRECTORIES_TO_DELETE}; do
             echo -e "\e[93mRemove unused vfs directory \"${VFS_DIRECTORY_TO_DELETE}\"\e[0m"
-            sudo rm -rf "${VFS_DIRECTORY_TO_DELETE}"
+            sudo rm -rfv "${VFS_DIRECTORY_TO_DELETE}"
         done
     fi
 fi
