@@ -17,7 +17,7 @@ bash "${SHELL_SCRIPTS_DIR}/devmachine/configure-system.sh" -t "Europe/Brussels"
 echo " "
 
 # Install programs
-bash "${SHELL_SCRIPTS_DIR}/devmachine/install-composer.sh" -d "/env/composer"
+bash "${SHELL_SCRIPTS_DIR}/devmachine/install-composer.sh" -d "${CWD}/composer"
 bash "${SHELL_SCRIPTS_DIR}/devmachine/install-gulp.sh"
 bash "${SHELL_SCRIPTS_DIR}/docker/install-docker.sh"
 echo " "
