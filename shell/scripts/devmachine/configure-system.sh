@@ -1,28 +1,10 @@
 #!/usr/bin/env bash
 
 # ====== ====== ====== ====== ====== ======
-# Network Time Protocol - http://www.debian-administration.org/article/25/Keeping_your_clock_current_automatically.
-# ====== ====== ====== ====== ====== ======
-
-if test ! -f /env/log/time-synced.log; then
-    # Set timezone
-    sudo rm /etc/localtime
-    sudo ln -s /usr/share/zoneinfo/Europe/Brussels /etc/localtime
-
-    # Update time
-    sudo ntpdate pool.ntp.org
-
-    # Log time update
-    touch /env/log/time-synced.log
-    DATETIME=$(date +"%Y/%m/%d %H:%M")
-    echo "--- ${DATETIME} ---" >> "/env/log/time-synced.log"
-fi
-
-# ====== ====== ====== ====== ====== ======
 # Command-Not-Found - http://askubuntu.com/questions/205378/unsupported-locale-setting-fault-by-command-not-found
 # ====== ====== ====== ====== ====== ======
 
-if test ! -f /env/log/locales-generated.log; then
+if test ! -f ".locales-generated"; then
     # Set environment
     export LANGUAGE=en_US.UTF-8
     export LANG=en_US.UTF-8
@@ -35,5 +17,36 @@ if test ! -f /env/log/locales-generated.log; then
     # Log locales generated
     touch /env/log/locales-generated.log
     DATETIME=$(date +"%Y/%m/%d %H:%M")
-    echo "--- ${DATETIME} ---" >> "/env/log/locales-generated.log"
+    echo "--- ${DATETIME} ---" >> ".locales-generated"
 fi
+
+# ====== ====== ====== ====== ====== ======
+# Network Time Protocol - http://www.debian-administration.org/article/25/Keeping_your_clock_current_automatically.
+# ====== ====== ====== ====== ====== ======
+
+# Variables
+TIMEZONE=""
+while getopts "t:" OPTION; do
+    case "${OPTION}" in
+        t)
+            TIMEZONE="${OPTARG}"
+            ;;
+        *)
+            return
+            ;;
+    esac
+done
+if test "" = "${TIMEZONE}"; then
+    return
+fi
+
+# Set timezone
+if test ! -f "/usr/share/zoneinfo/${TIMEZONE}"; then
+    echo "Timezone \"${TIMEZONE}\" not found!" # TODO add red coloring
+else
+    sudo rm /etc/localtime
+    sudo ln -s "/usr/share/zoneinfo/${TIMEZONE}" /etc/localtime
+fi
+
+# Update time
+sudo ntpdate pool.ntp.org

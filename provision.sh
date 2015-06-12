@@ -13,7 +13,8 @@ DOCKER_CONTAINERS_DIRECTORIES="${CWD}/docker/containers/data","${CWD}/docker/con
 IFS=',' read -ra DOCKER_CONTAINERS_DIRECTORIES <<< "${DOCKER_CONTAINERS_DIRECTORIES}"
 
 # Configure system
-bash "${SHELL_SCRIPTS_DIR}/devmachine/configure-system.sh"
+bash "${SHELL_SCRIPTS_DIR}/devmachine/configure-system.sh" -t "Europe/Brussels"
+echo " "
 
 # Install programs
 bash "${SHELL_SCRIPTS_DIR}/devmachine/install-composer.sh" -d "/env/composer"
