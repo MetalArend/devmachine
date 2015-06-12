@@ -4,6 +4,15 @@
 # Docker containers
 # ====== ====== ====== ====== ====== ======
 
+# Remove dead containers
+CONTAINERS_IDS_DEAD="$(sudo docker ps --all --no-trunc | grep " Dead " | awk '{print $1}')"
+if test -n "${CONTAINERS_IDS_DEAD}"; then
+    for CONTAINER_ID_DEAD in ${CONTAINERS_IDS_DEAD}; do
+        echo -e "\e[93mRemove dead container '${CONTAINER_ID_DEAD}'\e[0m"
+        sudo docker rm -f "${CONTAINER_ID_DEAD}"
+    done
+fi
+
 # Remove exited containers not with exit 0
 if test -n "$(sudo docker ps --all --no-trunc | grep "Exit " | grep -v "Exit 0")"; then
     echo -e "\e[93mRemove exited containers not with exit 0\e[0m"
