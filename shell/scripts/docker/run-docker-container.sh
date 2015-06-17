@@ -4,7 +4,7 @@
 # Docker containers
 # ====== ====== ====== ====== ====== ======
 
-DOCKER_TMP_DIR=".docker"
+DOCKER_TMP_DIR="/env/.docker"
 REPOSITORY="devmachine"
 RUNSCRIPT_FILENAME="run.sh"
 
