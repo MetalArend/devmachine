@@ -23,6 +23,13 @@ if ! which docker &> /dev/null; then
         # Add the root and vagrant users to the docker group # TIP: don't use usermod!
         sudo gpasswd -a "${USER}" docker
         sudo gpasswd -a "vagrant" docker
+
+        # Restart docker
+        if which service &> /dev/null; then
+            if which docker &> /dev/null; then
+                sudo service docker restart
+            fi
+        fi
     fi
 #else
 #    # Run install script from official docker server
@@ -35,9 +42,10 @@ if ! which docker-compose &> /dev/null; then
     curl -sL https://github.com/docker/compose/releases/download/1.3.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
     chmod +x /usr/local/bin/docker-compose
 
-# Restart the daemon
-if which service &> /dev/null; then
-    if which docker &> /dev/null; then
-        sudo service docker restart
+    # Restart docker
+    if which service &> /dev/null; then
+        if which docker &> /dev/null; then
+            sudo service docker restart
+        fi
     fi
 fi
