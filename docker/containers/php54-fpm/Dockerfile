@@ -31,6 +31,10 @@ RUN apt-get update && \
         php-pear \
         php5-xdebug
 
+# Install composer globally
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ && \
+    mv /usr/bin/composer.phar /usr/bin/composer
+
 # Clean image
 RUN apt-get clean && \
     apt-get -f install && \
