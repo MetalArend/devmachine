@@ -15,7 +15,7 @@ if test ! -f ".locales-generated"; then
     sudo dpkg-reconfigure locales
 
     # Log locales generated
-    touch /env/log/locales-generated.log
+    touch ".locales-generated"
     DATETIME=$(date +"%Y/%m/%d %H:%M")
     echo "--- ${DATETIME} ---" >> ".locales-generated"
 fi
