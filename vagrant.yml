@@ -69,10 +69,6 @@ vm:
 #            owner: vagrant
 #            group: www-data
             type: nfs
-        php:
-            source: ./php
-            target: /var/www
-            type: nfs
 
 ssh:
     host: null
