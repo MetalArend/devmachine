@@ -24,3 +24,4 @@ http://stackoverflow.com/questions/19689632/vagrant-errors-after-windows-8-1-upd
 
 
 
+docker-compose stop && docker-compose rm -f && docker-compose build && docker-compose up -d
