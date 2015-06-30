@@ -2,4 +2,5 @@
 /todo
 /workspace/*
 !/workspace/.gitkeep
+!/workspace/devmachine
 /.locales-generated
