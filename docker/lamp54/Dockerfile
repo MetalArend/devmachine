@@ -18,7 +18,6 @@ RUN apt-get update && \
         apache2 \
         apache2-mpm-worker \
         libapache2-mod-php5 curl php5-mysql php5-gd php5-curl php-pear php-apc
-#        libapache2-mod-fcgid
 
 # Install composer globally
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ && \
@@ -35,7 +34,6 @@ RUN mkdir -p /var/lock/apache2
 
 # enable services
 RUN a2enmod rewrite env actions alias
-#fastcgi
 
 # COPY ./conf/apache2.conf /etc/apache2/sites-available/001-docker.conf
 # RUN ln -s /etc/apache2/sites-available/001-docker.conf /etc/apache2/sites-enabled/
