@@ -31,6 +31,7 @@ RUN apt-get clean && \
 
 # add directories
 RUN mkdir -p /var/run/apache2
+RUN mkdir -p /var/lock/apache2
 
 # enable services
 RUN a2enmod rewrite env actions alias
