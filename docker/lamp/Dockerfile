@@ -18,7 +18,7 @@ RUN apt-get update && \
         apache2 apache2-mpm-worker libapache2-mod-php5 \
         php5 \
         php5-cli php5-mysql php5-gd php5-curl php-pear php-apc php5-mcrypt \
-        curl
+        curl git
 
 # Install composer globally
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ && \
