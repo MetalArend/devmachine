@@ -1,4 +1,5 @@
 <?php
+// TODO check if mysql is present
 error_reporting(E_ALL);
 ini_set('display_errors', true);
 
@@ -18,6 +19,7 @@ function getDockerVariable($alias, $variable)
 <body>
 <p>
     <?php echo str_replace('/', ' ', $_SERVER['SERVER_SOFTWARE']); ?>
+    <a href="apache.php">&rarr;</a>
     <br/>
 
     PHP <?php echo phpversion(); ?>
