@@ -15,9 +15,10 @@ RUN echo "deb http://archive.ubuntu.com/ubuntu precise multiverse" >> /etc/apt/s
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive && \
     apt-get -yq install \
-        apache2 \
-        apache2-mpm-worker \
-        libapache2-mod-php5 curl php5-mysql php5-gd php5-curl php-pear php-apc
+        apache2 apache2-mpm-worker libapache2-mod-php5 \
+        php5 \
+        php5-cli php5-mysql php5-gd php5-curl php-pear php-apc php5-mcrypt \
+        curl
 
 # Install composer globally
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ && \
@@ -29,33 +30,26 @@ RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* /tmp/* /var/tmp/*
 
 # add directories
-RUN mkdir -p /var/run/apache2
-RUN mkdir -p /var/lock/apache2
+RUN mkdir -p /var/run/apache2 /var/lock/apache2
+
+# set environment
+ENV APACHE_RUN_USER=www-data \
+    APACHE_RUN_GROUP=www-data \
+    APACHE_PID_FILE=/var/run/apache2/apache2.pid \
+    APACHE_RUN_DIR=/var/run/apache2 \
+    APACHE_LOCK_DIR=/var/lock/apache2 \
+    APACHE_LOG_DIR=/log \
+    APACHE_SERVERADMIN=admin@localhost \
+    APACHE_SERVERNAME=localhost \
+    APACHE_HOST=* \
+    APACHE_PORT=80 \
+    APACHE_DOCUMENTROOT="/var/www/html"
+
+# add config files
+COPY ./conf/apache2.conf /etc/apache2/sites-enabled/000-default
 
 # enable services
 RUN a2enmod rewrite env actions alias
-
-# COPY ./conf/apache2.conf /etc/apache2/sites-available/001-docker.conf
-# RUN ln -s /etc/apache2/sites-available/001-docker.conf /etc/apache2/sites-enabled/
-COPY ./conf/apache2.conf /etc/apache2/sites-enabled/000-default
-# COPY ./conf/httpd.conf /usr/local/apache2/conf/httpd.conf
-#COPY ./conf/httpd.conf /etc/apache2/conf.d/php5-fpm.conf
-#COPY ./conf/httpd.conf /etc/apache2/conf-available/001-docker.conf
-#RUN ln -s /etc/apache2/conf-available/001-docker.conf /etc/apache2/conf-enabled/
-
-# set environment
-ENV APACHE_RUN_USER www-data
-ENV APACHE_RUN_GROUP www-data
-ENV APACHE_PID_FILE /var/run/apache2.pid
-ENV APACHE_RUN_DIR /var/run/apache2
-ENV APACHE_LOCK_DIR /var/lock/apache2
-
-ENV APACHE_LOG_DIR /log
-ENV APACHE_SERVERADMIN admin@localhost
-ENV APACHE_SERVERNAME localhost
-ENV APACHE_HOST *
-ENV APACHE_PORT 80
-ENV APACHE_DOCUMENTROOT /var/www
 
 # apache2 should not be running here
 #RUN service apache2 restart # preferred instead of "/etc/init.d/apache2 restart"
