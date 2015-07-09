@@ -33,7 +33,7 @@ vm:
                 memory: '2048'
             gui: false
             setextradata:
-                VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root: 1
+                VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root: 1 # enable symlinks for windows
             check_guest_additions: false
             functional_vboxsf: false
     provision:
