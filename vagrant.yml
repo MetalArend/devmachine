@@ -30,7 +30,7 @@ vm:
                 # natdnsproxy1: on
                 natdnshostresolver1: on
                 # rtcuseutc: on # bugfix ssh connection - https://github.com/mitchellh/vagrant/issues/391
-                memory: '2048'
+                memory: '1024'
             gui: false
             setextradata:
                 VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root: 1 # enable symlinks for windows
