@@ -1,10 +1,12 @@
 require 'yaml'
 
-configVagrant = YAML.load_file('./config/config.yml')
+configVagrant = YAML.load_file('./vagrant.yml')
 
 Vagrant.require_version '>= 1.6.0'
 
 Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
+
+    config.vm.synced_folder ".", "/vagrant", disabled: true
 
     if !configVagrant['vagrant']['host'].nil?
         config.vagrant.host = configVagrant['vagrant']['host'].gsub(":", "").intern

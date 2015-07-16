@@ -1,49 +1,27 @@
 #!/usr/bin/env bash
 
-# ====== ====== ====== ====== ====== ======
-# Vagrant - http://docs.vagrantup.com/v2/
-# ====== ====== ====== ====== ====== ======
+# Stop after error
+set -e
 
-# Check current directory
+# Use current directory
 CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${CWD}"
 
-# Load configuration
-CONFIG_DIR="${CWD}/config"
-SHELL_SCRIPTS_DIR="${CWD}/shell/scripts"
-DOCKER_CONTAINERS_DIR="${CWD}/docker/containers"
-PHP_PROJECTS_DIR="${CWD}/php"
+# Configure system
+bash "${CWD}/shell/devmachine/configure-system.sh" -t "Europe/Brussels"
 
-# Variables
-source "${CONFIG_DIR}/config.sh"
+# Install
+bash "${CWD}/shell/docker/install-docker.sh"
 
-# Set timezone
-bash "${SHELL_SCRIPTS_DIR}/devmachine/update-time.sh"
+# Print branding & report environment
+bash "${CWD}/shell/branding/print-branding.sh"
+bash "${CWD}/shell/os/report-os.sh"
 
-# Fix command-not-found
-bash "${SHELL_SCRIPTS_DIR}/devmachine/fix-command-not-found.sh"
+# Report docker
+bash "${CWD}/shell/docker/report-docker.sh"
 
-# Install programs
-bash "${SHELL_SCRIPTS_DIR}/devmachine/install-composer.sh" -d "/env/composer"
-bash "${SHELL_SCRIPTS_DIR}/devmachine/install-gulp.sh"
-bash "${SHELL_SCRIPTS_DIR}/docker/install-docker.sh"
-
-# Run docker containers
-bash "${SHELL_SCRIPTS_DIR}/docker/run-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
+# Cleanup
+bash "${CWD}/shell/docker/cleanup-docker.sh"
 
 # Run application provision
-# TODO check the php dir for provision.sh files
-find "${PHP_PROJECTS_DIR}" -name "provision.sh" -exec bash "{}" \;
-
-# Print branding, environment and containers
-bash "${SHELL_SCRIPTS_DIR}/branding/print-branding.sh"
-
-# Print environment
-bash "${SHELL_SCRIPTS_DIR}/os/report-os.sh"
-
-# Report programs
-bash "${SHELL_SCRIPTS_DIR}/devmachine/report-composer.sh"
-bash "${SHELL_SCRIPTS_DIR}/devmachine/report-gulp.sh"
-bash "${SHELL_SCRIPTS_DIR}/docker/report-docker.sh"
-
-# Report docker containers
-bash "${SHELL_SCRIPTS_DIR}/docker/report-docker-containers.sh" "${DOCKER_CONTAINER_FILEPATHS}"
+find "/env/workspace" -iname "docker-provision.sh" -exec echo -e "\e[93mRun shell script \"{}\"\e[0m" \; -exec bash "{}" \; -exec echo " " \;
