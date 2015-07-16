@@ -1,0 +1,104 @@
+data:
+  image: busybox
+  volumes:
+    - /env/workspace:/var/www/html
+    - /env/workspace/stagesol/app/logs:/log
+# TODO - /env/mysql:/var/lib/mysql
+  command: true
+
+mysql56:
+  extends:
+    file: /env/docker/common.yml
+    service: mysql56
+  environment:
+    MYSQL_USER: docker
+    MYSQL_PASSWORD: docker
+    MYSQL_DATABASE: docker
+  volumes_from:
+    - data
+
+php54fpm:
+  build: /env/docker/php54-fpm
+  links:
+    - mysql56:db
+  ports:
+    - "9054:9000"
+  volumes_from:
+    - data
+
+lamp54:
+  extends:
+    file: /env/docker/common.yml
+    service: apache24
+  links:
+    - php54fpm:php
+    - mysql56:db
+  ports:
+    - "80:80"
+    - "8054:80"
+    - "443:443"
+  volumes_from:
+    - data
+
+php55fpm:
+  build: /env/docker/php55-fpm
+  links:
+    - mysql56:db
+  ports:
+    - "9055:9000"
+  volumes_from:
+    - data
+
+lamp55:
+  extends:
+    file: /env/docker/common.yml
+    service: apache24
+  links:
+    - php55fpm:php
+    - mysql56:db
+  ports:
+    - "8055:80"
+  volumes_from:
+    - data
+
+php56fpm:
+  build: /env/docker/php56-fpm
+  links:
+    - mysql56:db
+  ports:
+    - "9056:9000"
+  volumes_from:
+    - data
+
+lamp56:
+  extends:
+    file: /env/docker/common.yml
+    service: apache24
+  links:
+    - php56fpm:php
+    - mysql56:db
+  ports:
+    - "8056:80"
+  volumes_from:
+    - data
+
+php70fpm:
+  build: /env/docker/php70-fpm
+  links:
+    - mysql56:db
+  ports:
+    - "9070:9000"
+  volumes_from:
+    - data
+
+lamp70:
+  extends:
+    file: /env/docker/common.yml
+    service: apache24
+  links:
+    - php70fpm:php
+    - mysql56:db
+  ports:
+    - "8070:80"
+  volumes_from:
+    - data
