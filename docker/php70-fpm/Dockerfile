@@ -1,4 +1,4 @@
-FROM        php:5.5-fpm
+FROM        php:7.0-fpm
 MAINTAINER  Bart Reunes "@MetalArend"
 
 # Install packages
@@ -16,7 +16,7 @@ RUN apt-get update \
         zip \
         mbstring \
         intl \
-        mysql mysqli pdo_mysql #pdo pdo_mysql
+        mysqli pdo_mysql #pdo pdo_mysql
 RUN pecl install xdebug
 # other packages: php5-imagick php-pear
 
