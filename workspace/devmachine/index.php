@@ -36,22 +36,28 @@ function getDockerVariable($alias, $variable)
         $name = 'adminer';
         return $name === substr($file, 0, strlen($name));
     }))[0];
-    $dsn = 'mysql:host=' . $db_server . ';dbname=mysql';
-    $pdo = new PDO($dsn, 'root', getenv('DB_ENV_MYSQL_ROOT_PASSWORD'));
     ?>
-    <?php if (empty($pdo)): ?>
-        Database connection not found.
+    <?php if (empty($db_server)): ?>
+        Database server not found.
     <?php else: ?>
         <?php
-        $versionStmt = $pdo->query('SELECT VERSION() AS Version');
-        $version = $versionStmt->fetchObject()->Version;
-        $userStmt = $pdo->query('SELECT Host, User FROM user WHERE user="' . $db_user . '"');
-        $user = $userStmt->fetchObject();
+        $dsn = 'mysql:host=' . $db_server . ';dbname=mysql';
+        $pdo = new PDO($dsn, 'root', getenv('DB_ENV_MYSQL_ROOT_PASSWORD'));
         ?>
-        MySQL <?php echo $version; ?> on <?php echo $db_server; ?>:<?php echo $db_port; ?>
-        <a href="<?php echo $db_adminer_file . '?server=' . $db_server . '&username=' . $db_user . '&db=' . $db_database; ?>">&rarr;</a>
-        <br/>'<?php echo $user->User; ?>'@'<?php echo $user->Host; ?>'
-        IDENTIFIED BY '<?php echo $db_password ?>'
+        <?php if (empty($pdo)): ?>
+            Database connection not found.
+        <?php else: ?>
+            <?php
+            $versionStmt = $pdo->query('SELECT VERSION() AS Version');
+            $version = $versionStmt->fetchObject()->Version;
+            $userStmt = $pdo->query('SELECT Host, User FROM user WHERE user="' . $db_user . '"');
+            $user = $userStmt->fetchObject();
+            ?>
+            MySQL <?php echo $version; ?> on <?php echo $db_server; ?>:<?php echo $db_port; ?>
+            <a href="<?php echo $db_adminer_file . '?server=' . $db_server . '&username=' . $db_user . '&db=' . $db_database; ?>">&rarr;</a>
+            <br/>'<?php echo $user->User; ?>'@'<?php echo $user->Host; ?>'
+            IDENTIFIED BY '<?php echo $db_password ?>'
+        <?php endif; ?>
     <?php endif; ?>
 </p>
 
