@@ -8,7 +8,7 @@
 
 
 # Remove containers
-echo -e "\e[93mChecking containers\e[0m"
+echo -e "\e[93mCheck containers\e[0m"
 
 # Remove containers with missing image
 #CONTAINER_IDS_ALL=$(sudo docker ps --all --quiet --no-trunc)
@@ -48,7 +48,7 @@ if test -n "${CONTAINERS_IDS_UNTAGGED}"; then
 fi
 
 # Remove unused images
-echo -e "\e[93mChecking images\e[0m"
+echo -e "\e[93mCheck images\e[0m"
 #IMAGE_IDS_ALL=$(sudo docker images --all --quiet --no-trunc)
 #CONTAINER_IDS_ALL=$(sudo docker ps --all --quiet --no-trunc)
 #IMAGE_IDS_ALL_USED=""
@@ -75,7 +75,7 @@ echo -e "\e[93mChecking images\e[0m"
 #fi
 
 # Remove container directories
-echo -e "\e[93mChecking directories\e[0m"
+echo -e "\e[93mCheck directories\e[0m"
 if sudo test -d "/var/lib/docker/containers"; then
     CONTAINERS_DIRECTORIES=$(sudo find /var/lib/docker/containers -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | sort -u | grep -E "^[0-9a-f]{64}$")
     if test -n "${CONTAINERS_DIRECTORIES}"; then

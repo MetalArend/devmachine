@@ -11,6 +11,7 @@ if test ! -f ".locales-generated"; then
     export LC_ALL=en_US.UTF-8
 
     # Generate locales
+    echo -e "\e[93mGenerate locales for UTF-8\e[0m"
     locale-gen en_US.UTF-8
     sudo dpkg-reconfigure locales
 
@@ -49,4 +50,5 @@ else
 fi
 
 # Update time
+echo -e "\e[93mUpdate time for ${TIMEZONE}\e[0m"
 sudo ntpdate pool.ntp.org

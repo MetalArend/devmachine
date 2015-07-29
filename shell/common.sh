@@ -30,7 +30,7 @@ check_container () {
         fi
     done
 
-    echo -ne "Checking container \"${CONTAINER_NAME}\" \033[0K\r" >&2
+    echo -ne "Check container \"${CONTAINER_NAME}\" \033[0K\r" >&2
     local CONTAINER_ID="$(docker-compose ps -q "${CONTAINER_NAME}")"
     if test -z "${CONTAINER_ID}"; then
         echo -e "\033[2K\r\e[31mContainer \"${CONTAINER_NAME}\" not found\e[0m" >&2
