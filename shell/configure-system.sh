@@ -4,7 +4,7 @@
 # Command-Not-Found - http://askubuntu.com/questions/205378/unsupported-locale-setting-fault-by-command-not-found
 # ====== ====== ====== ====== ====== ======
 
-if test ! -f ".locales-generated"; then
+if test ! -f "/home/vagrant/.locales-generated"; then
     # Set environment
     export LANGUAGE=en_US.UTF-8
     export LANG=en_US.UTF-8
@@ -16,9 +16,9 @@ if test ! -f ".locales-generated"; then
     sudo dpkg-reconfigure locales
 
     # Log locales generated
-    touch ".locales-generated"
+    touch "/home/vagrant/.locales-generated"
     DATETIME=$(date +"%Y/%m/%d %H:%M")
-    echo "--- ${DATETIME} ---" >> ".locales-generated"
+    echo "--- ${DATETIME} ---" >> "/home/vagrant/.locales-generated"
 fi
 
 # ====== ====== ====== ====== ====== ======
