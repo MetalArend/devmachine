@@ -14,7 +14,6 @@ bash "${CWD}/shell/devmachine/configure-system.sh" -t "Europe/Brussels"
 bash "${CWD}/shell/docker/install-docker.sh"
 
 # Print branding & report environment
-bash "${CWD}/shell/branding/print-branding.sh"
 bash "${CWD}/shell/os/report-os.sh"
 
 # Report docker
