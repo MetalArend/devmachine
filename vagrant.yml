@@ -55,6 +55,10 @@ vm:
             path: ./provision.sh
             upload_path: /env/provision.sh
             keep_color: true
+        project:
+            type: shell
+            inline: 'find "/env/workspace" -iname "provision-docker-compose.sh" -exec echo -e "\e[93mRun shell script \"{}\"\e[0m" \; -exec bash "{}" \; -exec echo " " \;'
+            keep_color: true
         unix2dos:
             type: shell
             windows_only: true
