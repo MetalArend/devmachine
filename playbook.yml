@@ -1,0 +1,6 @@
+---
+- hosts: all
+  sudo: false
+  tasks:
+    - name: Report os
+      command: /bin/bash /env/shell/report-os.sh
