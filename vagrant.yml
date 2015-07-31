@@ -43,6 +43,18 @@ vm:
         startpath:
             type: shell
             inline: 'grep -q -F "cd /env" "/home/vagrant/.bashrc" || echo -e "\ncd /env" >> "/home/vagrant/.bashrc"'
+        install_ansible:
+            type: shell
+            inline: "if [ $(dpkg-query -W -f='${Status}' ansible 2>/dev/null | grep -c 'ok installed') -eq 0 ]; then export DEBIAN_FRONTEND=noninteractive && apt-get install -qq software-properties-common && apt-add-repository ppa:ansible/ansible && apt-get update -qq && apt-get install -qq ansible; fi"
+            keep_color: true
+        install_ansible_plugins:
+            type: shell
+            inline: "sudo mkdir -p /usr/share/ansible_plugins/callback_plugins && sudo cp /env/ansible/plugins/* /usr/share/ansible_plugins/callback_plugins/"
+            keep_color: true
+        run_ansible_playbook:
+            type: shell
+            inline: "cd /env && echo 'localhost ansible_connection=local' > /etc/ansible/local-hosts && export PYTHONUNBUFFERED=1 && export ANSIBLE_FORCE_COLOR=1 && ansible-playbook -i /etc/ansible/local-hosts playbook.yml --connection=local"
+            keep_color: true
         install_dos2unix:
             type: shell
             windows_only: true
