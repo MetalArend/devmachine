@@ -4,7 +4,7 @@ vagrant:
 
 vm:
     # http://www.vagrantbox.es/
-    box: "ubuntu64"
+    box: "ubuntu64" # TODO trusty64
     box_url: "https://cloud-images.ubuntu.com/vagrant/precise/current/precise-server-cloudimg-amd64-vagrant-disk1.box"
     hostname: null
     usable_port_range: 2200..2500
@@ -15,16 +15,19 @@ vm:
             #ssh:
             #    host: 2222
             #    guest: 22
-            http:
+            http_8080:
                 host: 8080
                 guest: 80
-            ssh-extra:
+            http_8000:
+                host: 8000
+                guest: 8000
+            ssh_8433:
                 host: 8433
                 guest: 433
     provider:
         virtualbox:
             memory: 2048
-            cpus: 1
+            cpus: 2 # 1
             modifyvm:
                 name: devmachine
                 # natdnsproxy1: on
@@ -40,12 +43,12 @@ vm:
         startpath:
             type: shell
             inline: 'grep -q -F "cd /env" "/home/vagrant/.bashrc" || echo -e "\ncd /env" >> "/home/vagrant/.bashrc"'
-        windows_packages:
+        install_dos2unix:
             type: shell
             windows_only: true
             inline: 'echo -e "\e[93mCheck dos2unix install\e[0m" && if ! which dos2unix &> /dev/null; then apt-get install -y dos2unix; fi'
             keep_color: true
-        dos2unix:
+        run_dos2unix:
             type: shell
             windows_only: true
             inline: 'find /env/shell/* -name "*.sh" -exec echo -e "\e[93mConvert shell script \"{}\" (dos to unix)\e[0m" \; -exec dos2unix --keepdate --quiet {} \; && find /env/workspace/* -not -path */vendor/* -name "provision-docker-compose.sh" -exec echo -e "\e[93mConvert shell script \"{}\" (dos to unix)\e[0m" \; -exec dos2unix --keepdate --quiet {} \;'
@@ -55,11 +58,11 @@ vm:
             path: ./provision.sh
             upload_path: /env/provision.sh
             keep_color: true
-        project:
+        project_provision:
             type: shell
             inline: 'find "/env/workspace" -iname "provision-docker-compose.sh" -exec echo -e "\e[93mRun shell script \"{}\"\e[0m" \; -exec bash "{}" \; -exec echo " " \;'
             keep_color: true
-        unix2dos:
+        run_unix2dos:
             type: shell
             windows_only: true
             inline: 'find /env/shell/* -name "*.sh" -exec echo -e "\e[93mConvert shell script \"{}\" (unix to dos)\e[0m" \; -exec unix2dos --keepdate --quiet {} \; && find /env/workspace/* -not -path */vendor/* -name "provision-docker-compose.sh" -exec echo -e "\e[93mConvert shell script \"{}\" (unix to dos)\e[0m" \; -exec unix2dos --keepdate --quiet {} \;'
@@ -85,9 +88,9 @@ ssh:
     host: null
     port: null
     private_key_path: null
-    username: vagrant # https://github.com/Varying-Vagrant-Vagrants/VVV/issues/375
+    username: vagrant # TODO https://github.com/Varying-Vagrant-Vagrants/VVV/issues/375
     guest_port: null
     keep_alive: true
-    forward_agent: false
+    forward_agent: false # TODO true http://wildlyinaccurate.com/using-ssh-agent-forwarding-with-vagrant/
     forward_x11: false
     shell: "bash -c 'BASH_ENV=/etc/profile exec bash'" # default: "bash -l", but this resolves the stdin error
