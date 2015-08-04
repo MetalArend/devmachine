@@ -40,37 +40,51 @@ vm:
             check_guest_additions: false
             functional_vboxsf: false
     provision:
-        startpath:
+        core:
             type: shell
-            inline: echo -e "\e[93mPrepare virtual machine\e[0m" && grep -q -F "cd /env" "/home/vagrant/.bashrc" || echo -e "\ncd /env" >> "/home/vagrant/.bashrc"
+            inline: |
+                (grep -q -F "cd /env" "/home/vagrant/.bashrc" || echo -e "\ncd /env" >> "/home/vagrant/.bashrc")
+                if [ $(dpkg-query -W -f='${Status}' ansible 2>/dev/null | grep -c "ok installed") -eq 0 ]; then
+                    echo -e "\e[93mInstall ansible\e[0m"
+                    export DEBIAN_FRONTEND=noninteractive
+                    apt-get install -qq software-properties-common
+                    apt-add-repository ppa:ansible/ansible
+                    apt-get update -qq && apt-get install -qq ansible
+                    sudo mkdir -p /usr/share/ansible_plugins/callback_plugins/
+                    sudo ln -sf /env/ansible/plugins/ /usr/share/ansible_plugins/callback_plugins/
+                    echo "localhost ansible_connection=local" > /etc/ansible/local-hosts;
+                fi
+                cd /env
+                echo -e "\e[93mRun ansible playbook \"/env/playbook.yml\" \e[0m"
+                export PYTHONUNBUFFERED=1
+                export ANSIBLE_FORCE_COLOR=1
+                ansible-playbook -i /etc/ansible/local-hosts playbook.yml --connection=local --extra-vars "timezone=Europe/Brussels locale=en_US.UTF-8 docker_version=1.7.1 docker_compose_version=1.3.3 docker_group_members=vagrant"
+                if which ansible &> /dev/null; then
+                    echo -e "\e[92m- $(ansible --version | grep 'ansible')\e[0m";
+                else
+                    echo -e "\e[91m- ansible not found\e[0m";
+                fi
+                if which docker &> /dev/null; then
+                    echo -e "\e[92m- docker $(docker --version | sed 's/^[^0-9]* //g') ($(docker info 2>/dev/null | sed -n -e '/Containers:.*/,/Images:.*/p' | sed ':a;N;s/\n/, /g'))\e[0m";
+                else
+                    echo -e "\e[91m- docker not found\e[0m";
+                fi
+                if which docker-compose &> /dev/null; then
+                    echo -e "\e[92m- $(docker-compose --version | sed 's/version: //g' | sed ':a;N;$!ba;s/\n/, /g')\e[0m";
+                else
+                    echo -e "\e[91m- docker-compose not found\e[0m";
+                fi
             keep_color: true
-        install_ansible:
+        project_ansible:
             type: shell
-            inline: echo -e "\e[93mCheck ansible install\e[0m" && if [ $(dpkg-query -W -f='${Status}' ansible 2>/dev/null | grep -c "ok installed") -eq 0 ]; then export DEBIAN_FRONTEND=noninteractive && apt-get install -qq software-properties-common && apt-add-repository ppa:ansible/ansible && apt-get update -qq && apt-get install -qq ansible; fi && sudo mkdir -p /usr/share/ansible_plugins/callback_plugins/ && sudo cp /env/ansible/plugins/* /usr/share/ansible_plugins/callback_plugins/
+            inline: |
+                find "/env/workspace" -iname "playbook.yml" -not -path "*/vendor/*" -exec echo -e "\e[93mRun ansible playbook \"{}\"\e[0m" \; -exec ansible-playbook -i /etc/ansible/local-hosts "{}" --connection=local \; -exec echo " " \;
             keep_color: true
-        run_ansible:
+        project_shell:
             type: shell
-            inline: echo -e "\e[93mRun ansible playbook\e[0m" && cd /env && echo "localhost ansible_connection=local" > /etc/ansible/local-hosts && export PYTHONUNBUFFERED=1 && export ANSIBLE_FORCE_COLOR=1 && ansible-playbook -i /etc/ansible/local-hosts playbook.yml --connection=local --extra-vars "timezone=Europe/Brussels locale=en_US.UTF-8 docker_version=1.6.0 docker_compose_version=1.3.1"
+            inline: |
+                find "/env/workspace" -iname "provision-docker-compose.sh" -exec echo -e "\e[93mRun shell script \"{}\"\e[0m" \; -exec bash "{}" \; -exec echo " " \;
             keep_color: true
-#        install_dos2unix:
-#            type: shell
-#            windows_only: true
-#            inline: 'echo -e "\e[93mCheck dos2unix install\e[0m" && if ! which dos2unix &> /dev/null; then apt-get install -y dos2unix; fi'
-#            keep_color: true
-#        run_dos2unix:
-#            type: shell
-#            windows_only: true
-#            inline: 'find /env/shell/* -name "*.sh" -exec echo -e "\e[93mConvert shell script \"{}\" (dos to unix)\e[0m" \; -exec dos2unix --keepdate --quiet {} \; && find /env/workspace/* -not -path */vendor/* -name "provision-docker-compose.sh" -exec echo -e "\e[93mConvert shell script \"{}\" (dos to unix)\e[0m" \; -exec dos2unix --keepdate --quiet {} \;'
-#            keep_color: true
-        project_provision:
-            type: shell
-            inline: 'find "/env/workspace" -iname "provision-docker-compose.sh" -exec echo -e "\e[93mRun shell script \"{}\"\e[0m" \; -exec bash "{}" \; -exec echo " " \;'
-            keep_color: true
-#        run_unix2dos:
-#            type: shell
-#            windows_only: true
-#            inline: 'find /env/shell/* -name "*.sh" -exec echo -e "\e[93mConvert shell script \"{}\" (unix to dos)\e[0m" \; -exec unix2dos --keepdate --quiet {} \; && find /env/workspace/* -not -path */vendor/* -name "provision-docker-compose.sh" -exec echo -e "\e[93mConvert shell script \"{}\" (unix to dos)\e[0m" \; -exec unix2dos --keepdate --quiet {} \;'
-#            keep_color: true
     synced_folder:
         # TODO http://jeremykendall.net/2013/08/09/vagrant-synced-folders-permissions/
         # TODO http://www.sebastien-han.fr/blog/2012/12/18/noac-performance-impact-on-web-applications/

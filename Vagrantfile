@@ -17,10 +17,15 @@ $stdout.send(:puts, " ")
 
 Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
 
-    config.vm.synced_folder ".", "/vagrant", disabled: true
+    config.vm.synced_folder ".", "/vagrant", disabled: true # TODO use this instead of /env?
 
     if !configVagrant['vagrant']['host'].nil?
         config.vagrant.host = configVagrant['vagrant']['host'].gsub(":", "").intern
+    end
+
+    if Vagrant::Util::Platform.windows?
+        config.vm.provision 'shell', inline: 'echo -e "\e[93mCheck dos2unix install\e[0m" && if ! which dos2unix &> /dev/null; then apt-get install -y dos2unix; fi', keep_color: true
+        config.vm.provision 'shell', inline: 'find /env/shell/* -name "*.sh" -exec echo -e "\e[93mConvert shell script \"{}\" (dos to unix)\e[0m" \; -exec dos2unix --keepdate --quiet {} \; && find /env/workspace/* -not -path */vendor/* -name "provision-docker-compose.sh" -exec echo -e "\e[93mConvert shell script \"{}\" (dos to unix)\e[0m" \; -exec dos2unix --keepdate --quiet {} \;', keep_color: true
     end
 
     if !configVagrant['vm'].empty?
@@ -125,6 +130,10 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
                 config.ssh.send("#{ssh_name}=", "#{ssh_value}")
             end
         end
+    end
+
+    if Vagrant::Util::Platform.windows?
+        config.vm.provision 'shell', inline: 'find /env/shell/* -name "*.sh" -exec echo -e "\e[93mConvert shell script \"{}\" (unix to dos)\e[0m" \; -exec unix2dos --keepdate --quiet {} \; && find /env/workspace/* -not -path */vendor/* -name "provision-docker-compose.sh" -exec echo -e "\e[93mConvert shell script \"{}\" (unix to dos)\e[0m" \; -exec unix2dos --keepdate --quiet {} \;', keep_color: true
     end
 
 end

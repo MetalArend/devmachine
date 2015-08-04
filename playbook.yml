@@ -4,42 +4,49 @@
   handlers:
     # Update locales
     - name: Update locales
+      sudo: yes
       command: dpkg-reconfigure --frontend noninteractive locales
     # Update timezone
     - name: Update timezone
+      sudo: yes
       command: dpkg-reconfigure --frontend noninteractive tzdata
     # Reload docker
     - name: Reload docker
       service: name=docker state=reloaded
   tasks:
+    # Set timezone
+    - name: Set timezone using the /etc/timezone file
+      sudo: yes
+      copy:
+        content: "{{ timezone }}\n\n"
+        dest: /etc/timezone
+        force: yes
+        backup: yes
+      when: timezone is defined
+      notify:
+        - Update timezone
+    - name: Set timezone using the /etc/localtime file
+      sudo: yes
+      copy:
+        src: /usr/share/zoneinfo/{{timezone}}
+        dest: /etc/localtime
+        force: yes
+        backup: yes
+      when: timezone is defined
+      notify:
+        - Update timezone
     # Generate locales
     - name: Generate locales
       environment:
         LANGUAGE: '{{ locale }}'
         LANG: '{{ locale }}'
         LC_ALL: '{{ locale }}'
-      command: locale-gen {{ locale }}
+      command: locale-gen "{{ locale }}"
       when: locale is defined
+      register: locales_gen_output
+      changed_when: '"done" in locales_gen_output.stdout'
       notify:
         - Update locales
-    # Set timezone
-    - name: Set timezone using the /etc/timezone file
-      sudo: yes
-      shell: echo {{ timezone }} > /etc/timezone
-      when: timezone is defined
-      notify:
-        - Update timezone
-    - name: Set timezone using the /etc/localtime file
-      sudo: yes
-      file:
-        src: /usr/share/zoneinfo/{{timezone}}
-        dest: /etc/localtime
-        state: link
-        force: yes
-        backup: yes
-      when: timezone is defined
-      notify:
-        - Update timezone
     # Set up network time protocol - thanks to https://github.com/geerlingguy/ansible-role-ntp
     - name: Install network time protocol
       apt:
@@ -104,10 +111,13 @@
         append: yes
       with_items: docker_group_members
       when: docker_group_members is defined
+    - name: Check docker-compose
+      shell: if which docker-compose > /dev/null; then docker-compose --version | grep 'docker-compose' | sed 's/^[^0-9\.]* //g'; fi
+      register: get_docker_compose_version
+      changed_when: false
     - name: Install docker-compose
       shell: curl -sL https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
-      args:
-        creates: /usr/local/bin/docker-compose
+      when: docker_compose_version != get_docker_compose_version.stdout
       notify:
         - Reload docker
     - name: Set docker-compose permissions
