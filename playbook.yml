@@ -2,18 +2,23 @@
 - hosts: all
   sudo: false
   handlers:
+
     # Update locales
     - name: Update locales
       sudo: yes
       command: dpkg-reconfigure --frontend noninteractive locales
+
     # Update timezone
     - name: Update timezone
       sudo: yes
       command: dpkg-reconfigure --frontend noninteractive tzdata
+
     # Reload docker
     - name: Reload docker
       service: name=docker state=reloaded
+
   tasks:
+
     # Set timezone
     - name: Set timezone using the /etc/timezone file
       sudo: yes
@@ -22,9 +27,9 @@
         dest: /etc/timezone
         force: yes
         backup: yes
-      when: timezone is defined
       notify:
         - Update timezone
+      when: timezone is defined
     - name: Set timezone using the /etc/localtime file
       sudo: yes
       copy:
@@ -32,9 +37,10 @@
         dest: /etc/localtime
         force: yes
         backup: yes
-      when: timezone is defined
       notify:
         - Update timezone
+      when: timezone is defined
+
     # Generate locales
     - name: Generate locales
       environment:
@@ -42,11 +48,12 @@
         LANG: '{{ locale }}'
         LC_ALL: '{{ locale }}'
       command: locale-gen "{{ locale }}"
-      when: locale is defined
       register: locales_gen_output
       changed_when: '"done" in locales_gen_output.stdout'
       notify:
         - Update locales
+      when: locale is defined
+
     # Set up network time protocol - thanks to https://github.com/geerlingguy/ansible-role-ntp
     - name: Install network time protocol
       apt:
@@ -57,22 +64,27 @@
         name: ntp
         state: started
         enabled: yes
+
     # Force NTP update - also see http://superuser.com/questions/639202/updating-time-ntpdate3108-the-ntp-socket-is-in-use-exiting
     - name: Update time
       sudo: yes
       shell: ntpdate -u pool.ntp.org
+
     # Flush handlers
     - meta: flush_handlers
+
     # Install Docker - thanks to https://github.com/angstwad/docker.ubuntu
     - name: Add docker repository key # url=http://get.docker.io/gpg id=A88D21E9 state=present
       apt_key:
         keyserver: hkp://p80.pool.sks-keyservers.net:80
         id: 36A1D7869245C8950F966E92D8576A8BA88D21E9
+      when: docker_version is defined
     - name: Add docker repository and update app cache
       apt_repository:
         repo: deb https://get.docker.com/ubuntu docker main
         update_cache: yes
         state: present
+      when: docker_version is defined
     - name: Install (or update) docker
       apt:
         name: lxc-docker-{{ docker_version }} # docker.io
@@ -81,6 +93,7 @@
         cache_valid_time: 600
       notify:
         - Reload docker
+      when: docker_version is defined
 #    - name: Set docker daemon options
 #      copy:
 #        content: "DOCKER_OPTS=\"{{ docker_opts.rstrip('\n') }}\""
@@ -103,23 +116,26 @@
       service:
         name: docker
         state: started
-    # ATTENTION: this task can potentially create new users!
-    - name: Add users to the docker group
+      when: docker_version is defined
+    - name: Add users to the docker group # ATTENTION: this task can potentially create new users!
       user:
         name:   "{{ item }}"
         groups: docker
         append: yes
       with_items: docker_group_members
-      when: docker_group_members is defined
+      when: docker_version is defined and docker_group_members is defined
+
+    # Install docker-compose
     - name: Check docker-compose
       shell: if which docker-compose > /dev/null; then docker-compose --version | grep 'docker-compose' | sed 's/^[^0-9\.]* //g'; fi
       register: get_docker_compose_version
       changed_when: false
-    - name: Install docker-compose
+      when: docker_compose_version is defined
+    - name: Install (or update) docker-compose
       shell: curl -sL https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
-      when: docker_compose_version != get_docker_compose_version.stdout
       notify:
         - Reload docker
+      when: docker_compose_version is defined and docker_compose_version != get_docker_compose_version.stdout
     - name: Set docker-compose permissions
       file:
         path: /usr/local/bin/docker-compose
@@ -128,7 +144,4 @@
         mode: 0755
       notify:
         - Reload docker
-    # Cleanup Docker
-    - name: Cleanup docker
-      command: bash /env/shell/cleanup-docker.sh
-
+      when: docker_compose_version is defined
