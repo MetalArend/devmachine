@@ -43,7 +43,7 @@ vm:
         cleanup:
             type: shell
             path: ./shell/cleanup-docker.sh
-            dos2unix: ['/env/shell/* -name \"cleanup-docker.sh\"']
+            dos2unix: [/env/shell -name "cleanup-docker.sh"]
             keep_color: true
         project_playbooks:
             type: shell

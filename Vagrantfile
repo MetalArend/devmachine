@@ -282,7 +282,7 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
                             ~
                             provision_config['dos2unix'].each do |dos2unix_filter|
                                 script += %~
-                                    FILES=$(echo -e "${FILES}\n$(find #{dos2unix_filter} | xargs file | grep CRLF | sed 's/:.*$//')")
+                                    FILES=$(echo -e "${FILES}\n$(find #{dos2unix_filter} | xargs --no-run-if-empty file | grep CRLF | sed 's/:.*$//')")
                                 ~
                             end
                             script += %~
