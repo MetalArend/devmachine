@@ -70,9 +70,10 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
         if ! which pip &> /dev/null; then
             echo -e "\e[93mInstall pip\e[0m"
             export DEBIAN_FRONTEND=noninteractive
-            apt-get -y install python-pip
-            pip install --upgrade distribute
+            apt-get -y update
+            apt-get -y install python-pip python-dev build-essential
             pip install --upgrade pip
+            hash -r
         fi
         if test -z "$(pip list | grep "ansible" | grep "#{ansible_version}")"; then
             echo -e "\e[93mInstall ansible\e[0m"
