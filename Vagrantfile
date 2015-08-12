@@ -81,14 +81,13 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
         fi
         sudo mkdir -p /usr/share/ansible_plugins/callback_plugins/
         sudo ln -sf /env/ansible/plugins/ /usr/share/ansible_plugins/callback_plugins/
-        echo "localhost ansible_connection=local" > /etc/ansible/local-hosts
 
         PLAYBOOK_DIRECTORY=$(dirname "#{ansible_playbook}")
         PLAYBOOK_FILENAME=$(basename "#{ansible_playbook}")
         echo -e "\e[93mRun ansible playbook \"#{ansible_playbook}\" \e[0m"
         cd "${PLAYBOOK_DIRECTORY}"
         export PYTHONUNBUFFERED=1
-        export ANSIBLE_INVENTORY=/etc/ansible/local-hosts
+        export ANSIBLE_INVENTORY=/env/ansible/hosts
         export ANSIBLE_FORCE_COLOR=1
         ansible-playbook "${PLAYBOOK_FILENAME}" --connection=local --extra-vars "#{ansible_extra_vars}"
     ~
@@ -153,12 +152,13 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
                             inline += %~
                                 echo -e "\e[93mRun ansible-playbook\e[0m"
                                 export PYTHONUNBUFFERED=1
+                                export ANSIBLE_INVENTORY=/env/ansible/hosts
                                 export ANSIBLE_FORCE_COLOR=1
                             ~
                             parts.each do |part|
                                 inline += %~
                                     echo "playbook: \\\"#{playbook}\\\""
-                                    ansible-playbook -i /etc/ansible/local-hosts "#{playbook}" --connection=local
+                                    ansible-playbook "#{playbook}" --connection=local
                                 ~
                             end
 
