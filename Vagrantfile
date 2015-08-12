@@ -70,7 +70,7 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
         if ! which pip &> /dev/null; then
             echo -e "\e[93mInstall pip\e[0m"
             export DEBIAN_FRONTEND=noninteractive
-            apt-get install -y -qq python-setuptools python-dev build-essential
+            apt-get -y install python-pip
             pip install --upgrade distribute
             pip install --upgrade pip
         fi
