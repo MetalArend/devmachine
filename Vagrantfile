@@ -89,36 +89,121 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
         ansible-playbook "${PLAYBOOK_FILENAME}" --connection=local --extra-vars "#{ansible_extra_vars}"
     ~
 
-    # Add provision "file": run shell script
-    # TODO add detection of file: ansible, php
-    # run commands like php app/console clear:cache
+    # Add once to run provision
     ARGV.each_with_index do |argument, index|
         if "--provision-with" == argument
             provision_with_array = ARGV[index+1].split(',')
             provision_with_array.each do |provision_with|
                 if provision_with.include? ':'
-                    provision_type = provision_with.split(':').first
-                    provision_files = provision_with.split(':').drop(1)
-                    provision_inline = ""
-                    provision_dos2unix = []
-                    if !provision_files.nil?
-                        provision_files.each do |file|
-                            filepath = File.dirname(file)
-                            filename = File.basename(file)
-                            if "shell" == provision_type
-                                provision_inline += %~
-                                    find "#{filepath}" -name "#{filename}" -maxdepth 1 -prune -exec echo -e "\e[93mRun shell script \\"{}\\"\e[0m" \\; -exec bash "{}" \\;
-                                ~
-                                provision_dos2unix.push("\"#{filepath}\" -name \"#{filename}\" -maxdepth 1 -prune")
+                    # Get type
+                    type = provision_with.split(':').first
+                    parts = provision_with.split(':').drop(1)
+                    inline = "cd \"/env\""
+                    dos2unix = []
+
+                    # Shift to specific directory/project
+                    if "cd" == type || "project" == type
+                        directory = parts.at(0)
+                        if "project" == type
+                            if !directory.start_with?('/') \
+                                    && !directory.start_with?('/env/workspace') \
+                                    && File.directory?(File.expand_path('./workspace/' + directory))
+                                directory = '/env/workspace/' + directory
                             end
                         end
-                        configVagrant['vm']['provision'][provision_with] = {
-                            "type"=>"shell",
-                            "keep_color"=>true,
-                            "inline"=>provision_inline,
-                            "dos2unix"=>provision_dos2unix
-                        }
+                        inline += %~
+                            echo -e "\e[93mChange directory\e[0m"
+                            cd "#{directory}"
+                            echo "#{directory}"
+                        ~
+                        type = parts.at(1)
+                        parts = parts.drop(2)
+                        if "bash" == type || "script" == type
+                            dos2unix.push("echo \"/env/shell/common.sh\"")
+                        end
                     end
+
+                    # Add specific parts
+                    if !parts.empty?
+
+                        # Run docker-compose
+                        if "docker-compose" == type || "compose" == type
+                            inline += %~
+                                echo -e "\e[93mRun docker-compose\e[0m"
+                            ~
+                            container = parts.at(0)
+                            entrypoint = !parts.at(1).empty? ? parts.at(1) : "/bin/bash"
+                            commands = ""
+                            parts = parts.drop(2)
+                            parts.each do |part|
+                                inline += %~
+                                    echo -e "container: \\\"#{container}\\\", entrypoint: \\\"#{entrypoint}\\\", command: \\\"#{part}\\\""
+                                    docker-compose run --rm --entrypoint "#{entrypoint}" "#{container}" -c "#{part}"
+                                ~
+                            end
+
+                        # Run ansible-playbook
+                        elsif "ansible-playbook" == type || "playbook" == type
+                            playbook = !parts.at(0).nil? ? parts.at(0) : "playbook.yml"
+                            parts = parts.drop(1)
+                            inline += %~
+                                echo -e "\e[93mRun ansible-playbook\e[0m"
+                                export PYTHONUNBUFFERED=1
+                                export ANSIBLE_FORCE_COLOR=1
+                            ~
+                            parts.each do |part|
+                                inline += %~
+                                    echo "playbook: \\\"#{playbook}\\\""
+                                    ansible-playbook -i /etc/ansible/local-hosts "#{playbook}" --connection=local
+                                ~
+                            end
+
+                        # Run bash with dos2unix
+                        elsif "bash" == type || "script" == type
+                            inline += %~
+                                echo -e "\e[93mRun command (dos2unix)\e[0m"
+                            ~
+                            parts.each do |part|
+                                inline += %~
+                                    echo "command: \\\"bash \\\"#{part}\\\"\\\""
+                                    bash "#{part}"
+                                ~
+                                dos2unix.push("echo \\\"#{part}\\\"")
+                            end
+
+                        # Run command
+                        elsif "run" == type || "command" == type
+                            inline += %~
+                                echo -e "\e[93mRun command\e[0m"
+                            ~
+                            parts.each do |part|
+                                inline += %~
+                                    echo "command: \\\"#{part}\\\""
+                                    #{part}
+                                ~
+                            end
+
+                        # Run anything
+                        else
+                            inline += %~
+                                echo -e "\e[93mRun command\e[0m"
+                            ~
+                            parts.each do |part|
+                                inline += %~
+                                    echo "command: \\\"#{type} #{part}\\\""
+                                    #{type} #{part}
+                                ~
+                            end
+                        end
+                    end
+
+                    # Add once to run provision
+                    configVagrant['vm']['provision'][provision_with] = {
+                        "type"=>"shell",
+                        "keep_color"=>true,
+                        "inline"=>inline,
+                        "dos2unix"=>dos2unix
+                    }
                 end
             end
             break
@@ -282,22 +367,28 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
                             ~
                             provision_config['dos2unix'].each do |dos2unix_item|
                                 script += %~
-                                    FILES=$(echo -e "${FILES}\n$(#{dos2unix_item} | xargs --no-run-if-empty file | grep CRLF | sed 's/:.*$//')")
+                                    FILES=$(echo -e "${FILES}\n$(#{dos2unix_item} | xargs --no-run-if-empty file | grep CRLF | sed -E 's/:.*$//')")
                                 ~
                             end
                             script += %~
                                 if test -n "${FILES}"; then
                                     echo -e "\e[93mConvert line endings from dos to unix\e[0m"
+                                    SAVEIFS=$IFS
+                                    IFS=$(echo -en "\n\b")
                                     for FILE in ${FILES}; do
-                                        dos2unix --keepdate ${FILE} 2>&1 | tr -d "\n"
+                                        dos2unix --keepdate \"${FILE}\" 2>&1 | tr -d "\n"
                                     done
+                                    IFS=$SAVEIFS
                                 fi
                                 #{provision_config['inline']}
                                 if test -n "${FILES}"; then
                                     echo -e "\e[93mConvert line endings from unix to dos\e[0m"
+                                    SAVEIFS=$IFS
+                                    IFS=$(echo -en "\n\b")
                                     for FILE in ${FILES}; do
-                                        unix2dos --keepdate ${FILE} 2>&1 | tr -d "\n"
+                                        unix2dos --keepdate \"${FILE}\" 2>&1 | tr -d "\n"
                                     done
+                                    IFS=$SAVEIFS
                                 fi
                             ~
                             provision_config['inline'] = script
