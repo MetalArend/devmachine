@@ -67,12 +67,15 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
 
     # Add provision "system": install ansible and run playbook # TODO use ansible_version
     config.vm.provision "system", type: "shell", keep_color: true, inline: %~
-        if [ -z "$(pip list | grep "ansible" | grep "#{ansible_version}")" ]; then
-            echo -e "\e[93mInstall ansible\e[0m"
+        if ! which pip &> /dev/null; then
+            echo -e "\e[93mInstall pip\e[0m"
             export DEBIAN_FRONTEND=noninteractive
             apt-get install -y -qq python-setuptools python-dev build-essential
             pip install --upgrade distribute
             pip install --upgrade pip
+        fi
+        if test -z "$(pip list | grep "ansible" | grep "#{ansible_version}")"; then
+            echo -e "\e[93mInstall ansible\e[0m"
             pip install ansible==#{ansible_version}
         fi
         sudo mkdir -p /usr/share/ansible_plugins/callback_plugins/
