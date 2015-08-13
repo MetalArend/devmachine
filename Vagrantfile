@@ -15,58 +15,66 @@ $stdout.send(:puts, "\e[92;40m                    DevMachine (CC BY-SA 4.0) 2014
 $stdout.send(:puts, "\e[92;40m                                                                    \e[0m")
 $stdout.send(:puts, " ")
 
-# Load configuration
-configVagrant = YAML.load_file('./vagrant.yml')
-Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
+# Load yaml configuration
+yaml_config = YAML.load_file('./vagrant.yml')
+
+# Read vagrant configuration
+vagrant_options         = !yaml_config['vagrant'].nil?              ? yaml_config['vagrant']            : {}
+api_version             = !vagrant_options['api_version'].nil?      ? vagrant_options['api_version']    : "2"
+host                    = !vagrant_options['host'].nil?             ? vagrant_options['host']           : nil
+
+# Read vm configuration
+vm_options              = !yaml_config['vm'].nil?                   ? yaml_config['vm']                 : {}
+
+# Read ssh configuration
+ssh_options             = !yaml_config['ssh'].nil?                  ? yaml_config['ssh']                : {}
+
+# Read devmachine configuration
+devmachine_options      = !yaml_config['devmachine'].nil?           ? yaml_config['devmachine']         : {}
+bashrc_start            = !devmachine_options['start'].nil?         ? devmachine_options['start']       : "/env"
+timezone                = !devmachine_options['timezone'].nil?      ? devmachine_options['timezone']    : "Europe/Brussels"
+locale                  = !devmachine_options['locale'].nil?        ? devmachine_options['locale']      : "en_US.UTF-8"
+
+# Read docker configuration
+docker_options          = !yaml_config['docker'].nil?               ? yaml_config['docker']             : {}
+docker_version          = !docker_options['version'].nil?           ? docker_options['version']         : "1.7.1"
+docker_group_members    = !docker_options['group_members'].nil?     ? docker_options['group_members']   : "vagrant"
+
+# Read docker-compose configuration
+docker_compose_options  = !yaml_config['docker_compose'].nil?       ? yaml_config['docker_compose']     : {}
+docker_compose_version  = !docker_compose_options['version'].nil?   ? docker_compose_options['version'] : "1.3.3"
+
+# Read ansible configuration
+ansible_options         = !yaml_config['ansible'].nil?              ? yaml_config['ansible']            : {}
+ansible_version         = !ansible_options['version'].nil?          ? ansible_options['version']        : "1.9.2"
+ansible_playbook        = !ansible_options['playbook'].nil?         ? ansible_options['playbook']       : "/env/ansible.yml"
+ansible_extra_vars      = !ansible_options['extra_vars'].nil?       ? ansible_options['extra_vars']     : {}
+ansible_extra_vars = {
+    "timezone"=>timezone,
+    "locale"=>locale,
+    "docker_version"=>docker_version,
+    "docker_group_members"=>docker_group_members,
+    "docker_compose_version"=>docker_compose_version
+}.merge(ansible_extra_vars).map { |key| key * "=" } * " "
+
+# Build Vagrant configuration
+Vagrant.configure(api_version) do |vagrant_config|
 
     # Disable auto mounting vagrant directory # TODO use this instead of /env?
-    config.vm.synced_folder ".", "/vagrant", disabled: true
+    vagrant_config.vm.synced_folder ".", "/vagrant", disabled: true
 
     # Set the host if given
-    if !configVagrant['vagrant']['host'].nil?
-        config.vagrant.host = configVagrant['vagrant']['host'].gsub(":", "").intern
+    if !host.nil?
+        vagrant_config.vagrant.host = host.gsub(":", "").intern
     end
 
-    # Load devmachine configuration
-    bashrc_start = (!configVagrant['devmachine'].nil? && !configVagrant['devmachine']['start'].nil?) \
-        ? configVagrant['devmachine']['start'] : "/env"
-    timezone = (!configVagrant['devmachine'].nil? && !configVagrant['devmachine']['timezone'].nil?) \
-        ? configVagrant['devmachine']['timezone'] : "Europe/Brussels"
-    locale = (!configVagrant['devmachine'].nil? && !configVagrant['devmachine']['locale'].nil?) \
-        ? configVagrant['devmachine']['locale'] : "en_US.UTF-8"
-
-    # Load docker configuration
-    docker_version = (!configVagrant['docker'].nil? && !configVagrant['docker']['version'].nil?) \
-        ? configVagrant['docker']['version'] : "1.7.1"
-    docker_group_members = (!configVagrant['docker'].nil? && !configVagrant['docker']['group_members'].nil?) \
-        ? configVagrant['docker']['group_members'] : "vagrant"
-
-    # Load docker-compose configuration
-    docker_compose_version = (!configVagrant['docker_compose'].nil? && !configVagrant['docker_compose']['version'].nil?) \
-        ? configVagrant['docker_compose']['version'] : "1.3.3"
-
-    # Load ansible configuration
-    ansible_version = (!configVagrant['ansible'].nil? && !configVagrant['ansible']['version'].nil?) \
-        ? configVagrant['ansible']['version'] : "1.9.2"
-    ansible_playbook = (!configVagrant['ansible'].nil? && !configVagrant['ansible']['playbook'].nil?) \
-        ? configVagrant['ansible']['playbook'] : nil
-    ansible_extra_vars = (!configVagrant['ansible'].nil? && !configVagrant['ansible']['extra_vars'].nil?) \
-        ? configVagrant['ansible']['extra_vars'] : {}
-    ansible_extra_vars = {
-        "timezone"=>timezone,
-        "locale"=>locale,
-        "docker_version"=>docker_version,
-        "docker_group_members"=>docker_group_members,
-        "docker_compose_version"=>docker_compose_version
-    }.merge(ansible_extra_vars).map { |key| key * "=" } * " "
-
     # Add provision "bashrc": add default login location
-    config.vm.provision "bashrc", type: "shell", keep_color: true, inline: %~
+    vagrant_config.vm.provision "bashrc", type: "shell", keep_color: true, inline: %~
         (grep -q -F "cd #{bashrc_start}" "/home/vagrant/.bashrc" || echo -e "\ncd #{bashrc_start}" >> "/home/vagrant/.bashrc")
     ~
 
     # Add provision "system": install ansible and run playbook # TODO use ansible_version
-    config.vm.provision "system", type: "shell", keep_color: true, inline: %~
+    vagrant_config.vm.provision "system", type: "shell", keep_color: true, inline: %~
         if ! which pip &> /dev/null; then
             echo -e "\e[93mInstall pip\e[0m"
             export DEBIAN_FRONTEND=noninteractive
@@ -200,7 +208,7 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
                     end
 
                     # Add once to run provision
-                    configVagrant['vm']['provision'][provision_with] = {
+                    vm_options['provision'][provision_with] = {
                         "type"=>"shell",
                         "keep_color"=>true,
                         "inline"=>inline,
@@ -213,7 +221,7 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
     end
 
     # Add provision "report": report versions of installed programs
-    configVagrant['vm']['provision']['report'] = {
+    vm_options['provision']['report'] = {
         "type"=>"shell",
         "keep_color"=>true,
         "inline"=>%~
@@ -282,9 +290,9 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
     }
 
     # Load vm configuration
-    if !configVagrant['vm'].empty?
+    if !vm_options.empty?
 
-        configVagrant['vm'].each do |vm_name, vm_value|
+        vm_options.each do |vm_name, vm_value|
 
             if !vm_value.nil? && !vm_value.empty?
 
@@ -293,7 +301,7 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
                         borders = vm_value.split('..').map{|d| Integer(d)}
                         vm_value = borders[0]..borders[1]
                     end
-                    config.vm.send("#{vm_name}=", vm_value)
+                    vagrant_config.vm.send("#{vm_name}=", vm_value)
 
                 # Resolve a "code NS_ERROR_FAILURE (0x80004005)" with the following commands on a host machine:
                 # Mac OS X: sudo /Library/StartupItems/VirtualBox/VirtualBox restart
@@ -303,16 +311,16 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
                     if vm_value['private_network'].to_s != ''
                         # TIP Sometimes Windows gives problems with the private network
                         # if Vagrant::Util::Platform.windows?
-                        #     config.vm.network "private_network", ip: "#{vm_value['private_network']}", type: "dhcp"
+                        #     vagrant_config.vm.network "private_network", ip: "#{vm_value['private_network']}", type: "dhcp"
                         # else
-                            config.vm.network "private_network", ip: "#{vm_value['private_network']}"
+                            vagrant_config.vm.network "private_network", ip: "#{vm_value['private_network']}"
                         # end
                     end
                     if !vm_value['forwarded_ports'].empty?
                         vm_value['forwarded_ports'].each do |port_id, port_config|
                             auto_correct = !port_config['auto_correct'].nil? ? port_config['auto_correct'] : false
                             if port_config['guest'] != '' && port_config['host'] != ''
-                                config.vm.network :forwarded_port, guest: port_config['guest'].to_i, host: port_config['host'].to_i, id: port_id, auto_correct: auto_correct
+                                vagrant_config.vm.network :forwarded_port, guest: port_config['guest'].to_i, host: port_config['host'].to_i, id: port_id, auto_correct: auto_correct
                             end
                         end
                     end
@@ -324,8 +332,8 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
                             group = !folder_config['group'].nil? && !folder_config['group'].empty? ? folder_config['group'] : nil
                             type = !folder_config['type'].nil? && !folder_config['type'].empty? ? folder_config['type'] : nil
                             # TODO make it possible to use the nfs special options
-                            config.vm.synced_folder "#{folder_config['source']}", "#{folder_config['target']}", id: folder_id, owner: owner, group: group, type: type
-                            config.vm.provider "virtualbox" do |provider|
+                            vagrant_config.vm.synced_folder "#{folder_config['source']}", "#{folder_config['target']}", id: folder_id, owner: owner, group: group, type: type
+                            vagrant_config.vm.provider "virtualbox" do |provider|
                                 provider.customize ["setextradata", :id, "VBoxInternal2/SharedFoldersEnableSymlinksCreate/#{folder_id}", "1"]
                             end
                         end
@@ -333,7 +341,7 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
 
                 elsif 'provider' == vm_name
                     vm_value.each do |provider_name, provider_config|
-                        config.vm.provider "#{provider_name}" do |provider|
+                        vagrant_config.vm.provider "#{provider_name}" do |provider|
                             provider_config.each do |provider_config_key, provider_config_value|
                                 if 'modifyvm' == provider_config_key
                                     provider_config['modifyvm'].each do |modifyvm_name, modifyvm_value|
@@ -397,7 +405,7 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
                         end
                         if provision_config['windows_only'].nil? || !provision_config['windows_only'] || (provision_config['windows_only'] && Vagrant::Util::Platform.windows?)
                             run = !provision_config['run'].nil? && !provision_config['run'].empty? ? provision_config['run'] : nil
-                            config.vm.provision "#{provision_name}", type: "#{provision_config['type']}", run: run do |provision|
+                            vagrant_config.vm.provision "#{provision_name}", type: "#{provision_config['type']}", run: run do |provision|
                                 provision_config.each do |provision_config_key, provision_config_value|
                                     if 'type' == provision_config_key or 'windows_only' == provision_config_key or 'run' == provision_config_key or 'dos2unix' == provision_config_key
                                         next
@@ -409,7 +417,7 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
                     end
 
                 else
-                    config.vm.send("#{vm_name}=", vm_value)
+                    vagrant_config.vm.send("#{vm_name}=", vm_value)
                 end
 
             end
@@ -419,10 +427,10 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
     end
 
     # Load ssh configuration
-    if !configVagrant['ssh'].empty?
-        configVagrant['ssh'].each do |ssh_name, ssh_value|
+    if !ssh_options.empty?
+        ssh_options.each do |ssh_name, ssh_value|
             if !ssh_value.nil?
-                config.ssh.send("#{ssh_name}=", "#{ssh_value}")
+                vagrant_config.ssh.send("#{ssh_name}=", "#{ssh_value}")
             end
         end
     end
