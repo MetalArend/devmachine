@@ -136,14 +136,11 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
                             ~
                             container = parts.at(0)
                             entrypoint = !parts.at(1).empty? ? parts.at(1) : "/bin/bash"
-                            commands = ""
-                            parts = parts.drop(2)
-                            parts.each do |part|
-                                inline += %~
-                                    echo -e "container: \\\"#{container}\\\", entrypoint: \\\"#{entrypoint}\\\", command: \\\"#{part}\\\""
-                                    docker-compose run --rm --entrypoint "#{entrypoint}" "#{container}" -c "#{part}"
-                                ~
-                            end
+                            command = parts.drop(2).join(':')
+                            inline += %~
+                                echo -e "container: \\\"#{container}\\\", entrypoint: \\\"#{entrypoint}\\\", command: \\\"#{command}\\\""
+                                docker-compose run --rm --entrypoint "#{entrypoint}" "#{container}" -c "#{command}"
+                            ~
 
                         # Run ansible-playbook
                         elsif "ansible-playbook" == type || "playbook" == type

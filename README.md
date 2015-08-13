@@ -36,7 +36,7 @@ A combination of vagrant, shell scripts and docker containers, to create an os-i
 	$ vagrant provision --provision-with cd:"<directory>"
 	$ vagrant provision --provision-with project:"<directory>", where <directory> may be inside "/env/workspace"
 	
-	$ vagrant provision --provision-with docker-compose:"<container>":"<entrypoint>":"<command>".. (alias: compose)
+	$ vagrant provision --provision-with docker-compose:<container>:"<entrypoint>":"<command>" (alias: compose)
 	$ vagrant provision --provision-with ansible-playbook:"<playbook>".. (alias: playbook)
 	$ vagrant provision --provision-with run:"<command>".. (alias: command)
 	$ vagrant provision --provision-with bash:"<script>".. with dos2unix conversion (alias: script)
