@@ -73,6 +73,7 @@ Vagrant.configure(configVagrant['vagrant']['api_version']) do |config|
             apt-get -y update
             apt-get -y install python-pip python-dev build-essential
             pip install --upgrade pip
+            pip install --upgrade distribute
             hash -r
         fi
         if test -z "$(pip list | grep "ansible" | grep "#{ansible_version}")"; then
