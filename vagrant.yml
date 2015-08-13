@@ -100,4 +100,4 @@ docker_compose:
 
 ansible:
     version: 1.9.2
-    playbook: /env/playbook.yml
+    playbook: /env/ansible.yml
