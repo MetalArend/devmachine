@@ -10,6 +10,44 @@
 # Remove containers
 echo -e "\e[93mCheck containers\e[0m"
 
+CONTAINER_IDS="$(sudo docker ps --all --no-trunc --quiet)"
+if test -z "${CONTAINER_IDS}"; then
+    echo "Geen containers gevonden" # TODO
+else
+    for CONTAINER_ID in ${CONTAINER_IDS}; do
+        CONTAINER_NAME="$(sudo docker inspect --format "{{ .Name }}" "${CONTAINER_ID}")"
+        CONTAINER_IP="$(sudo docker inspect --format "{{ .NetworkSettings.IPAddress }}" "${CONTAINER_ID}")"
+        CONTAINER_CREATED="$(sudo docker inspect --format "{{ .Created }}" "${CONTAINER_ID}")"
+        CONTAINER_IMAGE="$(sudo docker inspect --format "{{ .Image }}" "${CONTAINER_ID}")"
+
+        CONTAINER_PATH="$(sudo docker inspect --format "{{ .Path }}" "${CONTAINER_ID}")"
+        CONTAINER_ARGS="$(sudo docker inspect --format "{{ if .Args }}{{ range .Args }}{{ . }} {{ end }}{{ end }}" "${CONTAINER_ID}")"
+        CONTAINER_CONFIG_ENTRYPOINT="$(sudo docker inspect --format "{{ if .Config.Entrypoint }}{{ range .Config.Entrypoint }}{{ . }} {{ end }}{{ end }}" "${CONTAINER_ID}")"
+        CONTAINER_CONFIG_CMD="$(sudo docker inspect --format "{{ if .Config.Cmd }}{{ range .Config.Cmd }}{{ . }} {{ end }}{{ end }}" "${CONTAINER_ID}")"
+
+        echo "Container \"${CONTAINER_ID}\" \"${CONTAINER_NAME}\" (${CONTAINER_IP})"
+        echo "created ${CONTAINER_CREATED} from image \"${CONTAINER_IMAGE}\""
+        echo "command: ${CONTAINER_PATH} ${CONTAINER_ARGS}"
+        echo "config : ${CONTAINER_CONFIG_ENTRYPOINT}${CONTAINER_CONFIG_CMD}"
+
+        CONTAINER_VOLUMES="$(sudo docker inspect --format "{{ .Volumes }}" "${CONTAINER_ID}")"
+        CONTAINER_VOLUMES_RW="$(sudo docker inspect --format "{{ .VolumesRW }}" "${CONTAINER_ID}")"
+        CONTAINER_CONFIG_VOLUMES="$(sudo docker inspect --format "{{ .Config.Volumes }}" "${CONTAINER_ID}")"
+        CONTAINER_STATE="$(sudo docker inspect --format "{{ if .State.Running }}Running{{ else }}{{ if .State.Paused }}Paused{{ else }}{{ if .State.Dead }}Dead{{ else }}Exit {{ .State.ExitCode }}{{ end }}{{ end }}{{ end }}" "${CONTAINER_ID}")"
+        #.State: .Running .Paused .Dead .ExitCode .StartedAt .FinishedAt
+        #.HostConfig.VolumesFrom => id van de data container
+        #.Config.Labels => bevat com.docker.compose.project en com.docker.compose.service
+
+        echo "state: ${CONTAINER_STATE}"
+        echo " "
+
+    done
+fi
+
+
+
+exit
+
 # Remove containers with missing image
 #CONTAINER_IDS_ALL=$(sudo docker ps --all --quiet --no-trunc)
 #for CONTAINER_ID in ${CONTAINER_IDS_ALL}; do
