@@ -89,8 +89,8 @@ Vagrant.configure(api_version) do |vagrant_config|
             pip install ansible==#{ansible_version}
         fi
         sudo mkdir -p /etc/ansible/ /usr/share/ansible_plugins/callback_plugins/
+        sudo cp /env/ansible/plugins/* /usr/share/ansible_plugins/callback_plugins/
         echo "localhost ansible_connection=local" > /etc/ansible/local-hosts
-        sudo ln -sf /env/ansible/plugins/ /usr/share/ansible_plugins/callback_plugins/
 
         PLAYBOOK_DIRECTORY=$(dirname "#{ansible_playbook}")
         PLAYBOOK_FILENAME=$(basename "#{ansible_playbook}")
