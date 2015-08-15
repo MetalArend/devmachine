@@ -39,7 +39,7 @@ if test -n "${CONTAINERS_IDS_EXITED}"; then
 fi
 
 # Remove exited containers without a tag
-CONTAINERS_IDS_UNTAGGED="$(sudo docker ps --all --no-trunc | grep "Exited (0)" | awk '{print $1,$2}' | grep -v ":" | awk '{print $1}')"
+CONTAINERS_IDS_UNTAGGED="$(sudo docker ps --all --no-trunc | grep "Exited (0)" | grep -v "\"true\"" | awk '{print $1}')"
 if test -n "${CONTAINERS_IDS_UNTAGGED}"; then
     for CONTAINER_ID_UNTAGGED in ${CONTAINERS_IDS_UNTAGGED}; do
         echo -e "\e[93mRemove container \"${CONTAINER_ID_UNTAGGED}\" (exited container, without a tag)\e[0m"
