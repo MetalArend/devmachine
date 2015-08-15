@@ -45,16 +45,12 @@ vm:
             path: ./shell/cleanup-docker.sh
             dos2unix: [find /env/shell -name "cleanup-docker.sh"]
             keep_color: true
-        project_playbooks:
+        workspace:
             type: shell
             inline: |
                 export PYTHONUNBUFFERED=1
                 export ANSIBLE_FORCE_COLOR=1
                 find "/env/workspace" -iname "playbook.yml" -not -path "*/vendor/*" -exec echo -e "\e[93mRun ansible playbook \"{}\"\e[0m" \; -exec ansible-playbook -i /etc/ansible/local-hosts "{}" --connection=local \;
-            keep_color: true
-        project_scripts:
-            type: shell
-            inline: |
                 find "/env/workspace" -iname "provision-docker-compose.sh" -exec echo -e "\e[93mRun shell script \"{}\"\e[0m" \; -exec bash "{}" \;
             dos2unix: [find /env/shell/* -name "*.sh", find /env/workspace/* -not -path */vendor/* -name "provision-docker-compose.sh"]
             keep_color: true
