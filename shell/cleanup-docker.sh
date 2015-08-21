@@ -5,41 +5,134 @@
 # ====== ====== ====== ====== ====== ======
 
 # TODO remove containers with images that don't exist anymore
+# TODO check what docker is doing when using history or --all
+
+#CONTAINER_CREATED="$(date "+%d/%m/%Y %H:%M:%S" -d "$(sudo docker inspect --format='{{.Created}}' "${CONTAINER_ID}")")"
+#IMAGE_ID=$(sudo docker inspect --format='{{.Image}}' "${CONTAINER_ID}")
+#IMAGE_CREATED="$(date "+%d/%m/%Y %H:%M:%S" -d "$(sudo docker inspect --format='{{.Created}}' "${IMAGE_ID}")")"
+#CONTAINER_ID_RUNNING=""
+#if test -n "$(sudo docker ps --quiet --no-trunc)"; then
+#    CONTAINER_ID_RUNNING=$(sudo docker inspect --format='{{.Name}} {{.Id}}' $(sudo docker ps --quiet --no-trunc) | grep "^/${CONTAINER_NAME} " | awk '{print $2}')
+#fi
+#if test "[true] 0" = "$(sudo docker inspect --format='{{.Name}} {{.Config.Cmd}} {{.State.ExitCode}}' $(sudo docker ps --all --quiet --no-trunc) | grep "^/${CONTAINER_NAME} " | awk '{print $2, $3}')"; then
+#    echo -e "\e[92mdocker data container '${CONTAINER_NAME}'\e[0m"
+#    echo -e "\e[92m- cid:     ${CONTAINER_ID}, created ${CONTAINER_CREATED}\e[0m"
+#    echo -e "\e[92m- image:   ${IMAGE_ID}, created ${IMAGE_CREATED}\e[0m"
+#    PROJECT_VOLUMES=$(sudo docker inspect --format='{{range $v, $h := .Volumes}}{{$v}} -> {{$h}}  {{end}}' "${CONTAINER_ID}")
+#    if test -n "${PROJECT_VOLUMES}"; then
+#        echo -e "\e[92m- volumes: ${PROJECT_VOLUMES}\e[0m"
+#    fi
+#elif test -z "${CONTAINER_ID_RUNNING}"; then
+#    echo -e "\e[91mdocker container '${CONTAINER_NAME}' not running\e[0m"
+#    echo -e "\e[91m- cid:     ${CONTAINER_ID}, created ${CONTAINER_CREATED}\e[0m"
+#    echo -e "\e[91m- image:   ${IMAGE_ID}, created ${IMAGE_CREATED}\e[0m"
+#else
+#    PROJECT_IP=$(sudo docker inspect --format='{{.NetworkSettings.IPAddress}}' "${CONTAINER_ID_RUNNING}")
+#    if test -z "${PROJECT_IP}"; then
+#        echo -e "\e[91mdocker container '${CONTAINER_NAME}' not reachable\e[0m"
+#        echo -e "\e[91m- cid:     ${CONTAINER_ID_RUNNING}, created ${CONTAINER_CREATED}\e[0m"
+#        echo -e "\e[91m- image:   ${IMAGE_ID}, created ${IMAGE_CREATED}\e[0m"
+#    else
+#        echo -e "\e[92mdocker container '${CONTAINER_NAME}' on ${PROJECT_IP}\e[0m"
+#        echo -e "\e[92m- cid:     ${CONTAINER_ID_RUNNING}, created ${CONTAINER_CREATED}\e[0m"
+#        echo -e "\e[92m- image:   ${IMAGE_ID}, created ${IMAGE_CREATED}\e[0m"
+#        PROJECT_PORTS=$(sudo docker inspect --format='{{range $p, $conf := .NetworkSettings.Ports}}{{$p}} -> {{if $conf}}{{(index $conf 0).HostPort}}{{else}}{{$conf}}{{end}}  {{end}}' "${CONTAINER_ID_RUNNING}")
+#        if test -n "${PROJECT_PORTS}"; then
+#            echo -e "\e[92m- ports:   ${PROJECT_PORTS}\e[0m"
+#        fi
+#        PROJECT_VOLUMES=$(sudo docker inspect --format='{{range $v, $h := .Volumes}}{{$v}} -> {{$h}}  {{end}}' "${CONTAINER_ID}")
+#        if test -n "${PROJECT_VOLUMES}"; then
+#            echo -e "\e[92m- volumes: ${PROJECT_VOLUMES}\e[0m"
+#        fi
+#    fi
+#fi
+
+# DOCKER LOGS REPORTING
+#DATETIME=$(date +"%Y/%m/%d %H:%M")
+#echo "--- ${DATETIME} ---" >> "${LOG_DIR}/docker_${CONTAINER_NAME}.log"
+#sudo docker logs "${CONTAINER_ID}" >> "${LOG_DIR}/docker_${CONTAINER_NAME}.log"
+
+
+
+
+
+
+
+
+
 
 
 # Remove containers
 echo -e "\e[93mCheck containers\e[0m"
 
 CONTAINER_IDS="$(sudo docker ps --all --no-trunc --quiet)"
+
+
 if test -z "${CONTAINER_IDS}"; then
     echo "Geen containers gevonden" # TODO
 else
     for CONTAINER_ID in ${CONTAINER_IDS}; do
         CONTAINER_NAME="$(sudo docker inspect --format "{{ .Name }}" "${CONTAINER_ID}")"
         CONTAINER_IP="$(sudo docker inspect --format "{{ .NetworkSettings.IPAddress }}" "${CONTAINER_ID}")"
-        CONTAINER_CREATED="$(sudo docker inspect --format "{{ .Created }}" "${CONTAINER_ID}")"
-        CONTAINER_IMAGE="$(sudo docker inspect --format "{{ .Image }}" "${CONTAINER_ID}")"
+        CONTAINER_CREATED="$(sudo docker inspect --format "{{ .Created }}" "${CONTAINER_ID}"  | sed -E 's/^([0-9]{4})\-([0-9]{2})\-([0-9]{2})\s([0-9]{2})\:([0-9]{2})\:([0-9]{2})\.[0-9]+\s(.+)$/\3\/\2\/\1 \4\:\5\:\6 \7/g')"
+        CONTAINER_STARTED="$(sudo docker inspect --format "{{ .State.StartedAt }}" "${CONTAINER_ID}"  | sed -E 's/^([0-9]{4})\-([0-9]{2})\-([0-9]{2})\s([0-9]{2})\:([0-9]{2})\:([0-9]{2})\.[0-9]+\s(.+)$/\3\/\2\/\1 \4\:\5\:\6 \7/g')"
+        CONTAINER_FINISHED="$(sudo docker inspect --format "{{ if not .State.Running }}{{ .State.FinishedAt }}{{ end }}" "${CONTAINER_ID}"  | sed -E 's/^([0-9]{4})\-([0-9]{2})\-([0-9]{2})\s([0-9]{2})\:([0-9]{2})\:([0-9]{2})\.[0-9]+\s(.+)$/\3\/\2\/\1 \4\:\5\:\6 \7/g')"
+        CONTAINER_IMAGE_ID="$(sudo docker inspect --format "{{ .Image }}" "${CONTAINER_ID}")"
+        CONTAINER_IMAGE_IDS="$(sudo docker history --quiet --no-trunc ${CONTAINER_IMAGE_ID})"
 
         CONTAINER_PATH="$(sudo docker inspect --format "{{ .Path }}" "${CONTAINER_ID}")"
         CONTAINER_ARGS="$(sudo docker inspect --format "{{ if .Args }}{{ range .Args }}{{ . }} {{ end }}{{ end }}" "${CONTAINER_ID}")"
         CONTAINER_CONFIG_ENTRYPOINT="$(sudo docker inspect --format "{{ if .Config.Entrypoint }}{{ range .Config.Entrypoint }}{{ . }} {{ end }}{{ end }}" "${CONTAINER_ID}")"
         CONTAINER_CONFIG_CMD="$(sudo docker inspect --format "{{ if .Config.Cmd }}{{ range .Config.Cmd }}{{ . }} {{ end }}{{ end }}" "${CONTAINER_ID}")"
+        CONTAINER_STATE="$(sudo docker inspect --format "{{ if .State.Running }}Running{{ else }}{{ if .State.Paused }}Paused{{ else }}{{ if .State.Dead }}Dead{{ else }}Exit{{ end }}{{ end }}{{ end }}" "${CONTAINER_ID}")"
+        CONTAINER_STATE_EXIT_CODE="$(sudo docker inspect --format "{{ .State.ExitCode }}" "${CONTAINER_ID}")"
+        CONTAINER_STATE_ERROR="$(sudo docker inspect --format "{{ .State.Error }}" "${CONTAINER_ID}")"
 
-        echo "Container \"${CONTAINER_ID}\" \"${CONTAINER_NAME}\" (${CONTAINER_IP})"
-        echo "created ${CONTAINER_CREATED} from image \"${CONTAINER_IMAGE}\""
-        echo "command: ${CONTAINER_PATH} ${CONTAINER_ARGS}"
-        echo "config : ${CONTAINER_CONFIG_ENTRYPOINT}${CONTAINER_CONFIG_CMD}"
+        CONTAINER_DOCKER_COMPOSE_PROJECT="$(sudo docker inspect --format "{{ index .Config.Labels \"com.docker.compose.project\" }}" "${CONTAINER_ID}")"
+        CONTAINER_DOCKER_COMPOSE_SERVICE="$(sudo docker inspect --format "{{ index .Config.Labels \"com.docker.compose.service\" }}" "${CONTAINER_ID}")"
+
+        echo "Container id: ${CONTAINER_ID}"
+        echo "Name        : ${CONTAINER_NAME}"
+        echo "Image id    : ${CONTAINER_IMAGE_ID}"
+        echo "Command     : ${CONTAINER_CONFIG_ENTRYPOINT}${CONTAINER_CONFIG_CMD}"
+        echo "Created     : ${CONTAINER_CREATED}"
+        echo "Started     : ${CONTAINER_STARTED}"
+        echo "State       : ${CONTAINER_STATE} ${CONTAINER_STATE_EXIT_CODE}"
+        echo "Finished    : ${CONTAINER_FINISHED}"
+        echo "Run with    : ${CONTAINER_PATH} ${CONTAINER_ARGS}"
+        echo "IP          : ${CONTAINER_IP}"
 
         CONTAINER_VOLUMES="$(sudo docker inspect --format "{{ .Volumes }}" "${CONTAINER_ID}")"
         CONTAINER_VOLUMES_RW="$(sudo docker inspect --format "{{ .VolumesRW }}" "${CONTAINER_ID}")"
         CONTAINER_CONFIG_VOLUMES="$(sudo docker inspect --format "{{ .Config.Volumes }}" "${CONTAINER_ID}")"
-        CONTAINER_STATE="$(sudo docker inspect --format "{{ if .State.Running }}Running{{ else }}{{ if .State.Paused }}Paused{{ else }}{{ if .State.Dead }}Dead{{ else }}Exit {{ .State.ExitCode }}{{ end }}{{ end }}{{ end }}" "${CONTAINER_ID}")"
-        #.State: .Running .Paused .Dead .ExitCode .StartedAt .FinishedAt
         #.HostConfig.VolumesFrom => id van de data container
-        #.Config.Labels => bevat com.docker.compose.project en com.docker.compose.service
 
-        echo "state: ${CONTAINER_STATE}"
+        # Remove dead containers
+        if test "Dead" == "${CONTAINER_STATE}"; then
+            echo -e "\e[93mRemove container \"${CONTAINER_ID}\" (dead container)\e[0m"
+#           sudo docker rm -f "${CONTAINER_ID}"
+        fi
+
+        # Remove exited containers not with exit 0
+        if test "Exit" == "${CONTAINER_STATE}" && "0" != "${CONTAINER_STATE_EXIT_CODE}"; then
+            echo -e "\e[93mRemove container \"${CONTAINER_ID}\" (exited container with exit code ${CONTAINER_STATE_EXIT_CODE})\e[0m"
+#            sudo docker rm -f "${CONTAINER_ID}"
+        fi
+
+        # Remove exited containers without a tag
+        if test "Exit" == "${CONTAINER_STATE}" && -z "${CONTAINER_NAME}"; then
+            echo -e "\e[93mRemove container \"${CONTAINER_ID}\" (exited container without a name)\e[0m"
+#            sudo docker rm -f "${CONTAINER_ID}"
+        fi
+
+        # Remove containers with missing image
+        if test -z "${CONTAINER_IMAGE_ID}"; then
+            echo -e "\e[93mRemove container \"${CONTAINER_ID}\" (missing image)\e[0m"
+#            sudo docker rm -f "${CONTAINER_ID}"
+        fi
+
         echo " "
+        exit
 
     done
 fi
@@ -47,43 +140,6 @@ fi
 
 
 exit
-
-# Remove containers with missing image
-#CONTAINER_IDS_ALL=$(sudo docker ps --all --quiet --no-trunc)
-#for CONTAINER_ID in ${CONTAINER_IDS_ALL}; do
-#    IMAGE_ID_CHECK=$(sudo docker inspect --format='{{.Image}}' "${CONTAINER_ID}")
-#    if test -n "$(sudo docker images --all --quiet --no-trunc | grep "${IMAGE_ID_CHECK}")"; then
-#        echo -e "\e[93mRemove container \"${CONTAINER_ID}\" (missing image)\e[0m"
-#        sudo docker rm -f "${CONTAINER_ID}"
-#    fi
-#done
-
-# Remove dead containers
-CONTAINERS_IDS_DEAD="$(sudo docker ps --all --no-trunc | grep " Dead " | awk '{print $1}')"
-if test -n "${CONTAINERS_IDS_DEAD}"; then
-    for CONTAINER_ID_DEAD in ${CONTAINERS_IDS_DEAD}; do
-        echo -e "\e[93mRemove container \"${CONTAINER_ID_DEAD}\" (dead container)\e[0m"
-        sudo docker rm -f "${CONTAINER_ID_DEAD}"
-    done
-fi
-
-# Remove exited containers not with exit 0
-CONTAINERS_IDS_EXITED="$(sudo docker ps --all --no-trunc | grep "Exited " | grep -v "Exited (0)" | awk '{print $1}')"
-if test -n "${CONTAINERS_IDS_EXITED}"; then
-    for CONTAINER_ID_EXITED in ${CONTAINERS_IDS_EXITED}; do
-        echo -e "\e[93mRemove container \"${CONTAINER_ID_EXITED}\" (exited container, not with exit code 0)\e[0m"
-        sudo docker rm -f "${CONTAINER_ID_EXITED}"
-    done
-fi
-
-# Remove exited containers without a tag
-CONTAINERS_IDS_UNTAGGED="$(sudo docker ps --all --no-trunc | grep "Exited (0)" | grep -v "\"true\"" | awk '{print $1}')"
-if test -n "${CONTAINERS_IDS_UNTAGGED}"; then
-    for CONTAINER_ID_UNTAGGED in ${CONTAINERS_IDS_UNTAGGED}; do
-        echo -e "\e[93mRemove container \"${CONTAINER_ID_UNTAGGED}\" (exited container, without a tag)\e[0m"
-        sudo docker rm -f "${CONTAINER_ID_UNTAGGED}"
-    done
-fi
 
 # Remove unused images
 echo -e "\e[93mCheck images\e[0m"
