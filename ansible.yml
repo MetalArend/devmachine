@@ -74,6 +74,11 @@
     - meta: flush_handlers
 
     # Install Docker - thanks to https://github.com/angstwad/docker.ubuntu
+    - name: Check docker
+      shell: if which docker > /dev/null; then docker --version | sed -e 's/[^0-9\.]*\([0-9\.]\+\).*/\1/'; fi
+      register: get_docker_version
+      changed_when: false
+      when: docker_version is defined
     - name: Add docker repository key # url=http://get.docker.io/gpg id=A88D21E9 state=present
       apt_key:
         keyserver: hkp://p80.pool.sks-keyservers.net:80
@@ -93,7 +98,7 @@
         cache_valid_time: 600
       notify:
         - Reload docker
-      when: docker_version is defined
+      when: docker_version is defined and docker_version != get_docker_version.stdout
 #    - name: Set docker daemon options
 #      copy:
 #        content: "DOCKER_OPTS=\"{{ docker_opts.rstrip('\n') }}\""
