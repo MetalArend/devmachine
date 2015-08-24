@@ -40,6 +40,8 @@ RUN apt-get autoremove -yq --purge \
 # Add configuration
 ADD . /container
 RUN cp /container/conf/php.ini /usr/local/etc/php
+RUN cp /container/conf/php-fpm.conf /usr/local/etc/
+
 
 # --- --- ---
 # Configure php5-fpm
