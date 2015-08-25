@@ -128,32 +128,44 @@ else
 #        CONTAINER_CONFIG_VOLUMES="$(sudo docker inspect --format "{{ .Config.Volumes }}" "${CONTAINER_ID}")"
         #.HostConfig.VolumesFrom => id van de data container
 
+        REMOVE=false
+
         # Remove dead containers
         if test "Dead" == "${CONTAINER_STATE}"; then
-            echo -e "\e[93mRemove container \"${CONTAINER_ID}\" (dead container)\e[0m"
-#           sudo docker rm -f "${CONTAINER_ID}"
+            echo -e "\e[93mMark container \"${CONTAINER_ID}\" for removal: dead container\e[0m"
+            REMOVE=true
         fi
 
         # Remove exited containers not with exit 0
-        if test "Exit" == "${CONTAINER_STATE}" && "0" != "${CONTAINER_STATE_EXIT_CODE}"; then
-            echo -e "\e[93mRemove container \"${CONTAINER_ID}\" (exited container with exit code ${CONTAINER_STATE_EXIT_CODE})\e[0m"
-#            sudo docker rm -f "${CONTAINER_ID}"
+        if test "Exit" == "${CONTAINER_STATE}" && test "0" != "${CONTAINER_STATE_EXIT_CODE}"; then
+            echo -e "\e[93mMark container \"${CONTAINER_ID}\" for removal: exited container with exit code ${CONTAINER_STATE_EXIT_CODE}\e[0m"
+            REMOVE=true
         fi
 
         # Remove exited containers without a tag
-        if test "Exit" == "${CONTAINER_STATE}" && -z "${CONTAINER_NAME}"; then
-            echo -e "\e[93mRemove container \"${CONTAINER_ID}\" (exited container without a name)\e[0m"
-#            sudo docker rm -f "${CONTAINER_ID}"
+        if test "Exit" == "${CONTAINER_STATE}" && test -z "${CONTAINER_NAME}"; then
+            echo -e "\e[93mMark container \"${CONTAINER_ID}\" for removal: exited container without a name\e[0m"
+            REMOVE=true
+        fi
+
+        # Remove compose container oneoff
+        if test "True" == "${CONTAINER_DOCKER_COMPOSE_ONEOFF}"; then
+            echo -e "\e[93mMark container \"${CONTAINER_ID}\" for removal: docker-compose only run container\e[0m"
+            REMOVE=true
         fi
 
         # Remove containers with missing image
         if test -z "${CONTAINER_IMAGE_ID}"; then
-            echo -e "\e[93mRemove container \"${CONTAINER_ID}\" (missing image)\e[0m"
+            echo -e "\e[93mMark container \"${CONTAINER_ID}\" for removal: missing image\e[0m"
+            REMOVE=true
+        fi
+
+        if test true == ${REMOVE}; then
 #            sudo docker rm -f "${CONTAINER_ID}"
+            echo "(removing here)"
         fi
 
         echo " "
-        exit
 
     done
 fi
