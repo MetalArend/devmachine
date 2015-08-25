@@ -72,39 +72,60 @@ if test -z "${CONTAINER_IDS}"; then
     echo "Geen containers gevonden" # TODO
 else
     for CONTAINER_ID in ${CONTAINER_IDS}; do
-        CONTAINER_NAME="$(sudo docker inspect --format "{{ .Name }}" "${CONTAINER_ID}")"
-        CONTAINER_IP="$(sudo docker inspect --format "{{ .NetworkSettings.IPAddress }}" "${CONTAINER_ID}")"
-        CONTAINER_CREATED="$(sudo docker inspect --format "{{ .Created }}" "${CONTAINER_ID}"  | sed -E 's/^([0-9]{4})\-([0-9]{2})\-([0-9]{2})\s([0-9]{2})\:([0-9]{2})\:([0-9]{2})\.[0-9]+\s(.+)$/\3\/\2\/\1 \4\:\5\:\6 \7/g')"
-        CONTAINER_STARTED="$(sudo docker inspect --format "{{ .State.StartedAt }}" "${CONTAINER_ID}"  | sed -E 's/^([0-9]{4})\-([0-9]{2})\-([0-9]{2})\s([0-9]{2})\:([0-9]{2})\:([0-9]{2})\.[0-9]+\s(.+)$/\3\/\2\/\1 \4\:\5\:\6 \7/g')"
-        CONTAINER_FINISHED="$(sudo docker inspect --format "{{ if not .State.Running }}{{ .State.FinishedAt }}{{ end }}" "${CONTAINER_ID}"  | sed -E 's/^([0-9]{4})\-([0-9]{2})\-([0-9]{2})\s([0-9]{2})\:([0-9]{2})\:([0-9]{2})\.[0-9]+\s(.+)$/\3\/\2\/\1 \4\:\5\:\6 \7/g')"
-        CONTAINER_IMAGE_ID="$(sudo docker inspect --format "{{ .Image }}" "${CONTAINER_ID}")"
+        CONTAINER_INSPECTION="$(sudo docker inspect --format "
+            Name:           {{ .Name }}
+            IP:             {{ .NetworkSettings.IPAddress }}
+            Created:        {{ .Created }}
+            StartedAt:      {{ .State.StartedAt }}
+            FinishedAt:     {{ if not .State.Running }}{{ .State.FinishedAt }}{{ end }}
+            Image:          {{ .Image }}
+            Path:           {{ .Path }}
+            Arguments:      {{ if .Args }}{{ range .Args }}{{ . }} {{ end }}{{ end }}
+            State:          {{ if .State.Running }}Running{{ else }}{{ if .State.Paused }}Paused{{ else }}{{ if .State.Dead }}Dead{{ else }}Exit{{ end }}{{ end }}{{ end }}
+            ExitCode:       {{ .State.ExitCode }}
+            Error:          {{ .State.Error }}
+            ComposeProject: {{ index .Config.Labels \"com.docker.compose.project\" }}
+            ComposeService: {{ index .Config.Labels \"com.docker.compose.service\" }}
+            ComposeOneOff:  {{ index .Config.Labels \"com.docker.compose.oneoff\" }}
+        " "${CONTAINER_ID}")"
+        CONTAINER_NAME="$(echo "${CONTAINER_INSPECTION}" | grep "^ *Name:" | sed "s/^[^\:]\+\: \+//")"
+        CONTAINER_IP="$(echo "${CONTAINER_INSPECTION}" | grep "^ *IP:" | sed "s/^[^\:]\+\: \+//")"
+        CONTAINER_CREATED="$(echo "${CONTAINER_INSPECTION}" | grep "^ *Created:" | sed "s/^[^\:]\+\: \+//" | sed -E 's/^([0-9]{4})\-([0-9]{2})\-([0-9]{2})\s([0-9]{2})\:([0-9]{2})\:([0-9]{2})\.[0-9]+\s(.+)$/\3\/\2\/\1 \4\:\5\:\6 \7/g')"
+        CONTAINER_STARTED="$(echo "${CONTAINER_INSPECTION}" | grep "^ *StartedAt:" | sed "s/^[^\:]\+\: \+//" | sed -E 's/^([0-9]{4})\-([0-9]{2})\-([0-9]{2})\s([0-9]{2})\:([0-9]{2})\:([0-9]{2})\.[0-9]+\s(.+)$/\3\/\2\/\1 \4\:\5\:\6 \7/g')"
+        CONTAINER_FINISHED="$(echo "${CONTAINER_INSPECTION}" | grep "^ *FinishedAt:" | sed "s/^[^\:]\+\: \+//" | sed -E 's/^([0-9]{4})\-([0-9]{2})\-([0-9]{2})\s([0-9]{2})\:([0-9]{2})\:([0-9]{2})\.[0-9]+\s(.+)$/\3\/\2\/\1 \4\:\5\:\6 \7/g')"
+        CONTAINER_IMAGE_ID="$(echo "${CONTAINER_INSPECTION}" | grep "^ *Image:" | sed "s/^[^\:]\+\: \+//")"
         CONTAINER_IMAGE_IDS="$(sudo docker history --quiet --no-trunc ${CONTAINER_IMAGE_ID})"
 
-        CONTAINER_PATH="$(sudo docker inspect --format "{{ .Path }}" "${CONTAINER_ID}")"
-        CONTAINER_ARGS="$(sudo docker inspect --format "{{ if .Args }}{{ range .Args }}{{ . }} {{ end }}{{ end }}" "${CONTAINER_ID}")"
+        CONTAINER_PATH="$(echo "${CONTAINER_INSPECTION}" | grep "^ *Path:" | sed "s/^[^\:]\+\: \+//")"
+        CONTAINER_ARGS="$(echo "${CONTAINER_INSPECTION}" | grep "^ *Arguments:" | sed "s/^[^\:]\+\: \+//")"
         CONTAINER_CONFIG_ENTRYPOINT="$(sudo docker inspect --format "{{ if .Config.Entrypoint }}{{ range .Config.Entrypoint }}{{ . }} {{ end }}{{ end }}" "${CONTAINER_ID}")"
         CONTAINER_CONFIG_CMD="$(sudo docker inspect --format "{{ if .Config.Cmd }}{{ range .Config.Cmd }}{{ . }} {{ end }}{{ end }}" "${CONTAINER_ID}")"
-        CONTAINER_STATE="$(sudo docker inspect --format "{{ if .State.Running }}Running{{ else }}{{ if .State.Paused }}Paused{{ else }}{{ if .State.Dead }}Dead{{ else }}Exit{{ end }}{{ end }}{{ end }}" "${CONTAINER_ID}")"
-        CONTAINER_STATE_EXIT_CODE="$(sudo docker inspect --format "{{ .State.ExitCode }}" "${CONTAINER_ID}")"
-        CONTAINER_STATE_ERROR="$(sudo docker inspect --format "{{ .State.Error }}" "${CONTAINER_ID}")"
+        CONTAINER_STATE="$(echo "${CONTAINER_INSPECTION}" | grep "^ *State:" | sed "s/^[^\:]\+\: \+//")"
+        CONTAINER_STATE_EXIT_CODE="$(echo "${CONTAINER_INSPECTION}" | grep "^ *ExitCode:" | sed "s/^[^\:]\+\: \+//")"
+        CONTAINER_STATE_ERROR="$(echo "${CONTAINER_INSPECTION}" | grep "^ *Error:" | sed "s/^[^\:]\+\: \+//")"
 
-        CONTAINER_DOCKER_COMPOSE_PROJECT="$(sudo docker inspect --format "{{ index .Config.Labels \"com.docker.compose.project\" }}" "${CONTAINER_ID}")"
-        CONTAINER_DOCKER_COMPOSE_SERVICE="$(sudo docker inspect --format "{{ index .Config.Labels \"com.docker.compose.service\" }}" "${CONTAINER_ID}")"
+        CONTAINER_DOCKER_COMPOSE_PROJECT="$(echo "${CONTAINER_INSPECTION}" | grep "^ *ComposeProject:" | sed "s/^[^\:]\+\: \+//")"
+        CONTAINER_DOCKER_COMPOSE_SERVICE="$(echo "${CONTAINER_INSPECTION}" | grep "^ *ComposeService:" | sed "s/^[^\:]\+\: \+//")"
+        CONTAINER_DOCKER_COMPOSE_ONEOFF="$(echo "${CONTAINER_INSPECTION}" | grep "^ *ComposeOneOff:" | sed "s/^[^\:]\+\: \+//")"
 
-        echo "Container id: ${CONTAINER_ID}"
-        echo "Name        : ${CONTAINER_NAME}"
-        echo "Image id    : ${CONTAINER_IMAGE_ID}"
-        echo "Command     : ${CONTAINER_CONFIG_ENTRYPOINT}${CONTAINER_CONFIG_CMD}"
-        echo "Created     : ${CONTAINER_CREATED}"
-        echo "Started     : ${CONTAINER_STARTED}"
-        echo "State       : ${CONTAINER_STATE} ${CONTAINER_STATE_EXIT_CODE}"
-        echo "Finished    : ${CONTAINER_FINISHED}"
-        echo "Run with    : ${CONTAINER_PATH} ${CONTAINER_ARGS}"
-        echo "IP          : ${CONTAINER_IP}"
+        echo "Container id  : ${CONTAINER_ID}"
+        echo "Name          : ${CONTAINER_NAME}"
+        echo "Project       : ${CONTAINER_DOCKER_COMPOSE_PROJECT}"
+        echo "Service       : ${CONTAINER_DOCKER_COMPOSE_SERVICE}"
+        echo "RunOneOff     : ${CONTAINER_DOCKER_COMPOSE_ONEOFF}"
+        echo "Image id      : ${CONTAINER_IMAGE_ID}"
+        echo "Command       : ${CONTAINER_CONFIG_ENTRYPOINT}${CONTAINER_CONFIG_CMD}"
+        echo "Created       : ${CONTAINER_CREATED}"
+        echo "Started       : ${CONTAINER_STARTED}"
+        echo "State         : ${CONTAINER_STATE} ${CONTAINER_STATE_EXIT_CODE}"
+        echo "Error         : ${CONTAINER_STATE_ERROR}"
+        echo "Finished      : ${CONTAINER_FINISHED}"
+        echo "Run with      : ${CONTAINER_PATH} ${CONTAINER_ARGS}"
+        echo "IP            : ${CONTAINER_IP}"
 
-        CONTAINER_VOLUMES="$(sudo docker inspect --format "{{ .Volumes }}" "${CONTAINER_ID}")"
-        CONTAINER_VOLUMES_RW="$(sudo docker inspect --format "{{ .VolumesRW }}" "${CONTAINER_ID}")"
-        CONTAINER_CONFIG_VOLUMES="$(sudo docker inspect --format "{{ .Config.Volumes }}" "${CONTAINER_ID}")"
+#        CONTAINER_VOLUMES="$(sudo docker inspect --format "{{ .Volumes }}" "${CONTAINER_ID}")"
+#        CONTAINER_VOLUMES_RW="$(sudo docker inspect --format "{{ .VolumesRW }}" "${CONTAINER_ID}")"
+#        CONTAINER_CONFIG_VOLUMES="$(sudo docker inspect --format "{{ .Config.Volumes }}" "${CONTAINER_ID}")"
         #.HostConfig.VolumesFrom => id van de data container
 
         # Remove dead containers
