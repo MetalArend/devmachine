@@ -189,19 +189,17 @@ endif;
         }
     }
     $(document).ready(function () {
+        $('iframe').hide();
         var $tabs = $('a[data-toggle="tab"]');
-        $('iframe').hide().each(function () {
-            loadFrame(this);
-        });
         $tabs.on('click', function (event) {
             var id = $(event.target).attr('href').replace('#', '');
             window.location.hash = id;
             loadFrame($('#' + id).find('iframe'));
         });
-        if ('' !== window.location.hash) {
-            $tabs.filter('[href="#' + window.location.hash.replace('#', '') + '"]').trigger('click');
-        } else {
+        if ('' === window.location.hash) {
             $tabs.first().trigger('click');
+        } else {
+            $tabs.filter('[href="#' + window.location.hash.replace('#', '') + '"]').trigger('click');
         }
     });
 </script>
