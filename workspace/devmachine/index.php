@@ -49,7 +49,7 @@ endif;
             </a>
         </div>
         <ul class="nav navbar-nav" role="tablist">
-            <li class="active">
+            <li>
                 <a href="#workspaces" role="tab" data-toggle="tab">
                     <span class="glyphicon glyphicon-home" style="width: 14px;"></span>
                     workspaces
@@ -88,7 +88,7 @@ endif;
 </nav>
 <div class="container-fluid">
     <div class="tab-content">
-        <div id="workspaces" class="tab-pane active">
+        <div id="workspaces" class="tab-pane">
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h2 class="panel-title">Environment</h2>
@@ -125,7 +125,9 @@ endif;
                         $dir = rtrim(dirname(dirname(__FILE__)), '/');
                         if ($handle = opendir($dir)) {
                             while (false !== ($entry = readdir($handle))) {
-                                if (!is_dir($dir . '/' . $entry) || in_array($entry, array('.', '..', 'devmachine')) || '.' === substr($entry, 0, 1)) {
+                                if (!is_dir($dir . '/' . $entry) || in_array($entry,
+                                        array('.', '..', 'devmachine')) || '.' === substr($entry, 0, 1)
+                                ) {
                                     continue;
                                 }
                                 echo '<li><a href="../' . $entry . '">' . $entry . '</a></li>';
@@ -173,21 +175,32 @@ endif;
 <script type="text/javascript" src="bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script type="text/javascript">
     $(document).ready(function () {
+        $('iframe').hide();
         $('a[data-toggle="tab"]').on('click', function (event) {
             var $tab = $(event.target);
             var id = $tab.attr('href').replace('#', '');
             window.location.hash = id;
             var $iframe = $('#' + id).find('iframe');
-            if (0 !== $iframe.length) {
-                $iframe.hide();
-                $iframe.attr('src', $iframe.attr('src'));
-                $iframe.one('load', function () {
-                    $iframe.show().attr('height', $iframe.get(0).contentWindow.document.body.scrollHeight + 'px');
-                });
+            if (1 === $iframe.length) {
+                // Avoid flicker when reloading, by cloning into a new iframe instead of reloading the src
+                var $iframeReloaded = $iframe.clone(true, true);
+                $iframeReloaded.one('load', (function ($tab, $iframe, $iframeReloaded) {
+                    return function () {
+                        $iframeReloaded.show().attr('height', '0').attr('height', ($iframeReloaded.get(0).contentWindow.document.body.scrollHeight * 1.001) + 'px');
+                        // Avoid too large iframe by letting chrome time to calculate the height
+                        setTimeout(function () {
+                            $iframeReloaded.show().attr('height', '0').attr('height', ($iframeReloaded.get(0).contentWindow.document.body.scrollHeight * 1.001) + 'px');
+                        }, 100);
+                        $iframe.remove();
+                    };
+                }($tab, $iframe, $iframeReloaded)));
+                $iframeReloaded.hide().insertBefore($iframe);
             }
         });
         if ('' !== location.hash) {
             $('a[href="' + window.location.hash + '"]').trigger('click');
+        } else {
+            $('a[data-toggle="tab"]').first().trigger('click');
         }
     });
 </script>
