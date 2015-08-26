@@ -34,9 +34,6 @@ RUN apt-get autoremove -yq --purge \
     && apt-get -f install \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* /tmp/* /var/tmp/*
 
-# Install composer
-#RUN curl -sS https://getcomposer.org/installer | php -- --quiet --install-dir=/usr/bin/ && mv /usr/bin/composer.phar /usr/bin/composer
-
 # Add configuration
 ADD . /container
 RUN cp /container/conf/php.ini /usr/local/etc/php
