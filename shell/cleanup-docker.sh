@@ -117,18 +117,13 @@ else
         fi
 
         if test true == ${REMOVE}; then
-#            sudo docker rm -f "${CONTAINER_ID}"
-            echo "(removing here)"
+            sudo docker rm -f "${CONTAINER_ID}"
         fi
 
         echo " "
 
     done
 fi
-
-
-
-exit
 
 # Remove unused images
 echo -e "\e[93mCheck images\e[0m"
