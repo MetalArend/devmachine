@@ -37,19 +37,4 @@ RUN apt-get autoremove -yq --purge \
 # Add configuration
 ADD . /container
 RUN cp /container/conf/php.ini /usr/local/etc/php
-RUN cp /container/conf/php-fpm.conf /usr/local/etc/
-
-
-# --- --- ---
-# Configure php5-fpm
-#RUN sed -i '/^error_log = /c\error_log = \/log\/\error54.log' /etc/php5/fpm/php-fpm.conf && \
-#    sed -i '/^;access.log = /c\access.log = \/log\/access54.log' /etc/php5/fpm/pool.d/www.conf && \
-#    sed -i '/^;pm.status_path = /c\pm.status_path = \/status' /etc/php5/fpm/pool.d/www.conf && \
-#    sed -i '/^;ping.path = /c\ping.path = \/ping' /etc/php5/fpm/pool.d/www.conf && \
-#    sed -i '/^listen /c\listen = 9000' /etc/php5/fpm/pool.d/www.conf && \
-#    sed -i 's/^listen.allowed_clients/;listen.allowed_clients/' /etc/php5/fpm/pool.d/www.conf && \
-#    sed -i '/daemonize /c\daemonize = no' /etc/php5/fpm/php-fpm.conf # fpm conf
-#RUN sed -i 's/;pm.start_servers/pm.start_servers/g' /etc/php5/fpm/pool.d/www.conf
-# --- --- ---
-#RUN cp /etc/apache2/mods-available/rewrite.load /etc/apache2/mods-enabled/rewrite.load
-# --- --- ---
+RUN cp /container/conf/php-fpm.conf /usr/local/etc/php-fpm.conf
