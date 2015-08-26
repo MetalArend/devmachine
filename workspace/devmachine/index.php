@@ -44,13 +44,13 @@ endif;
 <nav class="navbar navbar-inverse navbar-static-top">
     <div class="container-fluid">
         <div class="navbar-header">
-            <a class="navbar-brand" href="#">
+            <a class="navbar-brand" onclick="$('a[data-toggle=tab][href=#workspaces]').trigger('click'); return false;">
                 DevMachine
             </a>
         </div>
         <ul class="nav navbar-nav" role="tablist">
             <li class="active">
-                <a href="#workspace" role="tab" data-toggle="tab">
+                <a href="#workspaces" role="tab" data-toggle="tab">
                     <span class="glyphicon glyphicon-home" style="width: 14px;"></span>
                     workspaces
                 </a>
@@ -88,7 +88,7 @@ endif;
 </nav>
 <div class="container-fluid">
     <div class="tab-content">
-        <div id="workspace" class="tab-pane active">
+        <div id="workspaces" class="tab-pane active">
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h2 class="panel-title">Environment</h2>
@@ -179,9 +179,10 @@ endif;
             window.location.hash = id;
             var $iframe = $('#' + id).find('iframe');
             if (0 !== $iframe.length) {
+                $iframe.hide();
                 $iframe.attr('src', $iframe.attr('src'));
                 $iframe.one('load', function () {
-                    $iframe.attr('height', $iframe.get(0).contentWindow.document.body.scrollHeight + 'px');
+                    $iframe.show().attr('height', $iframe.get(0).contentWindow.document.body.scrollHeight + 'px');
                 });
             }
         });
