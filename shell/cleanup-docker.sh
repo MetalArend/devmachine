@@ -5,65 +5,15 @@
 # ====== ====== ====== ====== ====== ======
 
 # TODO remove containers with images that don't exist anymore
-# TODO check what docker is doing when using history or --all
-
+# TODO check what docker is doing when using history or --all (in source code)
+# TODO catch "error getting container" on docker-compose up, and retry
 #CONTAINER_CREATED="$(date "+%d/%m/%Y %H:%M:%S" -d "$(sudo docker inspect --format='{{.Created}}' "${CONTAINER_ID}")")"
-#IMAGE_ID=$(sudo docker inspect --format='{{.Image}}' "${CONTAINER_ID}")
 #IMAGE_CREATED="$(date "+%d/%m/%Y %H:%M:%S" -d "$(sudo docker inspect --format='{{.Created}}' "${IMAGE_ID}")")"
-#CONTAINER_ID_RUNNING=""
-#if test -n "$(sudo docker ps --quiet --no-trunc)"; then
-#    CONTAINER_ID_RUNNING=$(sudo docker inspect --format='{{.Name}} {{.Id}}' $(sudo docker ps --quiet --no-trunc) | grep "^/${CONTAINER_NAME} " | awk '{print $2}')
-#fi
-#if test "[true] 0" = "$(sudo docker inspect --format='{{.Name}} {{.Config.Cmd}} {{.State.ExitCode}}' $(sudo docker ps --all --quiet --no-trunc) | grep "^/${CONTAINER_NAME} " | awk '{print $2, $3}')"; then
-#    echo -e "\e[92mdocker data container '${CONTAINER_NAME}'\e[0m"
-#    echo -e "\e[92m- cid:     ${CONTAINER_ID}, created ${CONTAINER_CREATED}\e[0m"
-#    echo -e "\e[92m- image:   ${IMAGE_ID}, created ${IMAGE_CREATED}\e[0m"
-#    PROJECT_VOLUMES=$(sudo docker inspect --format='{{range $v, $h := .Volumes}}{{$v}} -> {{$h}}  {{end}}' "${CONTAINER_ID}")
-#    if test -n "${PROJECT_VOLUMES}"; then
-#        echo -e "\e[92m- volumes: ${PROJECT_VOLUMES}\e[0m"
-#    fi
-#elif test -z "${CONTAINER_ID_RUNNING}"; then
-#    echo -e "\e[91mdocker container '${CONTAINER_NAME}' not running\e[0m"
-#    echo -e "\e[91m- cid:     ${CONTAINER_ID}, created ${CONTAINER_CREATED}\e[0m"
-#    echo -e "\e[91m- image:   ${IMAGE_ID}, created ${IMAGE_CREATED}\e[0m"
-#else
-#    PROJECT_IP=$(sudo docker inspect --format='{{.NetworkSettings.IPAddress}}' "${CONTAINER_ID_RUNNING}")
-#    if test -z "${PROJECT_IP}"; then
-#        echo -e "\e[91mdocker container '${CONTAINER_NAME}' not reachable\e[0m"
-#        echo -e "\e[91m- cid:     ${CONTAINER_ID_RUNNING}, created ${CONTAINER_CREATED}\e[0m"
-#        echo -e "\e[91m- image:   ${IMAGE_ID}, created ${IMAGE_CREATED}\e[0m"
-#    else
-#        echo -e "\e[92mdocker container '${CONTAINER_NAME}' on ${PROJECT_IP}\e[0m"
-#        echo -e "\e[92m- cid:     ${CONTAINER_ID_RUNNING}, created ${CONTAINER_CREATED}\e[0m"
-#        echo -e "\e[92m- image:   ${IMAGE_ID}, created ${IMAGE_CREATED}\e[0m"
-#        PROJECT_PORTS=$(sudo docker inspect --format='{{range $p, $conf := .NetworkSettings.Ports}}{{$p}} -> {{if $conf}}{{(index $conf 0).HostPort}}{{else}}{{$conf}}{{end}}  {{end}}' "${CONTAINER_ID_RUNNING}")
-#        if test -n "${PROJECT_PORTS}"; then
-#            echo -e "\e[92m- ports:   ${PROJECT_PORTS}\e[0m"
-#        fi
-#        PROJECT_VOLUMES=$(sudo docker inspect --format='{{range $v, $h := .Volumes}}{{$v}} -> {{$h}}  {{end}}' "${CONTAINER_ID}")
-#        if test -n "${PROJECT_VOLUMES}"; then
-#            echo -e "\e[92m- volumes: ${PROJECT_VOLUMES}\e[0m"
-#        fi
-#    fi
-#fi
-
-# DOCKER LOGS REPORTING
-#DATETIME=$(date +"%Y/%m/%d %H:%M")
-#echo "--- ${DATETIME} ---" >> "${LOG_DIR}/docker_${CONTAINER_NAME}.log"
-#sudo docker logs "${CONTAINER_ID}" >> "${LOG_DIR}/docker_${CONTAINER_NAME}.log"
-
-
-
-
-
-
-
-
-
-
 
 # Remove containers
 echo -e "\e[93mCheck containers\e[0m"
+
+DATETIME=$(date +"%Y/%m/%d %H:%M")
 
 CONTAINER_IDS="$(sudo docker ps --all --no-trunc --quiet)"
 
@@ -95,6 +45,7 @@ else
         CONTAINER_FINISHED="$(echo "${CONTAINER_INSPECTION}" | grep "^ *FinishedAt:" | sed "s/^[^\:]\+\: \+//" | sed -E 's/^([0-9]{4})\-([0-9]{2})\-([0-9]{2})\s([0-9]{2})\:([0-9]{2})\:([0-9]{2})\.[0-9]+\s(.+)$/\3\/\2\/\1 \4\:\5\:\6 \7/g')"
         CONTAINER_IMAGE_ID="$(echo "${CONTAINER_INSPECTION}" | grep "^ *Image:" | sed "s/^[^\:]\+\: \+//")"
         CONTAINER_IMAGE_IDS="$(sudo docker history --quiet --no-trunc ${CONTAINER_IMAGE_ID})"
+        CONTAINER_DATA_CONTAINER_ID="$(sudo docker inspect --format "{{ .HostConfig.VolumesFrom }}" "${CONTAINER_ID}")"
 
         CONTAINER_PATH="$(echo "${CONTAINER_INSPECTION}" | grep "^ *Path:" | sed "s/^[^\:]\+\: \+//")"
         CONTAINER_ARGS="$(echo "${CONTAINER_INSPECTION}" | grep "^ *Arguments:" | sed "s/^[^\:]\+\: \+//")"
@@ -103,6 +54,14 @@ else
         CONTAINER_STATE="$(echo "${CONTAINER_INSPECTION}" | grep "^ *State:" | sed "s/^[^\:]\+\: \+//")"
         CONTAINER_STATE_EXIT_CODE="$(echo "${CONTAINER_INSPECTION}" | grep "^ *ExitCode:" | sed "s/^[^\:]\+\: \+//")"
         CONTAINER_STATE_ERROR="$(echo "${CONTAINER_INSPECTION}" | grep "^ *Error:" | sed "s/^[^\:]\+\: \+//")"
+
+        CONTAINER_VOLUMES="$(sudo docker inspect --format='{{range $v, $h := .Volumes}}{{$v}} -> {{$h}}  {{end}}' "${CONTAINER_ID}")"
+        #CONTAINER_VOLUMES="$(sudo docker inspect --format "{{ .Volumes }}" "${CONTAINER_ID}")"
+        #CONTAINER_VOLUMES_RW="$(sudo docker inspect --format "{{ .VolumesRW }}" "${CONTAINER_ID}")"
+        #CONTAINER_CONFIG_VOLUMES="$(sudo docker inspect --format "{{ .Config.Volumes }}" "${CONTAINER_ID}")"
+        CONTAINER_PORTS="$(sudo docker inspect --format='{{range $p, $conf := .NetworkSettings.Ports}}{{$p}} -> {{if $conf}}{{(index $conf 0).HostPort}}{{else}}{{$conf}}{{end}}  {{end}}' "${CONTAINER_ID}")"
+
+#        CONTAINER_LOGS="$(sudo docker logs "${CONTAINER_ID}")"
 
         CONTAINER_DOCKER_COMPOSE_PROJECT="$(echo "${CONTAINER_INSPECTION}" | grep "^ *ComposeProject:" | sed "s/^[^\:]\+\: \+//")"
         CONTAINER_DOCKER_COMPOSE_SERVICE="$(echo "${CONTAINER_INSPECTION}" | grep "^ *ComposeService:" | sed "s/^[^\:]\+\: \+//")"
@@ -114,6 +73,7 @@ else
         echo "Service       : ${CONTAINER_DOCKER_COMPOSE_SERVICE}"
         echo "RunOneOff     : ${CONTAINER_DOCKER_COMPOSE_ONEOFF}"
         echo "Image id      : ${CONTAINER_IMAGE_ID}"
+        echo "Data id       : ${CONTAINER_DATA_CONTAINER_ID}"
         echo "Command       : ${CONTAINER_CONFIG_ENTRYPOINT}${CONTAINER_CONFIG_CMD}"
         echo "Created       : ${CONTAINER_CREATED}"
         echo "Started       : ${CONTAINER_STARTED}"
@@ -123,10 +83,6 @@ else
         echo "Run with      : ${CONTAINER_PATH} ${CONTAINER_ARGS}"
         echo "IP            : ${CONTAINER_IP}"
 
-#        CONTAINER_VOLUMES="$(sudo docker inspect --format "{{ .Volumes }}" "${CONTAINER_ID}")"
-#        CONTAINER_VOLUMES_RW="$(sudo docker inspect --format "{{ .VolumesRW }}" "${CONTAINER_ID}")"
-#        CONTAINER_CONFIG_VOLUMES="$(sudo docker inspect --format "{{ .Config.Volumes }}" "${CONTAINER_ID}")"
-        #.HostConfig.VolumesFrom => id van de data container
 
         REMOVE=false
 
