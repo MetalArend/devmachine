@@ -174,33 +174,34 @@ endif;
 <script type="text/javascript" src="jquery-1.11.3/jquery.min.js"></script>
 <script type="text/javascript" src="bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script type="text/javascript">
+    function loadFrame(iframe) {
+        var $iframe = $(iframe);
+        if (1 === $iframe.length) {
+            // Avoid flicker when reloading, by cloning into a new iframe instead of reloading the src
+            var $iframeReloaded = $iframe.clone(true, true);
+            $iframeReloaded.one('load', (function ($iframe, $iframeReloaded) {
+                return function () {
+                    $iframeReloaded.show().attr('height', '0').attr('height', ($iframeReloaded.get(0).contentWindow.document.body.scrollHeight * 1.001) + 'px');
+                    $iframe.remove();
+                };
+            }($iframe, $iframeReloaded)));
+            $iframeReloaded.hide().insertBefore($iframe);
+        }
+    }
     $(document).ready(function () {
-        $('iframe').hide();
-        $('a[data-toggle="tab"]').on('click', function (event) {
-            var $tab = $(event.target);
-            var id = $tab.attr('href').replace('#', '');
-            window.location.hash = id;
-            var $iframe = $('#' + id).find('iframe');
-            if (1 === $iframe.length) {
-                // Avoid flicker when reloading, by cloning into a new iframe instead of reloading the src
-                var $iframeReloaded = $iframe.clone(true, true);
-                $iframeReloaded.one('load', (function ($tab, $iframe, $iframeReloaded) {
-                    return function () {
-                        $iframeReloaded.show().attr('height', '0').attr('height', ($iframeReloaded.get(0).contentWindow.document.body.scrollHeight * 1.001) + 'px');
-                        // Avoid too large iframe by letting chrome time to calculate the height
-                        setTimeout(function () {
-                            $iframeReloaded.show().attr('height', '0').attr('height', ($iframeReloaded.get(0).contentWindow.document.body.scrollHeight * 1.001) + 'px');
-                        }, 100);
-                        $iframe.remove();
-                    };
-                }($tab, $iframe, $iframeReloaded)));
-                $iframeReloaded.hide().insertBefore($iframe);
-            }
+        var $tabs = $('a[data-toggle="tab"]');
+        $('iframe').hide().each(function () {
+            loadFrame(this);
         });
-        if ('' !== location.hash) {
-            $('a[href="' + window.location.hash + '"]').trigger('click');
+        $tabs.on('click', function (event) {
+            var id = $(event.target).attr('href').replace('#', '');
+            window.location.hash = id;
+            loadFrame($('#' + id).find('iframe'));
+        });
+        if ('' !== window.location.hash) {
+            $tabs.filter('[href="#' + window.location.hash.replace('#', '') + '"]').trigger('click');
         } else {
-            $('a[data-toggle="tab"]').first().trigger('click');
+            $tabs.first().trigger('click');
         }
     });
 </script>
