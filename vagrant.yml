@@ -21,9 +21,6 @@ vm:
             http_8000:
                 host: 8000
                 guest: 8000
-            ssh_8433:
-                host: 8433
-                guest: 433
     provider:
         virtualbox:
             memory: 2048
