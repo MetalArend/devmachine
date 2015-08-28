@@ -1,0 +1,6 @@
+TODO extract template from index.php
+TODO add vrana/adminer as composer project
+TODO add docker-compose and provision-docker-compose files to create LAMP stack for devmachine workspace
+
+TODO enable/disable certain workspaces (but scan all if no config is available)
+TODO list workspaces with their corresponding url and port, and if they are reachable or not

@@ -14,7 +14,7 @@ $db_server = getDockerVariable('db', 'tcp_addr');
 $db_database = getenv('DB_ENV_MYSQL_DATABASE');
 $db_user = getenv('DB_ENV_MYSQL_USER');
 $db_password = getenv('DB_ENV_MYSQL_PASSWORD');
-$db_adminer_file = array_values(array_filter(scandir('.', SCANDIR_SORT_DESCENDING), function ($file) {
+$db_adminer_file = array_values(array_filter(scandir('./pages', SCANDIR_SORT_DESCENDING), function ($file) {
     $name = 'adminer';
     return $name === substr($file, 0, strlen($name));
 }))[0];
@@ -23,22 +23,27 @@ $dsn = null;
 $pdo = null;
 $version = null;
 $user = null;
+$error = '';
 if (!empty($db_server)):
-    $dsn = 'mysql:host=' . $db_server . ';dbname=mysql';
-    $pdo = new PDO($dsn, 'root', getenv('DB_ENV_MYSQL_ROOT_PASSWORD'));
-    if (!empty($pdo)):
-        $versionStmt = $pdo->query('SELECT VERSION() AS Version');
-        $version = $versionStmt->fetchObject()->Version;
-        $userStmt = $pdo->query('SELECT Host, User FROM user WHERE user="' . $db_user . '"');
-        $user = $userStmt->fetchObject();
-    endif;
+    try {
+        $dsn = 'mysql:host=' . $db_server . ';dbname=mysql';
+        $pdo = new PDO($dsn, 'root', getenv('DB_ENV_MYSQL_ROOT_PASSWORD'));
+        if (!empty($pdo)):
+            $versionStmt = $pdo->query('SELECT VERSION() AS Version');
+            $version = $versionStmt->fetchObject()->Version;
+            $userStmt = $pdo->query('SELECT Host, User FROM user WHERE user="' . $db_user . '"');
+            $user = $userStmt->fetchObject();
+        endif;
+    } catch (\Exception $exception) {
+        $error = $exception->getMessage();
+    }
 endif;
 ?>
 <!doctype html>
 <html>
 <head>
     <title>Docker</title>
-    <link type="text/css" rel="stylesheet" href="bootstrap-3.3.5/css/bootstrap.min.css"/>
+    <link type="text/css" rel="stylesheet" href="assets/bootstrap-3.3.5/css/bootstrap.min.css"/>
 </head>
 <body>
 <nav class="navbar navbar-inverse navbar-static-top">
@@ -102,7 +107,11 @@ endif;
                             <?php if (empty($db_server)): ?>
                                 Database server not found.
                             <?php elseif (empty($pdo)): ?>
-                                Database connection not found.
+                                <?php if (!empty($error)): ?>
+                                    <?php echo $error; ?>
+                                    <?php else : ?>
+                                    Database connection not found.
+                                <?php endif; ?>
                             <?php elseif (!empty($version) && !empty($user)): ?>
                                 MySQL <?php echo $version; ?> on <?php echo $db_server; ?>:<?php echo $db_port; ?>
                                 // '<?php echo $user->User; ?>'@'<?php echo $user->Host; ?>' IDENTIFIED BY '<?php echo $db_password ?>'
@@ -145,7 +154,7 @@ endif;
                     <h2 class="panel-title">Apache</h2>
                 </div>
                 <div class="panel-body">
-                    <iframe src="apache.php" style="width:100%; border:0;"></iframe>
+                    <iframe src="pages/apache.php" style="width:100%; border:0;"></iframe>
                 </div>
             </div>
         </div>
@@ -155,7 +164,7 @@ endif;
                     <h2 class="panel-title">PHP info</h2>
                 </div>
                 <div class="panel-body">
-                    <iframe src="phpinfo.php" style="width:100%; border:0;"></iframe>
+                    <iframe src="pages/phpinfo.php" style="width:100%; border:0;"></iframe>
                 </div>
             </div>
         </div>
@@ -171,8 +180,8 @@ endif;
         </div>
     </div>
 </div>
-<script type="text/javascript" src="jquery-1.11.3/jquery.min.js"></script>
-<script type="text/javascript" src="bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="assets/jquery-1.11.3/jquery.min.js"></script>
+<script type="text/javascript" src="assets/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script type="text/javascript">
     function loadFrame(iframe) {
         var $iframe = $(iframe);
