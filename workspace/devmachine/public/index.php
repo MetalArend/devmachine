@@ -18,7 +18,7 @@ $db_adminer_file = array_values(array_filter(scandir('./pages', SCANDIR_SORT_DES
     $name = 'adminer';
     return $name === substr($file, 0, strlen($name));
 }))[0];
-$db_adminer_url = $db_adminer_file . '?server=' . $db_server . '&username=' . $db_user . '&db=' . $db_database;
+$db_adminer_url = 'pages/' . $db_adminer_file . '?server=' . $db_server . '&username=' . $db_user . '&db=' . $db_database;
 $dsn = null;
 $pdo = null;
 $version = null;
@@ -109,7 +109,7 @@ endif;
                             <?php elseif (empty($pdo)): ?>
                                 <?php if (!empty($error)): ?>
                                     <?php echo $error; ?>
-                                    <?php else : ?>
+                                <?php else : ?>
                                     Database connection not found.
                                 <?php endif; ?>
                             <?php elseif (!empty($version) && !empty($user)): ?>
@@ -131,7 +131,7 @@ endif;
                 <div class="panel-body">
                     <ul>
                         <?php
-                        $dir = rtrim(dirname(dirname(__FILE__)), '/');
+                        $dir = realpath(rtrim(dirname(dirname(__FILE__)), '/') . '/../');
                         if ($handle = opendir($dir)) {
                             while (false !== ($entry = readdir($handle))) {
                                 if (!is_dir($dir . '/' . $entry) || in_array($entry,
@@ -139,7 +139,7 @@ endif;
                                 ) {
                                     continue;
                                 }
-                                echo '<li><a href="../' . $entry . '">' . $entry . '</a></li>';
+                                echo '<li><!--<a href="../' . $entry . '">-->' . $entry . '<!--</a>--></li>';
                             }
                             closedir($handle);
                         }
