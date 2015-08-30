@@ -1,8 +1,8 @@
 data:
   image: busybox
   volumes:
-    - /env/workspace/devmachine:/var/www
-    - /env/workspace/stagesol/app/logs:/log
+    - /env/workspace:/var/www/html
+    - /env/workspace/devmachine/log:/log
     # TODO - /env/mysql:/var/lib/mysql
   command: "true"
 
@@ -21,20 +21,25 @@ db:
 
 php:
   extends:
-      file: /env/docker/common.yml
-      service: php54fpm
+    file: /env/docker/common.yml
+    service: php54fpm
   links:
     - db:db
   volumes_from:
     - data
 
-lamp54:
+lamp:
   extends:
     file: /env/docker/common.yml
     service: apache24
   links:
     - php:php
     - db:db
+  environment:
+    - APACHE_SERVER_NAME=devmachine
+    - APACHE_SERVER_ADMIN=metalarend@gmail.com
+    - APACHE_DOCUMENT_ROOT=/var/www/html/devmachine/public
+    - WORK_DIR=/var/www/html/devmachine
   ports:
     - "8080:80"
   volumes_from:

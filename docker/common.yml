@@ -32,17 +32,18 @@ php70fpm:
 apache24:
   build: /env/docker/apache24
   environment:
-    - APACHE_RUN_USER="www-data"
-    - APACHE_RUN_GROUP="www-data"
-    - APACHE_PID_FILE="/var/run/apache2/apache2.pid"
-    - APACHE_RUN_DIR="/var/run/apache2"
-#    - APACHE_LOCK_DIR="/var/lock/apache2" # TODO
-#    - APACHE_LOG_DIR="/log" # TODO
-    - APACHE_SERVERADMIN="admin@localhost"
-    - APACHE_SERVERNAME="localhost"
-    - APACHE_HOST="*"
-    - APACHE_PORT="80"
-    - APACHE_DOCUMENTROOT="/var/www/html"
+    - APACHE_RUN_USER=www-data
+    - APACHE_RUN_GROUP=www-data
+    - APACHE_PID_FILE=/var/run/apache2/apache2.pid
+    - APACHE_RUN_DIR=/var/run/apache2
+    - APACHE_LOCK_DIR=/var/lock/apache2
+    - APACHE_LOG_DIR=/log
+    - APACHE_SERVER_ADMIN=admin@localhost
+    - APACHE_SERVER_NAME=localhost
+    - APACHE_HOST=*
+    - APACHE_PORT=80
+    - APACHE_DOCUMENT_ROOT=/var/www/html
+    - WORK_DIR=/var/www/html
   ports:
     - "80"
     - "443"

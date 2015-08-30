@@ -37,19 +37,23 @@ ENV APACHE_RUN_USER=www-data \
     APACHE_RUN_DIR=/var/run/apache2 \
     APACHE_LOCK_DIR=/var/lock/apache2 \
     APACHE_LOG_DIR=/log \
-    APACHE_SERVERADMIN=admin@localhost \
-    APACHE_SERVERNAME=localhost \
+    APACHE_SERVER_ADMIN=admin@localhost \
+    APACHE_SERVER_NAME=localhost \
     APACHE_HOST=* \
     APACHE_PORT=80 \
-    APACHE_DOCUMENTROOT="/var/www/html"
+    APACHE_DOCUMENT_ROOT=/var/www/html \
+    WORK_DIR=/var/www/html
 
 # Add & configure files
 #COPY ./conf/apache2.conf /etc/apache2/sites-available/001-docker.conf
 #RUN ln -s /etc/apache2/sites-available/001-docker.conf /etc/apache2/sites-enabled/
-COPY ./conf/apache2.conf /etc/apache2/sites-enabled/000-default
+COPY ./conf/apache2.conf /etc/apache2/sites-enabled/000-default.conf
 #COPY ./conf/httpd.conf /usr/local/apache2/conf/httpd.conf
 #COPY ./conf/httpd.conf /etc/apache2/conf.d/php5-fpm.conf
 COPY ./conf/httpd.conf /etc/apache2/conf-available/php5-fpm.conf
+
+# Create directories
+RUN mkdir -pv "$APACHE_RUN_DIR" "$APACHE_LOCK_DIR" "$APACHE_LOG_DIR"
 
 # Enable services
 RUN a2enmod rewrite env actions fastcgi alias
@@ -60,6 +64,7 @@ RUN a2enconf php5-fpm
 
 # Expose container
 EXPOSE 80 443
-VOLUME ["/log"]
+WORKDIR "${WORK_DIR}" # TODO this variable is not filled!!!
+VOLUME ["$APACHE_LOG_DIR"]
 ENTRYPOINT ["/usr/sbin/apache2"]
 CMD ["-help"]
