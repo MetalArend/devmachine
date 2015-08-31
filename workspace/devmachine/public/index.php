@@ -200,15 +200,20 @@ endif;
         $('iframe').hide();
         var $tabs = $('a[data-toggle="tab"]');
         $tabs.on('click', function (event) {
-            var id = $(event.target).attr('href').replace('#', '');
-            window.location.hash = id;
-            loadFrame($('#' + id).find('iframe'));
+            var tab = $(event.target).attr('href').replace('#', '');
+            if (tab !== window.location.hash.replace('#', '')) {
+                window.location.hash = tab;
+            }
+            loadFrame($('#' + tab).find('iframe'));
         });
-        if ('' === window.location.hash) {
-            $tabs.first().trigger('click');
-        } else {
-            $tabs.filter('[href="#' + window.location.hash.replace('#', '') + '"]').trigger('click');
-        }
+        $(window).on('hashchange', function () {
+            var hash = window.location.hash.replace('#', '');
+            if ('' === hash) {
+                $tabs.first().trigger('click');
+            } else {
+                $tabs.filter('[href="#' + hash + '"]').trigger('click');
+            }
+        }).trigger('hashchange');
     });
 </script>
 </body>
