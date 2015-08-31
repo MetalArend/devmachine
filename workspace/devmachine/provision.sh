@@ -18,7 +18,7 @@ check_container --container "php" --port 9000 --timeout 10
 
 # Install composer packages
 echo -e "\e[33mInstall composer packages\e[0m"
-docker-compose run --rm --entrypoint /bin/bash "php" -c "composer install"
+docker-compose run --rm --entrypoint /bin/bash "php" -c "cd devmachine && composer install"
 
 ## Check database server
 #echo -e "\e[33mCheck database server\e[0m"

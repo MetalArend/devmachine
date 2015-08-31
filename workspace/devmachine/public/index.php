@@ -14,11 +14,6 @@ $db_server = getDockerVariable('db', 'tcp_addr');
 $db_database = getenv('DB_ENV_MYSQL_DATABASE');
 $db_user = getenv('DB_ENV_MYSQL_USER');
 $db_password = getenv('DB_ENV_MYSQL_PASSWORD');
-$db_adminer_file = array_values(array_filter(scandir('./pages', SCANDIR_SORT_DESCENDING), function ($file) {
-    $name = 'adminer';
-    return $name === substr($file, 0, strlen($name));
-}))[0];
-$db_adminer_url = 'pages/' . $db_adminer_file . '?server=' . $db_server . '&username=' . $db_user . '&db=' . $db_database;
 $dsn = null;
 $pdo = null;
 $version = null;
@@ -79,7 +74,7 @@ endif;
                 </a>
             </li>
             <li>
-                <a href="<?php echo $db_adminer_url; ?>" target="_blank">
+                <a href="pages/adminer.php" target="_adminer">
                     <span class="glyphicon glyphicon-compressed" style="width: 14px;"></span>
                     adminer
                 </a>
@@ -114,7 +109,11 @@ endif;
                                 <?php endif; ?>
                             <?php elseif (!empty($version) && !empty($user)): ?>
                                 MySQL <?php echo $version; ?> on <?php echo $db_server; ?>:<?php echo $db_port; ?>
-                                // '<?php echo $user->User; ?>'@'<?php echo $user->Host; ?>' IDENTIFIED BY '<?php echo $db_password ?>'
+                                //
+                                <a href="<?php echo 'pages/adminer.php?server=' . $db_server . '&username=' . $db_user . '&db=' . $db_database; ?>" target="_adminer">
+                                    '<?php echo $user->User; ?>'@'<?php echo $user->Host; ?>' IDENTIFIED BY
+                                    '<?php echo $db_password ?>'
+                                </a>
                             <?php endif; ?>
                         </li>
                         <li>
