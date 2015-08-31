@@ -115,9 +115,9 @@ Vagrant.configure(api_version) do |vagrant_config|
                     dos2unix = []
 
                     # Shift to specific directory/project
-                    if "cd" == type || "project" == type
+                    if "cd" == type || "workspace" == type
                         directory = parts.at(0)
-                        if "project" == type
+                        if "workspace" == type
                             if !directory.start_with?('/') \
                                     && !directory.start_with?('/env/workspace') \
                                     && File.directory?(File.expand_path('./workspace/' + directory))
