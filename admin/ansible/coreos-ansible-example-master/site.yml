@@ -1,0 +1,27 @@
+#bootstrap
+- name: bootstrap coreos hosts
+  hosts: coreos
+  gather_facts: False
+  roles:
+    - defunctzombie.coreos-bootstrap
+#website
+- name: example nginx website
+  hosts: web
+  tasks:
+    - name: Start etcd
+      service: name=etcd.service state=started
+      sudo: yes
+      sudo_user: root
+
+    - name: Install docker-py
+      pip: name=docker-py version=0.6.0
+
+    - name: pull container
+      raw: docker pull nginx:1.7.1
+
+    - name: launch nginx container
+      docker:
+        image="nginx:1.7.1"
+        name="example-nginx"
+        ports="8080:80"
+        state=started
