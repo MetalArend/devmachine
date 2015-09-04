@@ -199,6 +199,9 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |vagrant_config|
         ansible-playbook "${PLAYBOOK_FILENAME}" --connection=local --extra-vars "#{ansible_extra_vars}"
     ~
 
+    # Add provision "cleanup": add shell script to cleanup docker containers
+    vagrant_config.vm.provision "cleanup", type: "shell", keep_color: true, run: "always", path: "./shell/cleanup-docker.sh"
+
     # Add once to run provision
     ARGV.each_with_index do |argument, index|
         if "--provision-with" == argument
@@ -291,22 +294,13 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |vagrant_config|
         end
     end
 
-    # Add provision "cleanup": add shell script
-    yaml_config['vm']['provision']['cleanup'] = {
-        "type"=>"shell",
-        "path"=>"./shell/cleanup-docker.sh",
-        "keep_color"=>true,
-        "run"=>"always"
-    }
-
+    # Add provision "report": report versions of installed programs
     yaml_config['vm']['provision']['report'] = {
         "type"=>"shell",
         "path"=>"./shell/report.sh",
         "keep_color"=>true,
         "run"=>"always"
     }
-
-    # Add provision "report": report versions of installed programs
 
     # Load vm configuration
     if !yaml_config['vm'].empty?
