@@ -1,5 +1,4 @@
 /.vagrant
-/todo
 /workspace/*
 !/workspace/.gitkeep
 !/workspace/devmachine

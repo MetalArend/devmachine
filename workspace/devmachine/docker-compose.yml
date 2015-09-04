@@ -3,7 +3,6 @@ data:
   volumes:
     - /env/workspace:/var/www/html
     - /env/workspace/devmachine/log:/log
-    # TODO - /env/mysql:/var/lib/mysql
   command: "true"
 
 db:

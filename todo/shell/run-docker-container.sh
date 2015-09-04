@@ -112,7 +112,7 @@ if which docker &> /dev/null; then
         echo -e "\e[93mRemove old images for container '${CONTAINER_NAME}'\e[0m"
         for IMAGE_ID in ${IMAGE_IDS_OLD}; do
             if test -n "$(sudo docker images --all --quiet --no-trunc | grep "${IMAGE_ID}")"; then
-                sudo docker rmi --force "${IMAGE_ID}" # TODO never delete the newly created image
+                sudo docker rmi --force "${IMAGE_ID}"
             fi
         done
     fi #/ has old images

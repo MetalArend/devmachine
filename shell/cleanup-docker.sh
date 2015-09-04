@@ -4,9 +4,6 @@
 # Docker containers
 # ====== ====== ====== ====== ====== ======
 
-# TODO remove containers with images that don't exist anymore
-
-
 # Remove containers
 echo -e "\e[93mCheck containers\e[0m"
 

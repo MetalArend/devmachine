@@ -64,7 +64,7 @@ RUN a2enconf php5-fpm
 
 # Expose container
 EXPOSE 80 443
-WORKDIR "${WORK_DIR}" # TODO this variable is not filled!!!
+WORKDIR "${WORK_DIR}"
 VOLUME ["$APACHE_LOG_DIR"]
 ENTRYPOINT ["/usr/sbin/apache2"]
 CMD ["-help"]

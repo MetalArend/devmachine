@@ -17,11 +17,6 @@ if ! grep -Fq "$SERVERNAME" /etc/apache2/httpd.conf ; then
   echo "ServerName written to /etc/apache2/httpd.conf: $SERVERNAME"
 fi
 
-# Check mysql
-if [[ $(mysqladmin -u root -proot ping | grep 'mysqld is alive') != 'mysqld is alive' ]]; then
-    sudo service mysql restart # init.d method not working when no bind address is given, avoid upstart comment
-fi
-
 # Externalize mysql
 if test -d "/etc/mysql"; then
     if test ! -d "/shared/mysql"; then

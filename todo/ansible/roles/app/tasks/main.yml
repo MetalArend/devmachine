@@ -33,4 +33,3 @@
 
 - name: Add vagrant user to www-data
   user: name=vagrant groups=www-data append=yes
-  #when: vagrant environment @TODO
