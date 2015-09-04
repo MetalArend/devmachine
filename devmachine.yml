@@ -1,0 +1,7 @@
+devmachine:
+    timezone: Europe/Brussels
+    locale: en_US.UTF-8
+
+workspace:
+    stagesol:
+        run: always

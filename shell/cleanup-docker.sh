@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # ====== ====== ====== ====== ====== ======
-# Docker containers
+# Cleanup
 # ====== ====== ====== ====== ====== ======
 
 # Remove containers

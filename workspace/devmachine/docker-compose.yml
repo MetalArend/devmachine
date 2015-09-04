@@ -24,6 +24,8 @@ php:
     service: php54fpm
   links:
     - db:db
+  ports:
+    - "9000:9000"
   volumes_from:
     - data
 
