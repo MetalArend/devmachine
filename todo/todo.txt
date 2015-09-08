@@ -40,7 +40,7 @@ TODO vagrant: add time loaded per container, and overall
 TODO vagrant: use CoreOS container, with docker pre-installed
 TODO vagrant: create a dhcp container, giving all the other containers a fixed internal ip address
 TODO vagrant: ability to disable autoloading workspaces globally, or per workspace
-TODO vagrant: say per project which filename should be used
+TODO vagrant: say per project which config filename should be used
 TODO vagrant: devmachine.yml filename should be an option
 TODO vagrant: ability to either use devmachine.yml, ansible-playbook.yml or provision.sh
 TODO vagrant: if provision.sh is detected, don't assume it should be running!!!
@@ -48,6 +48,7 @@ TODO vagrant: if disable: true, allow to run if asked for explicitly
 TODO vagrant: if a devmachine.yml file is found, import it here, else it should be in the global config devmachine.yml inside the root
 TODO vagrant: use /vagrant instead of /env - does this sync two way or not?
 TODO vagrant: make it possible to use the nfs special options
+TODO vagrant: for some commands, don't show the branding
 
 TODO install specific docker version from source!!!
 TODO -> https://docs.docker.com/project/set-up-dev-env/
@@ -64,7 +65,7 @@ TODO docker: install nginx, apache 2.2, hhvm, phpmyadmin, xdebug, git, openssl, 
 TODO docker: persist databases to a system data container
 TODO docker: persist /var/lib/docker to a system data container
 TODO docker: add php 5.6 and 7
-TODO docker: add specific php.ini per project
+TODO docker: add specific php.ini per project (use files with docker-compose config)
 TODO docker: split common.yml into parts inside containers, as sort of default use case
 TODO docker: add /env/mysql:/var/lib/mysql as volume outside the box
 TODO docker: remove containers with images that don't exist anymore
@@ -72,11 +73,13 @@ TODO docker: add docker containers to report
 TODO docker: only report on containers of workspace, if workspace is named with "report:devmachine"
 TODO docker: WORK_DIR environment variable does not work! write test to check all environment variables!!!
 TODO docker: add docker-compose path or filename
+TODO docker: add switch:devmachine command, to halt all containers of other workspace, and avoid port conflicts
 
 DONE ansible: move ansible.yml system config out of main directory, as it is system, not config
 TODO ansible: add common.sh scripts to ansible as plugins
 TODO ansible: split ansible file into roles
 TODO ansible: use ansible to connect to docker-compose containers
+TODO MAYBE ansible: install ansible on a docker machine, and connect from there to the other machines, including the vagrant box (use vagrant built in docker, use ansible to set specific version)
 
 DONE apache: upgrade from apache 2.2 to apache 2.4 https://httpd.apache.org/docs/2.4/upgrading.html
 TODO apache: provide an apache 2.2 container
