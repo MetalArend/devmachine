@@ -14,13 +14,13 @@ DONE vagrant: move composer to docker: http://marmelab.com/blog/2014/09/10/make-
 DONE vagrant: rename docker-provision to provision-docker-compose.sh
 DONE vagrant: use dos2unix to run shell script
 DONE vagrant: install composer in the composer container, running the php version that gets linked to it?
+DONE vagrant: put the vagrant defaults in a separate yml file in the vagrant directory
+DONE vagrant: --provision-with system,workspace:stagesol
 IGNORE vagrant: use vagrant docker provisioning
 IGNORE vagrant: containers without a build.sh should have a .version file, to make sure they rebuild when anything changes in them
 TODO vagrant: use trusty64 - http://www.vagrantbox.es/
 TODO vagrant: use [devmachine][ip] or [devmachine][private_network] for [vm][network][private_network]
 TODO vagrant: add [ssh][forward_agent] = true http://wildlyinaccurate.com/using-ssh-agent-forwarding-with-vagrant/
-TODO vagrant: put the vagrant defaults in a separate yml file in the vagrant directory
-TODO vagrant: load config from specific devmachine.yml or config.yml file
 TODO vagrant: add "run: explicit" to use instead of always
 TODO vagrant: add "embed: file", to embed workspace config from any file
 TODO vagrant: add global disable scanning workspaces - and other behaviors
@@ -29,7 +29,6 @@ TODO vagrant: make vagrant.yml an optional file
 TODO vagrant: report devmachine version
 TODO vagrant: enable/disable certain workspaces in config (but scan all if no config is available)
 TODO vagrant: add provision inside project, so only that project gets scanned (including the whole containers and vagrant)
-TODO vagrant: --provision-with system,workspace:stagesol
 TODO vagrant: report only containers inside workspace if workspace is specified
 TODO vagrant: add docker container checker to vagrant, so after vagrant up, workspaces that should be active become automatically active and stay active, when containers crash
 TODO vagrant: report on all containers inside docker, combine docker-compose ps and docker ps -a in one big overview

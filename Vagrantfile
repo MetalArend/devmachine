@@ -24,77 +24,7 @@ end
 
 # Load yaml configuration
 yaml_config = File.exist?('./devmachine.yml') ? YAML.load_file('./devmachine.yml') : {}
-yaml_config = add_defaults(yaml_config, {
-    "vagrant"=>{"api_version"=>"2"},
-    "vm"=>{
-        "box"=>"ubuntu64",
-        "box_url"=>"https://cloud-images.ubuntu.com/vagrant/precise/current/precise-server-cloudimg-amd64-vagrant-disk1.box",
-        "hostname"=>nil,
-        "usable_port_range"=>"2200..2500",
-        "network"=>{
-            "private_network"=>"192.168.100.100",
-            "forwarded_ports"=>{
-                # ssh is set by default - overwriting it can lead to unexpected behavior
-                "http_8080"=>{
-                    "host"=>"8080",
-                    "guest"=>"80"
-                },
-                "http_8000"=>{
-                    "host"=>"8000",
-                    "guest"=>"8000"
-                },
-                "php"=>{
-                    "host"=>"9000",
-                    "guest"=>"9000"
-                }
-            }
-        },
-        "provider"=>{
-            "virtualbox"=>{
-                "memory"=>2048,
-                "cpus"=>2,
-                "modifyvm"=>{
-                    "name"=>"devmachine",
-                    # "natdnsproxy1"=>true,
-                    "natdnshostresolver1"=>true,
-                    # "rtcuseutc"=>true, # bugfix ssh connection - https://github.com/mitchellh/vagrant/issues/391
-                    "memory"=>2048
-                },
-                "gui"=>false,
-                "setextradata"=>{
-                    "VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root"=>true # enable symlinks for windows
-                },
-                "check_guest_additions"=>false,
-                "functional_vboxsf"=>false
-            }
-        },
-        "provision"=>{}
-    },
-    "ssh"=>{
-        "username"=>"vagrant", # https://github.com/Varying-Vagrant-Vagrants/VVV/issues/375
-        "shell"=>"bash -c 'BASH_ENV=/etc/profile exec bash'", # Vagrant default: "bash -l", but this resolves the stdin error
-        "keep_alive"=>"true"
-    },
-    "devmachine"=>{
-        "bashrc"=>"cd /env",
-        "ip"=>"192.168.100.100",
-        "timezone"=>"Europe/Brussels",
-        "locale"=>"en_US.UTF-8",
-        "shell"=>"bash",
-        "docker"=>{
-            "version"=>"1.7.1",
-            "group_members"=>"vagrant"
-        },
-        "docker-compose"=>{
-            "version"=>"1.3.3"
-        },
-        "ansible"=>{
-            "version"=>"1.9.2",
-            "playbook"=>"/env/ansible/playbook.yml",
-            "extra_vars"=>{}
-        }
-    }
-})
+yaml_config = add_defaults(yaml_config, YAML.load_file('./vagrant/default.yml'))
 yaml_config = add_defaults(yaml_config, {
     "devmachine"=>{
         "ansible"=>{
