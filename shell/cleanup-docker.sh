@@ -15,13 +15,11 @@ echo -e "\e[93mCheck containers\e[0m"
 
 DATETIME=$(date +"%Y/%m/%d %H:%M")
 
-CONTAINER_IDS="$(sudo docker ps --all --no-trunc --quiet)"
-
-
-if test -z "${CONTAINER_IDS}"; then
-    echo "Geen containers gevonden" # TODO
+CONTAINERS_IDS="$(sudo docker ps --all --no-trunc --quiet)"
+if test -z "${CONTAINERS_IDS}"; then
+    echo "Geen containers gevonden"
 else
-    for CONTAINER_ID in ${CONTAINER_IDS}; do
+    for CONTAINER_ID in ${CONTAINERS_IDS}; do
         CONTAINER_INSPECTION="$(sudo docker inspect --format "
             Name:           {{ .Name }}
             IP:             {{ .NetworkSettings.IPAddress }}
@@ -67,38 +65,38 @@ else
         CONTAINER_DOCKER_COMPOSE_SERVICE="$(echo "${CONTAINER_INSPECTION}" | grep "^ *ComposeService:" | sed "s/^[^\:]\+\: \+//")"
         CONTAINER_DOCKER_COMPOSE_ONEOFF="$(echo "${CONTAINER_INSPECTION}" | grep "^ *ComposeOneOff:" | sed "s/^[^\:]\+\: \+//")"
 
-        echo "Container id  : ${CONTAINER_ID}"
-        echo "Name          : ${CONTAINER_NAME}"
-        echo "Project       : ${CONTAINER_DOCKER_COMPOSE_PROJECT}"
-        echo "Service       : ${CONTAINER_DOCKER_COMPOSE_SERVICE}"
-        echo "RunOneOff     : ${CONTAINER_DOCKER_COMPOSE_ONEOFF}"
-        echo "Image id      : ${CONTAINER_IMAGE_ID}"
-        echo "Data id       : ${CONTAINER_DATA_CONTAINER_ID}"
-        echo "Command       : ${CONTAINER_CONFIG_ENTRYPOINT}${CONTAINER_CONFIG_CMD}"
-        echo "Created       : ${CONTAINER_CREATED}"
-        echo "Started       : ${CONTAINER_STARTED}"
-        echo "State         : ${CONTAINER_STATE} ${CONTAINER_STATE_EXIT_CODE}"
-        echo "Error         : ${CONTAINER_STATE_ERROR}"
-        echo "Finished      : ${CONTAINER_FINISHED}"
-        echo "Run with      : ${CONTAINER_PATH} ${CONTAINER_ARGS}"
-        echo "IP            : ${CONTAINER_IP}"
+#        echo "Container id  : ${CONTAINER_ID}"
+#        echo "Name          : ${CONTAINER_NAME}"
+#        echo "Project       : ${CONTAINER_DOCKER_COMPOSE_PROJECT}"
+#        echo "Service       : ${CONTAINER_DOCKER_COMPOSE_SERVICE}"
+#        echo "RunOneOff     : ${CONTAINER_DOCKER_COMPOSE_ONEOFF}"
+#        echo "Image id      : ${CONTAINER_IMAGE_ID}"
+#        echo "Data id       : ${CONTAINER_DATA_CONTAINER_ID}"
+#        echo "Command       : ${CONTAINER_CONFIG_ENTRYPOINT}${CONTAINER_CONFIG_CMD}"
+#        echo "Created       : ${CONTAINER_CREATED}"
+#        echo "Started       : ${CONTAINER_STARTED}"
+#        echo "State         : ${CONTAINER_STATE} ${CONTAINER_STATE_EXIT_CODE}"
+#        echo "Error         : ${CONTAINER_STATE_ERROR}"
+#        echo "Finished      : ${CONTAINER_FINISHED}"
+#        echo "Run with      : ${CONTAINER_PATH} ${CONTAINER_ARGS}"
+#        echo "IP            : ${CONTAINER_IP}"
 
 
         REMOVE=false
 
-        # Remove dead containers
+        # Remove dead container
         if test "Dead" == "${CONTAINER_STATE}"; then
             echo -e "\e[93mMark container \"${CONTAINER_ID}\" for removal: dead container\e[0m"
             REMOVE=true
         fi
 
-        # Remove exited containers not with exit 0
+        # Remove exited container not with exit 0
         if test "Exit" == "${CONTAINER_STATE}" && test "0" != "${CONTAINER_STATE_EXIT_CODE}"; then
             echo -e "\e[93mMark container \"${CONTAINER_ID}\" for removal: exited container with exit code ${CONTAINER_STATE_EXIT_CODE}\e[0m"
             REMOVE=true
         fi
 
-        # Remove exited containers without a tag
+        # Remove exited container without a tag
         if test "Exit" == "${CONTAINER_STATE}" && test -z "${CONTAINER_NAME}"; then
             echo -e "\e[93mMark container \"${CONTAINER_ID}\" for removal: exited container without a name\e[0m"
             REMOVE=true
@@ -110,12 +108,13 @@ else
             REMOVE=true
         fi
 
-        # Remove containers with missing image
+        # Remove container with missing image
         if test -z "${CONTAINER_IMAGE_ID}"; then
             echo -e "\e[93mMark container \"${CONTAINER_ID}\" for removal: missing image\e[0m"
             REMOVE=true
         fi
 
+        # Remove container
         if test true == ${REMOVE}; then
             sudo docker rm -f "${CONTAINER_ID}"
         fi
@@ -125,31 +124,46 @@ else
     done
 fi
 
-# Remove unused images
+# Remove images
 echo -e "\e[93mCheck images\e[0m"
-#IMAGE_IDS_ALL=$(sudo docker images --all --quiet --no-trunc)
-#CONTAINER_IDS_ALL=$(sudo docker ps --all --quiet --no-trunc)
-#IMAGE_IDS_ALL_USED=""
-#for CONTAINER_ID in ${CONTAINER_IDS_ALL}; do
-#    IMAGE_ID_USED=$(sudo docker inspect --format='{{.Image}}' "${CONTAINER_ID}")
-#    if test -n "$(sudo docker images --all --quiet --no-trunc | grep "${IMAGE_ID_USED}")"; then
-#        echo "Container ${CONTAINER_ID} uses image ${IMAGE_ID_USED}"
-#        IMAGE_IDS_ALL_USED=$(echo -e "${IMAGE_IDS_ALL_USED}\n${IMAGE_ID_USED}\n$(sudo docker history --quiet --no-trunc "${IMAGE_ID_USED}")")
-#    fi
-#done
-#IMAGE_IDS_ALL_UNUSED=$(comm -23 <(echo "${IMAGE_IDS_ALL}" | sort -u) <(echo "${IMAGE_IDS_ALL_USED}" | sort -u))
-#if test -n "${IMAGE_IDS_ALL_UNUSED}"; then
-#    HISTORY_AND_IMAGE_IDS=""
-#    for IMAGE_ID_UNUSED in ${IMAGE_IDS_ALL_UNUSED}; do
-#        HISTORY_AND_IMAGE_IDS=$(echo -e "${HISTORY_AND_IMAGE_IDS}\n$(sudo docker history --quiet --no-trunc "${IMAGE_ID_UNUSED}" | wc -l) ${IMAGE_ID_UNUSED}")
-#    done
-#    IMAGE_IDS_ALL_UNUSED="$(echo "${HISTORY_AND_IMAGE_IDS}" | sort --unique --reverse | awk '{print $2}')"
-#    for IMAGE_ID_UNUSED in ${IMAGE_IDS_ALL_UNUSED}; do
-#        if test -n "$(sudo docker images --all --quiet --no-trunc | grep "${IMAGE_ID_UNUSED}")"; then
-#            echo -e "\e[93mRemove image \"${IMAGE_ID_UNUSED}\" (not used by any container)\e[0m"
-#            sudo docker rmi --force "${IMAGE_ID_UNUSED}"
+
+#IMAGES_IDS="$(sudo docker images --all --no-trunc --quiet)"
+#CONTAINERS_IDS="$(sudo docker ps --all --no-trunc --quiet)"
+#if test -z "${IMAGES_IDS}"; then
+#    echo "Geen images gevonden"
+#else
+#    IMAGES_IDS_FROM_CONTAINERS=$(sudo docker inspect --format='{{ .Id }}' ${CONTAINERS_IDS})
+#    echo "${IMAGES_IDS_FROM_CONTAINERS}"
+#
+#    for IMAGE_ID_USED in ${IMAGES_IDS_FROM_CONTAINERS}; do
+#        if test -n "$(sudo docker images --all --quiet --no-trunc | grep "${IMAGE_ID_USED}")"; then
+#            IMAGES_IDS_FROM_CONTAINERS=$(echo -e "${IMAGES_IDS_FROM_CONTAINERS}\n${IMAGE_ID_USED}\n$(sudo docker history --quiet --no-trunc ${IMAGE_ID_USED})")
 #        fi
 #    done
+#    echo "---"
+#    echo "${IMAGES_IDS_FROM_CONTAINERS}"
+#    IMAGES_IDS_UNUSED=$(comm -23 <(echo "${IMAGES_IDS}" | sort -u) <(echo "${IMAGES_IDS_FROM_CONTAINERS}" | sort -u))
+#    echo "---"
+#    echo "${IMAGES_IDS_UNUSED}"
+##
+##
+##    if test -n "${IMAGES_IDS_UNUSED}"; then
+##        HISTORY_AND_IMAGE_IDS=""
+##        for IMAGE_ID_UNUSED in ${IMAGES_IDS_UNUSED}; do
+##            echo "${IMAGE_ID_UNUSED} removing"
+###            docker rmi $(docker history --quiet --no-trunc "${IMAGE_ID_UNUSED}")
+##    #        HISTORY_AND_IMAGE_IDS=$(echo -e "${HISTORY_AND_IMAGE_IDS}\n$(sudo docker history --quiet --no-trunc "${IMAGE_ID_UNUSED}" | wc -l) ${IMAGE_ID_UNUSED}")
+##        done
+##    #    IMAGES_IDS_UNUSED="$(echo "${HISTORY_AND_IMAGE_IDS}" | sort --unique --reverse | awk '{print $2}')"
+##    #    for IMAGE_ID_UNUSED in ${IMAGES_IDS_UNUSED}; do
+##    #        if test -n "$(sudo docker images --all --quiet --no-trunc | grep "${IMAGE_ID_UNUSED}")"; then
+##    #            echo -e "\e[93mRemove image \"${IMAGE_ID_UNUSED}\" (not used by any container)\e[0m"
+##    #            sudo docker rmi --force "${IMAGE_ID_UNUSED}"
+##    #        fi
+##    #    done
+##    fi
+#
+#    echo " "
 #fi
 
 # Remove container directories
