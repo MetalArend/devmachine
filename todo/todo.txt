@@ -54,6 +54,9 @@ TODO install specific docker version from source!!!
 TODO -> https://docs.docker.com/project/set-up-dev-env/
 TODO -> http://stackoverflow.com/questions/791959/download-a-specific-tag-with-git
 TODO -> https://forums.docker.com/t/how-can-i-install-a-specific-version-of-the-docker-engine/1993
+TODO docker: remove containers with images that don't exist anymore
+TODO docker: check what docker is doing when using history or --all (in source code)
+TODO docker: catch "error getting container" on docker-compose up, and retry
 TODO docker: overwrite all sorts of config files from docker container
 TODO docker: overwrite files inside docker by mimicking the docker container filesystem structure
 TODO docker: use tagging system to upload build versions of containers, and use smart versioning system on docker container directory to create the tag, and keep it in the directory
