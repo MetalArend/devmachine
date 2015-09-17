@@ -1,0 +1,106 @@
+
+TODO site: extract template from index.php
+TODO site: ping docker machines on index page with javascript, use colored icons
+TODO site: add provisioning for devmachine workspace
+TODO site: add vrana/adminer as composer project
+TODO site: add logs page to show apache, php and docker logs in backend
+TODO site: list workspaces with their corresponding url and port, and if they are reachable or not
+TODO site: switch different environments, urls, ports, to reach certain page
+TODO site: add javascript issue tracker in backend
+TODO site: show latest docker report on home screen from devmachine
+TODO site: report devmachine version, and if latest version was installed (git api?)
+
+DONE vagrant: move composer to docker: http://marmelab.com/blog/2014/09/10/make-docker-command.html
+DONE vagrant: rename docker-provision to provision-docker-compose.sh
+DONE vagrant: use dos2unix to run shell script
+DONE vagrant: install composer in the composer container, running the php version that gets linked to it?
+DONE vagrant: put the vagrant defaults in a separate yml file in the vagrant directory
+DONE vagrant: --provision-with system,workspace:stagesol
+IGNORE vagrant: use vagrant docker provisioning
+IGNORE vagrant: containers without a build.sh should have a .version file, to make sure they rebuild when anything changes in them
+TODO vagrant: use trusty64 - http://www.vagrantbox.es/
+TODO vagrant: use [devmachine][ip] or [devmachine][private_network] for [vm][network][private_network]
+TODO vagrant: add [ssh][forward_agent] = true http://wildlyinaccurate.com/using-ssh-agent-forwarding-with-vagrant/
+TODO vagrant: add "run: explicit" to use instead of always
+TODO vagrant: add "embed: file", to embed workspace config from any file
+TODO vagrant: add global disable scanning workspaces - and other behaviors
+TODO vagrant: add overwriting name of devmachine.yml file - global and per workspace
+TODO vagrant: make vagrant.yml an optional file
+TODO vagrant: report devmachine version
+TODO vagrant: enable/disable certain workspaces in config (but scan all if no config is available)
+TODO vagrant: add provision inside project, so only that project gets scanned (including the whole containers and vagrant)
+TODO vagrant: report only containers inside workspace if workspace is specified
+TODO vagrant: add docker container checker to vagrant, so after vagrant up, workspaces that should be active become automatically active and stay active, when containers crash
+TODO vagrant: report on all containers inside docker, combine docker-compose ps and docker ps -a in one big overview
+TODO vagrant: automatically open url on host machine after provisioning
+TODO vagrant: add virtualhosts files in project, and automagically add those to the server
+TODO vagrant: check in provision.sh if vagrant is running and script runs in vagrant, otherwise start vagrant, and automagically run provisioning
+TODO vagrant: add cleanup shell scripts to remove all files
+TODO vagrant: add time loaded per container, and overall
+TODO vagrant: use CoreOS container, with docker pre-installed
+TODO vagrant: create a dhcp container, giving all the other containers a fixed internal ip address
+TODO vagrant: ability to disable autoloading workspaces globally, or per workspace
+TODO vagrant: say per project which config filename should be used
+TODO vagrant: devmachine.yml filename should be an option
+TODO vagrant: ability to either use devmachine.yml, ansible-playbook.yml or provision.sh
+TODO vagrant: if provision.sh is detected, don't assume it should be running!!!
+TODO vagrant: if disable: true, allow to run if asked for explicitly
+TODO vagrant: if a devmachine.yml file is found, import it here, else it should be in the global config devmachine.yml inside the root
+TODO vagrant: use /vagrant instead of /env - does this sync two way or not?
+TODO vagrant: make it possible to use the nfs special options
+TODO vagrant: for some commands, don't show the branding
+
+TODO install specific docker version from source!!!
+TODO -> https://docs.docker.com/project/set-up-dev-env/
+TODO -> http://stackoverflow.com/questions/791959/download-a-specific-tag-with-git
+TODO -> https://forums.docker.com/t/how-can-i-install-a-specific-version-of-the-docker-engine/1993
+TODO docker: remove containers with images that don't exist anymore
+TODO docker: check what docker is doing when using history or --all (in source code)
+TODO docker: catch "error getting container" on docker-compose up, and retry
+TODO docker: overwrite all sorts of config files from docker container
+TODO docker: overwrite files inside docker by mimicking the docker container filesystem structure
+TODO docker: use tagging system to upload build versions of containers, and use smart versioning system on docker container directory to create the tag, and keep it in the directory
+TODO docker: add ssh container to access php, to directly ssh to app/console and/or xdebug
+TODO docker: add auto-completion for docker: https://docs.docker.com/compose/completion/
+TODO docker: rename common.yml to containers.yml
+TODO docker: use an sql file to load during provisioning
+TODO docker: install nginx, apache 2.2, hhvm, phpmyadmin, xdebug, git, openssl, node, npm, grunt, xhprof, memcache, redis, elasticsearch, apc, varnish, webgrind, closure
+TODO docker: persist databases to a system data container
+TODO docker: persist /var/lib/docker to a system data container
+TODO docker: add php 5.6 and 7
+TODO docker: add specific php.ini per project (use files with docker-compose config)
+TODO docker: split common.yml into parts inside containers, as sort of default use case
+TODO docker: add /env/mysql:/var/lib/mysql as volume outside the box
+TODO docker: remove containers with images that don't exist anymore
+TODO docker: add docker containers to report
+TODO docker: only report on containers of workspace, if workspace is named with "report:devmachine"
+TODO docker: WORK_DIR environment variable does not work! write test to check all environment variables!!!
+TODO docker: add docker-compose path or filename
+TODO docker: add switch:devmachine command, to halt all containers of other workspace, and avoid port conflicts
+
+DONE ansible: move ansible.yml system config out of main directory, as it is system, not config
+TODO ansible: add common.sh scripts to ansible as plugins
+TODO ansible: split ansible file into roles
+TODO ansible: use ansible to connect to docker-compose containers
+TODO MAYBE ansible: install ansible on a docker machine, and connect from there to the other machines, including the vagrant box (use vagrant built in docker, use ansible to set specific version)
+
+DONE apache: upgrade from apache 2.2 to apache 2.4 https://httpd.apache.org/docs/2.4/upgrading.html
+TODO apache: provide an apache 2.2 container
+TODO apache: add server aliases
+TODO apache: add settings per project
+TODO ErrorLog "|cat"
+TODO LogFormat "%h %l %u %t \"%r\" %>s %b" common
+TODO CustomLog "|cat" common
+TODO add LockDir
+
+DONE php: put the php-fpm config in the php-fpm docker directory, not in the lamp run file (add it with -c without newlines?)
+DONE php: add php.ini settings (date.timezone, display_errors, error_reporting, session.save_path)
+TODO php: use environment to name logs and log directory
+TODO php: add php.ini variables through environment
+TODO php: fpm is failing on multiple connections!!!!
+
+TODO LATER use rsync https://servercheck.in/blog/rsync-vagrant-15-file-performance-windows-dev
+TODO LATER also update already installed programs
+
+TODO CLEAN http://mywiki.wooledge.org/Bashism
+TODO CHECK https://github.com/coreos/coreos-vagrant/blob/master/Vagrantfile
