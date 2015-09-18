@@ -2,6 +2,13 @@
 error_reporting(E_ALL);
 ini_set('display_errors', true);
 
+// Adds X-Frame-Options to HTTP header, so that page can only be shown in an iframe of the same site.
+header('X-Frame-Options: SAMEORIGIN');
+
+// Adds the Content-Security-Policy to the HTTP header.
+// JavaScript will be restricted to the same domain as the page itself.
+header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:");
+
 function getDockerVariable($alias, $variable)
 {
     $key = strtoupper($alias) . '_PORT';
@@ -39,6 +46,7 @@ endif;
 <head>
     <title>Docker</title>
     <link type="text/css" rel="stylesheet" href="assets/bootstrap-3.3.5/css/bootstrap.min.css"/>
+    <link type="text/css" rel="stylesheet" href="assets/index.css"/>
 </head>
 <body>
 <nav class="navbar navbar-inverse navbar-static-top">
@@ -51,31 +59,31 @@ endif;
         <ul class="nav navbar-nav" role="tablist">
             <li>
                 <a href="#workspaces" role="tab" data-toggle="tab">
-                    <span class="glyphicon glyphicon-home" style="width: 14px;"></span>
+                    <span class="glyphicon glyphicon-home"></span>
                     workspaces
                 </a>
             </li>
             <li>
                 <a href="#apache" role="tab" data-toggle="tab">
-                    <span class="glyphicon glyphicon-list-alt" style="width: 14px;"></span>
+                    <span class="glyphicon glyphicon-list-alt"></span>
                     apache
                 </a>
             </li>
             <li>
                 <a href="#php" role="tab" data-toggle="tab">
-                    <span class="glyphicon glyphicon-info-sign" style="width: 14px;"></span>
+                    <span class="glyphicon glyphicon-info-sign"></span>
                     phpinfo
                 </a>
             </li>
             <li>
                 <a href="#fpm" role="tab" data-toggle="tab">
-                    <span class="glyphicon glyphicon-dashboard" style="width: 14px;"></span>
+                    <span class="glyphicon glyphicon-dashboard"></span>
                     fpm status
                 </a>
             </li>
             <li>
                 <a href="pages/adminer.php" target="_adminer">
-                    <span class="glyphicon glyphicon-compressed" style="width: 14px;"></span>
+                    <span class="glyphicon glyphicon-compressed"></span>
                     adminer
                 </a>
             </li>
@@ -153,7 +161,7 @@ endif;
                     <h2 class="panel-title">Apache</h2>
                 </div>
                 <div class="panel-body">
-                    <iframe src="pages/apache.php" style="width:100%; border:0;"></iframe>
+                    <iframe src="pages/apache.php"></iframe>
                 </div>
             </div>
         </div>
@@ -163,7 +171,7 @@ endif;
                     <h2 class="panel-title">PHP info</h2>
                 </div>
                 <div class="panel-body">
-                    <iframe src="pages/phpinfo.php" style="width:100%; border:0;"></iframe>
+                    <iframe src="pages/phpinfo.php"></iframe>
                 </div>
             </div>
         </div>
@@ -173,7 +181,7 @@ endif;
                     <h2 class="panel-title">FPM status</h2>
                 </div>
                 <div class="panel-body">
-                    <iframe src="/fpm-status" style="width:100%; border:0;"></iframe>
+                    <iframe src="/fpm-status"></iframe>
                 </div>
             </div>
         </div>
@@ -181,40 +189,6 @@ endif;
 </div>
 <script type="text/javascript" src="assets/jquery-1.11.3/jquery.min.js"></script>
 <script type="text/javascript" src="assets/bootstrap-3.3.5/js/bootstrap.min.js"></script>
-<script type="text/javascript">
-    function loadFrame(iframe) {
-        var $iframe = $(iframe);
-        if (1 === $iframe.length) {
-            // Avoid flicker when reloading, by cloning into a new iframe instead of reloading the src
-            var $iframeReloaded = $iframe.clone(true, true);
-            $iframeReloaded.one('load', (function ($iframe, $iframeReloaded) {
-                return function () {
-                    $iframeReloaded.show().attr('height', '0').attr('height', ($iframeReloaded.get(0).contentWindow.document.body.scrollHeight * 1.001) + 'px');
-                    $iframe.remove();
-                };
-            }($iframe, $iframeReloaded)));
-            $iframeReloaded.hide().insertBefore($iframe);
-        }
-    }
-    $(document).ready(function () {
-        $('iframe').hide();
-        var $tabs = $('a[data-toggle="tab"]');
-        $tabs.on('click', function (event) {
-            var tab = $(event.target).attr('href').replace('#', '');
-            if (tab !== window.location.hash.replace('#', '')) {
-                window.location.hash = tab;
-            }
-            loadFrame($('#' + tab).find('iframe'));
-        });
-        $(window).on('hashchange', function () {
-            var hash = window.location.hash.replace('#', '');
-            if ('' === hash) {
-                $tabs.first().trigger('click');
-            } else {
-                $tabs.filter('[href="#' + hash + '"]').trigger('click');
-            }
-        }).trigger('hashchange');
-    });
-</script>
+<script type="text/javascript" src="assets/index.js"></script>
 </body>
 </html>
