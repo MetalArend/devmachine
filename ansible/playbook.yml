@@ -134,14 +134,15 @@
       when: docker_version is defined
     - name: Set docker daemon options
       copy:
-        content: "DOCKER_OPTS=\"-s aufs\"" #"DOCKER_OPTS=\"{{ docker_opts.rstrip('\n') }}\""
+        content: "DOCKER_OPTS=\"{{ docker_options }}\""
         dest: /etc/default/docker
         owner: root
         group: root
         mode: 0644
+        force: yes
       notify:
         - Reload docker
-#      when: docker_opts is defined and docker_opts != ""
+      when: docker_options is defined and docker_options != ""
     - name: Start docker
       service:
         name: docker
