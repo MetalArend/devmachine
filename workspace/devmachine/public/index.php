@@ -146,7 +146,11 @@ endif;
                                 ) {
                                     continue;
                                 }
-                                echo '<li><!--<a href="../' . $entry . '">-->' . $entry . '<!--</a>--></li>';
+                                echo '<li>';
+                                echo '<!--<a href="../' . $entry . '">-->' . $entry . '<!--</a>-->';
+                                // TODO detect username and database
+                                echo ' // <a href="pages/adminer.php?server=' . $db_server . '&username=' . $entry . '&db=' . $entry . '" target="_adminer">database</a>';
+                                echo '</li>';
                             }
                             closedir($handle);
                         }
