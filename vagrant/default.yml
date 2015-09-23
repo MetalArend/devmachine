@@ -2,8 +2,9 @@ vagrant:
     api_version: "2"
 
 vm:
-    box: "ubuntu64"
-    box_url: "https://cloud-images.ubuntu.com/vagrant/precise/current/precise-server-cloudimg-amd64-vagrant-disk1.box"
+    box: "ubuntu-trusty-amd64"
+#    box_url: "https://cloud-images.ubuntu.com/vagrant/precise/current/precise-server-cloudimg-amd64-vagrant-disk1.box"
+    box_url: "https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box"
     hostname: null
     usable_port_range: 2200..2500
     network:
@@ -57,10 +58,10 @@ devmachine:
     locale: en_US.UTF-8
     shell: bash
     docker:
-        version: 1.7.1
+        version: 1.8.2*
         group_members: vagrant
     docker-compose:
-        version: 1.3.3
+        version: 1.4.2
     ansible:
         version: 1.9.2
         playbook: /env/ansible/playbook.yml

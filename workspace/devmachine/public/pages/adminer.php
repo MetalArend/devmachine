@@ -1,6 +1,10 @@
 <?php
 
-chdir('../../vendor/vrana/adminer');
+if (!is_dir('../../vendor/vrana/adminer')) {
+    chdir('../../fallback');
+} else {
+    chdir('../../vendor/vrana/adminer');
+}
 
 $db_adminer_file = array_values(array_filter(scandir('.', SCANDIR_SORT_DESCENDING), function ($file) {
     $name = 'adminer';

@@ -14,7 +14,7 @@ DATETIME=$(date +"%Y/%m/%d %H:%M")
 
 CONTAINERS_IDS="$(sudo docker ps --all --no-trunc --quiet)"
 if test -z "${CONTAINERS_IDS}"; then
-    echo "Geen containers gevonden"
+    echo "No containers found"
 else
     for CONTAINER_ID in ${CONTAINERS_IDS}; do
         CONTAINER_INSPECTION="$(sudo docker inspect --format "

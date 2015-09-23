@@ -66,58 +66,83 @@
         enabled: yes
 
     # Force NTP update - also see http://superuser.com/questions/639202/updating-time-ntpdate3108-the-ntp-socket-is-in-use-exiting
-    - name: Update time
-      sudo: yes
-      shell: ntpdate -u pool.ntp.org
+#    - name: Update time
+#      sudo: yes
+#      shell: ntpdate -u pool.ntp.org
 
     # Flush handlers
     - meta: flush_handlers
 
     # Install Docker - thanks to https://github.com/angstwad/docker.ubuntu
-    - name: Check docker
-      shell: if which docker > /dev/null; then docker --version | sed -e 's/[^0-9\.]*\([0-9\.]\+\).*/\1/'; fi
-      register: get_docker_version
-      changed_when: false
-      when: docker_version is defined
-    - name: Add docker repository key # url=http://get.docker.io/gpg id=A88D21E9 state=present
+#    - name: Check docker
+#      shell: if which docker > /dev/null; then docker --version | sed -e 's/[^0-9\.]*\([0-9\.]\+\).*/\1/'; fi
+#      register: get_docker_version
+#      changed_when: false
+#      when: docker_version is defined
+#    - name: Add docker repository key # url=http://get.docker.io/gpg id=A88D21E9 state=present
+#      apt_key:
+#        keyserver: hkp://p80.pool.sks-keyservers.net:80
+#        id: 36A1D7869245C8950F966E92D8576A8BA88D21E9
+#      when: docker_version is defined
+#    - name: Add docker repository and update app cache
+#      apt_repository:
+#        repo: deb https://get.docker.com/ubuntu docker main
+#        update_cache: yes
+#        state: present
+#      when: docker_version is defined
+#    - name: Install (or update) docker
+#      apt:
+#        name: lxc-docker-{{ docker_version }}
+#        update_cache: yes
+#        cache_valid_time: 600
+#        force: yes
+#      notify:
+#        - Reload docker
+#      when: docker_version is defined and docker_version != get_docker_version.stdout
+    - name: Add docker repository key
       apt_key:
         keyserver: hkp://p80.pool.sks-keyservers.net:80
-        id: 36A1D7869245C8950F966E92D8576A8BA88D21E9
+        id: 58118E89F3A912897C070ADBF76221572C52609D
       when: docker_version is defined
     - name: Add docker repository and update app cache
       apt_repository:
-        repo: deb https://get.docker.com/ubuntu docker main
+        repo: deb https://apt.dockerproject.org/repo ubuntu-trusty main
         update_cache: yes
         state: present
       when: docker_version is defined
-    - name: Install (or update) docker
+    - name: Add aufs support
       apt:
-        name: lxc-docker-{{ docker_version }} # docker.io
-        state: latest
+        name: "{{ item }}"
+        state: installed
         update_cache: yes
         cache_valid_time: 600
+        force: yes
+      with_items:
+        - aufs-tools
+        - linux-image-extra-virtual
+        - linux-image-extra-{{ ansible_kernel }}
       notify:
         - Reload docker
-      when: docker_version is defined and docker_version != get_docker_version.stdout
-#    - name: Set docker daemon options
-#      copy:
-#        content: "DOCKER_OPTS=\"{{ docker_opts.rstrip('\n') }}\""
-#        dest: /etc/default/docker
-#        owner: root
-#        group: root
-#        mode: 0644
-#      notify:
-#        - Reload docker
+    - name: Install (or update) docker
+      apt:
+        name: docker-engine={{ docker_version }}
+        update_cache: yes
+        cache_valid_time: 600
+        force: yes
+      notify:
+        - Reload docker
+      when: docker_version is defined
+    - name: Set docker daemon options
+      copy:
+        content: "DOCKER_OPTS=\"-s aufs\"" #"DOCKER_OPTS=\"{{ docker_opts.rstrip('\n') }}\""
+        dest: /etc/default/docker
+        owner: root
+        group: root
+        mode: 0644
+      notify:
+        - Reload docker
 #      when: docker_opts is defined and docker_opts != ""
-#    - name: Fix DNS in docker.io
-#      lineinfile:
-#        dest: "{{ docker_defaults_file_path }}"
-#        regexp: "DOCKER_OPTS="
-#        line: 'DOCKER_OPTS="--dns {{ ansible_docker0.ipv4.address }}"'
-#      register: dns_fix
-#      notify: Restart dockerio
-#      when: docker_pkg_name is defined and docker_pkg_name == 'docker.io'
-    - name: Start docker-lxc
+    - name: Start docker
       service:
         name: docker
         state: started
@@ -131,22 +156,22 @@
       when: docker_version is defined and docker_group_members is defined
 
     # Install docker-compose
-    - name: Check docker-compose
-      shell: if which docker-compose > /dev/null; then docker-compose --version | grep 'docker-compose' | sed 's/^[^0-9\.]* //g'; fi
-      register: get_docker_compose_version
-      changed_when: false
-      when: docker_compose_version is defined
-    - name: Install (or update) docker-compose
-      shell: curl -sL https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+    - name: Download docker-compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-{{ ansible_system }}-{{ ansible_machine }}
+        dest: /tmp/docker-compose-{{ docker_compose_version }}
       notify:
         - Reload docker
-      when: docker_compose_version is defined and docker_compose_version != get_docker_compose_version.stdout
-    - name: Set docker-compose permissions
-      file:
-        path: /usr/local/bin/docker-compose
+      when: docker_compose_version is defined
+    - name: Enable docker-compose
+      copy:
+        src: /tmp/docker-compose-{{ docker_compose_version }}
+        dest: /usr/local/bin/docker-compose
         group: root
         owner: root
         mode: 0755
+        force: yes
       notify:
         - Reload docker
       when: docker_compose_version is defined
+
