@@ -2,8 +2,9 @@ vagrant:
     api_version: "2"
 
 vm:
-    box: "ubuntu64"
-    box_url: "https://cloud-images.ubuntu.com/vagrant/precise/current/precise-server-cloudimg-amd64-vagrant-disk1.box"
+    box: "ubuntu-trusty-amd64"
+#    box_url: "https://cloud-images.ubuntu.com/vagrant/precise/current/precise-server-cloudimg-amd64-vagrant-disk1.box"
+    box_url: "https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box"
     hostname: null
     usable_port_range: 2200..2500
     network:
