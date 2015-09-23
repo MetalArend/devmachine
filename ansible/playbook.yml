@@ -110,6 +110,19 @@
         update_cache: yes
         state: present
       when: docker_version is defined
+    - name: Add aufs support
+      apt:
+        name: "{{ item }}"
+        state: installed
+        update_cache: yes
+        cache_valid_time: 600
+        force: yes
+      with_items:
+        - aufs-tools
+        - linux-image-extra-virtual
+        - linux-image-extra-{{ ansible_kernel }}
+      notify:
+        - Reload docker
     - name: Install (or update) docker
       apt:
         name: docker-engine={{ docker_version }}
@@ -119,15 +132,15 @@
       notify:
         - Reload docker
       when: docker_version is defined
-#    - name: Set docker daemon options
-#      copy:
-#        content: "DOCKER_OPTS=\"{{ docker_opts.rstrip('\n') }}\""
-#        dest: /etc/default/docker
-#        owner: root
-#        group: root
-#        mode: 0644
-#      notify:
-#        - Reload docker
+    - name: Set docker daemon options
+      copy:
+        content: "DOCKER_OPTS=\"-s aufs\"" #"DOCKER_OPTS=\"{{ docker_opts.rstrip('\n') }}\""
+        dest: /etc/default/docker
+        owner: root
+        group: root
+        mode: 0644
+      notify:
+        - Reload docker
 #      when: docker_opts is defined and docker_opts != ""
     - name: Start docker
       service:

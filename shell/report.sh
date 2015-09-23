@@ -55,7 +55,7 @@ else
   echo -e "\e[91m- ansible not found\e[0m";
 fi
 if which docker &> /dev/null; then
-  echo -e "\e[92m- $(docker --version | sed 's/^Docker version /docker /g') ($(docker info 2>/dev/null | sed -n -e '/Containers:.*/,/Images:.*/p' | sed ':a;N;s/\n/, /g'))\e[0m";
+  echo -e "\e[92m- $(docker --version | sed 's/^Docker version /docker /g') ($(docker info 2>/dev/null | sed -n -e '/Containers:.*/p;/Images:.*/p;/Storage Driver:.*/p' | sed ':a;N;$!ba;s/\n/, /g'))\e[0m";
 else
   echo -e "\e[91m- docker not found\e[0m";
 fi
