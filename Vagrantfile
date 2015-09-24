@@ -32,6 +32,7 @@ yaml_config = add_defaults(yaml_config, {
                 "timezone"=>yaml_config['devmachine']['timezone'],
                 "locale"=>yaml_config['devmachine']['locale'],
                 "docker_version"=>yaml_config['devmachine']['docker']['version'],
+                "docker_options"=>yaml_config['devmachine']['docker']['options'],
                 "docker_compose_version"=>yaml_config['devmachine']['docker-compose']['version'],
                 "docker_group_members"=>yaml_config['devmachine']['docker']['group_members']
             }
@@ -100,7 +101,7 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |vagrant_config|
     # Add provision "system": install ansible and run playbook
     ansible_version = yaml_config['devmachine']['ansible']['version']
     ansible_playbook = yaml_config['devmachine']['ansible']['playbook']
-    ansible_extra_vars = yaml_config['devmachine']['ansible']['extra_vars'].map { |key| key * "=" } * " "
+    ansible_extra_vars = yaml_config['devmachine']['ansible']['extra_vars'].map { |key, value| [key.to_sym, '\"' + value + '\"'] * "=" } * " "
     vagrant_config.vm.provision "system", type: "shell", keep_color: true, run: "always", inline: %~
         if ! which pip &> /dev/null; then
             echo -e "\e[93mInstall pip\e[0m"
@@ -310,6 +311,7 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |vagrant_config|
                             "dos2unix"=>[]
                         })
                         directory = provision_config.delete('directory')
+                        directory << '/' unless directory.end_with?('/') || directory.empty?
                         dos2unix = provision_config.delete('dos2unix')
                         if "shell" == provision_config['type'] && !provision_config['path'].nil?
                             if !File.exist?("#{directory}#{provision_config['path']}")

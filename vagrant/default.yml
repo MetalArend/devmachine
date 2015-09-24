@@ -60,6 +60,7 @@ devmachine:
     docker:
         version: 1.8.2*
         group_members: vagrant
+        options: -s aufs
     docker-compose:
         version: 1.4.2
     ansible:
