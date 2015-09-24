@@ -311,6 +311,7 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |vagrant_config|
                             "dos2unix"=>[]
                         })
                         directory = provision_config.delete('directory')
+                        directory << '/' unless directory.end_with?('/') || directory.empty?
                         dos2unix = provision_config.delete('dos2unix')
                         if "shell" == provision_config['type'] && !provision_config['path'].nil?
                             if !File.exist?("#{directory}#{provision_config['path']}")
