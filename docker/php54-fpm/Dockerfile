@@ -17,7 +17,7 @@ RUN apt-get update \
         mbstring \
         intl \
         mysql mysqli pdo_mysql #pdo pdo_mysql
-RUN pecl install xdebug
+RUN pecl install xdebug apc
 # other packages: php5-imagick php-pear
 
 # Install phpunit, phpcs, phpdoc and composer
