@@ -98,6 +98,8 @@ DONE php: add php.ini settings (date.timezone, display_errors, error_reporting, 
 TODO php: use environment to name logs and log directory
 TODO php: add php.ini variables through environment
 TODO php: fpm is failing on multiple connections!!!!
+TODO php: add magallanes globally in an other container
+TODO php: install composer inside a separated container, running "on top" of the php container?
 
 TODO LATER use rsync https://servercheck.in/blog/rsync-vagrant-15-file-performance-windows-dev
 TODO LATER also update already installed programs
