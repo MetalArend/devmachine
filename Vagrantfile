@@ -87,6 +87,9 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |vagrant_config|
     # Check http://www.sebastien-han.fr/blog/2012/12/18/noac-performance-impact-on-web-applications/
     vagrant_config.vm.synced_folder ".", "/env", type: "nfs"
 
+    # Add ssh keys
+    vagrant_config.vm.synced_folder "~/.ssh", "/ssh", type: "nfs"
+
     # Set the host if given
     if !yaml_config['vagrant']['host'].nil?
         vagrant_config.vagrant.host = yaml_config['vagrant']['host'].gsub(":", "").intern
