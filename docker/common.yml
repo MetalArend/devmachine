@@ -23,6 +23,7 @@ php56fpm:
   build: /env/docker/php56-fpm
   ports:
     - "9000"
+    - "10000"
 
 php70fpm:
   build: /env/docker/php70-fpm
