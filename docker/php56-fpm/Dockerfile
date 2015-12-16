@@ -24,9 +24,10 @@ RUN pecl install xdebug apc
 RUN apt-get install -y git \
     && curl -o /usr/bin/phpunit https://phar.phpunit.de/phpunit.phar \
     && curl -o /usr/bin/phpcs https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar \
+    && curl -o /usr/bin/phpcbf https://squizlabs.github.io/PHP_CodeSniffer/phpcbf.phar \
     && curl -o /usr/bin/phpdoc http://phpdoc.org/phpDocumentor.phar \
     && curl -o /usr/bin/composer https://getcomposer.org/composer.phar \
-    && chmod +x /usr/bin/phpunit /usr/bin/phpcs /usr/bin/composer /usr/bin/phpdoc
+    && chmod +x /usr/bin/phpunit /usr/bin/phpcs /usr/bin/phpcbf /usr/bin/composer /usr/bin/phpdoc
 
 # Clean image
 RUN apt-get autoremove -yq --purge \
