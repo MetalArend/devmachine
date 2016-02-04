@@ -18,6 +18,26 @@ if (['provision', 'reload', 'resume', 'up'].include? ARGV[0])
     $stdout.send(:puts, "\e[92;40m                                                                    \e[0m")
     $stdout.send(:puts, " ")
 
+    # Check required plugins
+    plugins_required = []
+    if (Vagrant::Util::Platform.windows?)
+        plugins_required << 'vagrant-winnfsd'
+    end
+
+    plugins_to_install = plugins_required.select { |plugin| not Vagrant.has_plugin? plugin }
+    has_new_plugin = false
+    if not plugins_to_install.empty?
+        plugins_to_install.each do |plugin|
+            if system "vagrant plugin install #{plugin}"
+                has_new_plugin = true
+            else
+                abort "Installation has failed."
+            end
+        end
+        if true === has_new_plugin
+            exec "vagrant #{ARGV.join' '}"
+        end
+    end
 
 end
 
