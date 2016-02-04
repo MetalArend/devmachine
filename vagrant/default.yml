@@ -59,11 +59,11 @@ devmachine:
     locale: en_US.UTF-8
     shell: bash
     docker:
-        version: 1.8.2*
+        version: 1.9.1*
         group_members: vagrant
         options: -s aufs
     docker-compose:
-        version: 1.4.2
+        version: 1.5.2
     ansible:
         version: 1.9.2
         playbook: /env/ansible/playbook.yml
