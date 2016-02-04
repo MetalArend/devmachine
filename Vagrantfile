@@ -3,17 +3,23 @@ require 'yaml'
 # Require latest vagrant version
 Vagrant.require_version '>= 1.6.0'
 
-# Print branding
-$stdout.send(:puts, " ")
-$stdout.send(:puts, "\e[92;40m                                                                    \e[0m")
-$stdout.send(:puts, "\e[92;40m________            ______  ___            ______ _____             \e[0m")
-$stdout.send(:puts, "\e[92;40m___  __ \\_______   ____   |/  /_____ _________  /____(_)___________ \e[0m")
-$stdout.send(:puts, "\e[92;40m__  / / /  _ \\_ | / /_  /|_/ /_  __ `/  ___/_  __ \\_  /__  __ \\  _ \\\e[0m")
-$stdout.send(:puts, "\e[92;40m_  /_/ //  __/_ |/ /_  /  / / / /_/ // /__ _  / / /  / _  / / /  __/\e[0m")
-$stdout.send(:puts, "\e[92;40m/_____/ \\___/_____/ /_/  /_/  \\__,_/ \\___/ /_/ /_//_/  /_/ /_/\\___/ \e[0m")
-$stdout.send(:puts, "\e[92;40m                    DevMachine (CC BY-SA 4.0) 2014-2015 MetalArend  \e[0m")
-$stdout.send(:puts, "\e[92;40m                                                                    \e[0m")
-$stdout.send(:puts, " ")
+# Check command
+if (['provision', 'reload', 'resume', 'up'].include? ARGV[0])
+
+    # Print branding
+    $stdout.send(:puts, " ")
+    $stdout.send(:puts, "\e[92;40m                                                                    \e[0m")
+    $stdout.send(:puts, "\e[92;40m________            ______  ___            ______ _____             \e[0m")
+    $stdout.send(:puts, "\e[92;40m___  __ \\_______   ____   |/  /_____ _________  /____(_)___________ \e[0m")
+    $stdout.send(:puts, "\e[92;40m__  / / /  _ \\_ | / /_  /|_/ /_  __ `/  ___/_  __ \\_  /__  __ \\  _ \\\e[0m")
+    $stdout.send(:puts, "\e[92;40m_  /_/ //  __/_ |/ /_  /  / / / /_/ // /__ _  / / /  / _  / / /  __/\e[0m")
+    $stdout.send(:puts, "\e[92;40m/_____/ \\___/_____/ /_/  /_/  \\__,_/ \\___/ /_/ /_//_/  /_/ /_/\\___/ \e[0m")
+    $stdout.send(:puts, "\e[92;40m                    DevMachine (CC BY-SA 4.0) 2014-2015 MetalArend  \e[0m")
+    $stdout.send(:puts, "\e[92;40m                                                                    \e[0m")
+    $stdout.send(:puts, " ")
+
+
+end
 
 # Define recursive replace function
 def add_defaults(a,b)
