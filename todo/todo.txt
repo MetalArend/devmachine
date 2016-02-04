@@ -1,3 +1,26 @@
+- use rancheros
+- "vagrant ssh php workspace/stagesol"
+- add behat
+- TODO remove phpunit and other tools from default php docker image, but create helper function for them
+
+- workspace:up to only start a specific workspace
+- make workspace:stagesol also work with dashes
+- add a central docker loadbalancer for phpfpm 
+	http://blog.hypriot.com/post/docker-compose-nodejs-haproxy/
+- update the backend
+- xdebug
+- make the default vagrant yml the distribution file, create a config.yml from it
+- php7
+- put php modules in devmachine.yml
+- look if there is a possibility to run phpcs without installing it in the main php container
+- enable xdebug in devmachine.yml
+- move ansible to docker container, to update timezone and stuff of all containers
+- install docker simply with a shell script
+- use ansible for stagesonline? 
+- docker images on kuleuven repository
+- move everything to docker containers, empty out vagrant shizzle
+- php as alias for docker php - but make the alias behave so even the normal php can handle -- prefix (use another alias: doc-php for example)
+- use composer scripts, instead of shell scripts
 
 TODO site: extract template from index.php
 TODO site: ping docker machines on index page with javascript, use colored icons
@@ -106,3 +129,15 @@ TODO LATER also update already installed programs
 
 TODO CLEAN http://mywiki.wooledge.org/Bashism
 TODO CHECK https://github.com/coreos/coreos-vagrant/blob/master/Vagrantfile
+
+
+
+## Recreate database and add user
+#echo -e "\e[33mRecreate database and add user\e[0m"
+#docker run --link "$(docker inspect --format="{{.Name}}" "$(docker-compose ps -q "db")")":mysql --rm mysql sh -c 'exec mysql -v -v -v --host="$MYSQL_PORT_3306_TCP_ADDR" --port="$MYSQL_PORT_3306_TCP_PORT" --user="root" --password="$MYSQL_ENV_MYSQL_ROOT_PASSWORD" -e "SET FOREIGN_KEY_CHECKS = 0;" -e "DROP DATABASE IF EXISTS stagesol;" -e "SET FOREIGN_KEY_CHECKS = 1;" -e "CREATE DATABASE IF NOT EXISTS stagesol;" -e "GRANT ALL PRIVILEGES ON stagesol.* TO \"stagesol\"@\"%\" IDENTIFIED BY \"stagesol\";" -e "FLUSH PRIVILEGES;" -e "SHOW WARNINGS;"'
+
+## Document mysqldump
+# db prefix: docker run --link "$(docker inspect --format="{{.Name}}" "$(docker-compose ps -q "db")")":mysql --rm --volume /env/workspace/stagesol/dev/dump:/dump mysql sh
+# export database: -c 'exec mysqldump --host="$MYSQL_PORT_3306_TCP_ADDR" --user="root" --password="$MYSQL_ENV_MYSQL_ROOT_PASSWORD" stagesol api__account > /dump/api__account.sql'
+# import database: -c 'exec mysql --host="$MYSQL_PORT_3306_TCP_ADDR" --user="root" --password="$MYSQL_ENV_MYSQL_ROOT_PASSWORD" stagesol < /dump/api__account.sql'
+
