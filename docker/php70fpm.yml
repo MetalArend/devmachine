@@ -1,0 +1,4 @@
+php:
+  build: /opt/devmachine/docker/php70-fpm
+  ports:
+    - "9000"
