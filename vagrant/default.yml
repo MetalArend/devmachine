@@ -2,9 +2,8 @@ vagrant:
     api_version: "2"
 
 vm:
-    box: "ubuntu-trusty-amd64"
-#    box_url: "https://cloud-images.ubuntu.com/vagrant/precise/current/precise-server-cloudimg-amd64-vagrant-disk1.box"
-    box_url: "https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box"
+    box: "rancherio/rancheros"
+    box_version: ">=0.4.1"
     hostname: null
     usable_port_range: 2200..2500
     network:
@@ -25,6 +24,7 @@ vm:
                 guest: 9000
     provider:
         virtualbox:
+            gui: false
             memory: 2048
             cpus: 2
             modifyvm:
@@ -34,7 +34,6 @@ vm:
                 # rtcuseutc: true # bugfix ssh connection - https://github.com/mitchellh/vagrant/issues/391
                 memory: 2048
                 # TODO nictype1: virtio # faster network - https://stackoverflow.com/questions/27401513/vagrant-ansible-resolving-super-slow
-            gui: false
             setextradata:
                 VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root: true # enable symlinks for windows
             check_guest_additions: false
@@ -44,13 +43,12 @@ vm:
 ssh:
     host: null
     port: null
-    private_key_path: null
-    username: vagrant # https://github.com/Varying-Vagrant-Vagrants/VVV/issues/375
+    username: rancher # https://github.com/Varying-Vagrant-Vagrants/VVV/issues/375
     guest_port: null
     keep_alive: true
     forward_agent: false # http://wildlyinaccurate.com/using-ssh-agent-forwarding-with-vagrant/
-    forward_x11: false
-    shell: "bash -c 'BASH_ENV=/etc/profile exec bash'" # default: "bash -l", but this resolves the stdin error
+    insert_key: true
+    shell: "bash -c 'BASH_ENV=/etc/profile; exec bash'" # default: "bash -l", but this resolves the stdin error
 
 devmachine:
     bashrc: "cd /env"
@@ -67,4 +65,4 @@ devmachine:
     ansible:
         version: 1.9.2
         playbook: /env/ansible/playbook.yml
-        extra_vars: {}
+        extra_vars: {}    nodes: 1
