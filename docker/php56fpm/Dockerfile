@@ -16,9 +16,8 @@ RUN apt-get update \
         zip \
         mbstring \
         intl \
-        mysql mysqli pdo_mysql \
-        opcache
-#RUN pecl install xdebug apc
+        mysql mysqli pdo_mysql #pdo pdo_mysql
+RUN pecl install xdebug apc
 # other packages: php5-imagick php-pear
 
 # Install phpunit, phpcs, phpdoc and composer
