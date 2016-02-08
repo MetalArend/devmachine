@@ -1,0 +1,43 @@
+data:
+  image: busybox
+  volumes:
+    - /opt/devmachine/gui:/var/www/html
+    - /opt/devmachine/gui/log:/log
+  command: "true"
+
+db:
+  extends:
+    file: /opt/devmachine/docker/mysql56.yml
+    service: mysql
+  environment:
+    MYSQL_USER: devmachine
+    MYSQL_PASSWORD: devmachine
+    MYSQL_DATABASE: devmachine
+  volumes_from:
+    - data
+
+php:
+  extends:
+    file: /opt/devmachine/docker/php56fpm.yml
+    service: php
+  links:
+    - db:db
+  volumes_from:
+    - data
+
+lamp:
+  extends:
+    file: /opt/devmachine/docker/apache24.yml
+    service: apache
+  links:
+    - php:php
+    - db:db
+  environment:
+    - APACHE_SERVER_NAME=devmachine
+    - APACHE_SERVER_ADMIN=metalarend@gmail.com
+    - APACHE_DOCUMENT_ROOT=/var/www/html/public
+    - WORK_DIR=/var/www/html
+  ports:
+    - 8056:80
+  volumes_from:
+    - data

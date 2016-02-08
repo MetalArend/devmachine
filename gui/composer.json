@@ -1,0 +1,10 @@
+{
+  "require": {
+    "vrana/adminer": "^4.2"
+  },
+  "scripts": {
+    "post-autoload-dump": [
+      "cd vendor/vrana/adminer && php compile.php"
+    ]
+  }
+}
