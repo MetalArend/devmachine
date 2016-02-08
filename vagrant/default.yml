@@ -7,7 +7,8 @@ vm:
     hostname: null
     usable_port_range: 2200..2500
     network:
-        private_network: 192.168.100.100
+#        private_network:
+#            ip: 192.168.100.100
         forwarded_ports:
             # ssh is set by default - overwriting it can lead to unexpected behavior
             #ssh:
@@ -28,7 +29,7 @@ vm:
             memory: 2048
             cpus: 2
             modifyvm:
-                name: devmachine
+#                 name: devmachine
                 # natdnsproxy1: true
                 natdnshostresolver1: true
                 # rtcuseutc: true # bugfix ssh connection - https://github.com/mitchellh/vagrant/issues/391
@@ -51,18 +52,22 @@ ssh:
     shell: "bash -c 'BASH_ENV=/etc/profile; exec bash'" # default: "bash -l", but this resolves the stdin error
 
 devmachine:
-    bashrc: "cd /env"
-    ip: 192.168.100.100
-    timezone: Europe/Brussels
-    locale: en_US.UTF-8
-    shell: bash
-    docker:
-        version: 1.9.1*
-        group_members: vagrant
-        options: -s aufs
-    docker-compose:
-        version: 1.5.2
-    ansible:
-        version: 1.9.2
-        playbook: /env/ansible/playbook.yml
-        extra_vars: {}    nodes: 1
+    nodes: 1
+#    hostname: rancher-%02d
+#    ip: 172.20.100.#{i+99}
+#    bashrc: "cd /home"
+#    ip: 192.168.100.100
+#    timezone: Europe/Brussels
+#    locale: en_US.UTF-8
+#    shell: bash
+#    docker:
+#        version: 1.9.1*
+#        group_members: vagrant
+#        options: -s aufs
+#    docker-compose:
+#        version: 1.5.2
+#    ansible:
+#        version: 1.9.2
+#        playbook: /env/ansible/playbook.yml
+#        extra_vars: {}
+
