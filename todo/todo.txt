@@ -1,6 +1,11 @@
+- overwrite default login location based on active docker machines and settings for project
+- create plugin to directly ssh into docker-compose container
+- persist shell history for all docker containers + vagrant machine?
 - use rancheros
 - "vagrant ssh php workspace/stagesol"
 - add behat
+- use nfs within rancheros
+- use aufs within rancheros
 - TODO remove phpunit and other tools from default php docker image, but create helper function for them
 
 - workspace:up to only start a specific workspace
