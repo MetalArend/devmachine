@@ -1,3 +1,28 @@
+
+# Install phpunit, phpcs, phpdoc and composer
+RUN apt-get install -y git \
+    && curl -o /usr/bin/phpunit https://phar.phpunit.de/phpunit.phar \
+    && curl -o /usr/bin/phpcs https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar \
+    && curl -o /usr/bin/phpcbf https://squizlabs.github.io/PHP_CodeSniffer/phpcbf.phar \
+    && curl -o /usr/bin/phpdoc http://phpdoc.org/phpDocumentor.phar \
+    && curl -o /usr/bin/composer https://getcomposer.org/composer.phar \
+    && chmod +x /usr/bin/phpunit /usr/bin/phpcs /usr/bin/phpcbf /usr/bin/composer /usr/bin/phpdoc
+
+
+zend_extension = "/usr/local/lib/php/extensions/no-debug-non-zts-20131226/xdebug.so"
+xdebug.remote_enable = 1
+xdebug.remote_log = "/log/xdebug.log"
+xdebug.remote_host = 127.0.0.1
+xdebug.remote_port = 10000
+xdebug.profiler_enable=0
+xdebug.profiler_enable_trigger=1
+xdebug.remote_autostart=0
+
+
+- cache docker builds in repository, based on md5 from files
+- do a docker-compose build --no-cache for instances where docker files are changed
+- remove 10000 port and find a way to run phpspec and stuff without installing it to the php container
+- use specific version from docker and docker-compose inside rancheros
 - use rancheros
 - "vagrant ssh php workspace/stagesol"
 - add behat
@@ -141,3 +166,39 @@ TODO CHECK https://github.com/coreos/coreos-vagrant/blob/master/Vagrantfile
 # export database: -c 'exec mysqldump --host="$MYSQL_PORT_3306_TCP_ADDR" --user="root" --password="$MYSQL_ENV_MYSQL_ROOT_PASSWORD" stagesol api__account > /dump/api__account.sql'
 # import database: -c 'exec mysql --host="$MYSQL_PORT_3306_TCP_ADDR" --user="root" --password="$MYSQL_ENV_MYSQL_ROOT_PASSWORD" stagesol < /dump/api__account.sql'
 
+
+# Run docker-compose
+echo -e "\e[33mRun docker-compose\e[0m"
+docker-compose stop && docker-compose rm -f && docker-compose build && docker-compose up -d && docker-compose ps
+source "/env/shell/common.sh"
+#check_container --container "db" --port 3306 --timeout 20
+check_container --container "php" --port 9000 --timeout 20
+check_container --container "lamp" --port 80 --timeout 20
+
+#docker rm -f "xdebug_php" &> /dev/null; \
+#LINK_CONTAINER_ID=$(docker-compose ps -q "php"); \
+#docker run \
+#    --name "xdebug_php" \
+#    --link "$(docker inspect --format="{{.Name}}" "${LINK_CONTAINER_ID}")" \
+#    --volumes-from ${LINK_CONTAINER_ID} \
+#    -d \
+#    "$(docker inspect --format="{{.Image}}" "${LINK_CONTAINER_ID}")" \
+#    sh -c "pecl install xdebug; XDEBUG_PATH=$(find / -name 'xdebug.so' 2> /dev/null); zend_extension="${XDEBUG_PATH}" > /usr/local/etc/php/conf.d/xdebug.ini; php-fpm"; \
+#\
+#docker rm -f "xdebug_lamp" &> /dev/null; \
+#LINK_CONTAINER_ID=$(docker-compose ps -q "lamp"); \
+#docker exec "${LINK_CONTAINER_ID}" /bin/bash -c 'ls -hal /usr/sbin/'; \
+#docker run \
+#    --name "xdebug_lamp" \
+#    --link "$(docker inspect --format="{{.Name}}" "${LINK_CONTAINER_ID}")" \
+#    --volumes-from ${LINK_CONTAINER_ID} \
+#    -p 8081:80 \
+#    -d \
+#    "$(docker inspect --format="{{.Image}}" "${LINK_CONTAINER_ID}")"; \
+#    ls -hal /usr/sbin/
+#    "$(docker inspect --format="{{index .Config.Entrypoint 0}}" "${LINK_CONTAINER_ID}")" "-D" \
+#docker ps
+#
+##docker cp ${LINK_CONTAINER_ID}:/usr/sbin/apache2 ./tmp/usr/sbin/apache2; \
+##docker cp ./tmp/usr/sbin/apache2 "xdebug_lamp":/usr/sbin/apache2 ;\
+#docker exec -ti "stagesol_lamp_1" /bin/bash -c 'cd ~; exec "${SHELL:-sh}"'
