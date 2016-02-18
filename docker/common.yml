@@ -23,7 +23,13 @@ php56fpm:
   build: /env/docker/php56-fpm
   ports:
     - "9000"
-    - "10000"
+
+php56fpm-xdebug:
+  build: /env/docker/php56-fpm
+  ports:
+    - "9000"
+  # TODO use environment variables
+  command: sh -c 'pecl install xdebug | grep "zend_extension=" | sed "s/^.*zend_extension=\(.*xdebug.so\).*/\1/" | xargs -I %xdebug_path% printf "zend_extension=\"%xdebug_path%\"\nxdebug.remote_enable=1\nxdebug.remote_connect_back=1\nxdebug.remote_port=9000" > /usr/local/etc/php/conf.d/xdebug.ini && php-fpm'
 
 php70fpm:
   build: /env/docker/php70-fpm
