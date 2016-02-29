@@ -1,70 +1,78 @@
-vagrant:
-    api_version: "2"
-
-vm:
-    box: "rancherio/rancheros"
-    box_version: ">=0.4.1"
-    hostname: null
-    usable_port_range: 2200..2500
-    network:
-#        private_network:
-#            ip: 192.168.100.100
-        forwarded_ports:
-            # ssh is set by default - overwriting it can lead to unexpected behavior
-            #ssh:
-            #    host: 2222
-            #    guest: 22
-            http_8080:
-                host: 8080
-                guest: 80
-            http_8000:
-                host: 8000
-                guest: 8000
-    provider:
-        virtualbox:
-            gui: false
-            memory: 2048
-            cpus: 2
-            modifyvm:
-#                 name: devmachine
-                # natdnsproxy1: true
-                natdnshostresolver1: true
-                # rtcuseutc: true # bugfix ssh connection - https://github.com/mitchellh/vagrant/issues/391
-                memory: 2048
-                # TODO nictype1: virtio # faster network - https://stackoverflow.com/questions/27401513/vagrant-ansible-resolving-super-slow
-            setextradata:
-                VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root: true # enable symlinks for windows
-            check_guest_additions: false
-            functional_vboxsf: false
-    provision: {}
-
-ssh:
-    host: null
-    port: null
-    username: rancher # https://github.com/Varying-Vagrant-Vagrants/VVV/issues/375
-    guest_port: null
-    keep_alive: true
-    forward_agent: false # http://wildlyinaccurate.com/using-ssh-agent-forwarding-with-vagrant/
-    insert_key: true
-    shell: "bash -c 'BASH_ENV=/etc/profile; exec bash'" # default: "bash -l", but this resolves the stdin error
-
+---
 devmachine:
-    nodes: 1
-#    hostname: rancher-%02d
-#    ip: 172.20.100.#{i+99}
-#    bashrc: "cd /home"
-#    ip: 192.168.100.100
-#    timezone: Europe/Brussels
-#    locale: en_US.UTF-8
-#    shell: bash
-#    docker:
-#        version: 1.9.1*
-#        group_members: vagrant
-#        options: -s aufs
-#    docker-compose:
-#        version: 1.5.2
-#    ansible:
-#        version: 1.9.2
-#        playbook: /env/ansible/playbook.yml
-#        extra_vars: {}
-
+  version: 0.0.0 # TODO add version in Vagrantfile
+  branding: |-
+    ________            ______  ___            ______ _____
+    ___  __ \_______   ____   |/  /_____ _________  /____(_)___________
+    __  / / /  _ \_ | / /_  /|_/ /_  __ `/  ___/_  __ \_  /__  __ \  _ \
+    _  /_/ //  __/_ |/ /_  /  / / / /_/ // /__ _  / / /  / _  / / /  __/
+    /_____/ \___/_____/ /_/  /_/  \__,_/ \___/ /_/ /_//_/  /_/ /_/\___/
+  plugins: # TODO load plugins based on platform
+    vagrant-reload: all
+    vagrant-winnfsd: windows
+  hostname:
+  nodes: 1
+  node_suffix: "-%02d"
+  #timezone: Europe/Brussels
+  #locale: en_US.UTF-8
+  #ip: 172.20.100.#{i+99}
+  #bashrc: "cd /home"
+  #ip: 192.168.100.100
+  #shell: bash
+  #docker:
+  #    version: 1.9.1*
+  #    group_members: vagrant
+  #    options: -s aufs
+  #docker-compose:
+  #    version: 1.5.2
+  #ansible:
+  #    version: 1.9.2
+  #    playbook: /env/ansible/playbook.yml
+  #    extra_vars: {}
+vagrant:
+  api_version: 2
+vm:
+  box: "rancherio/rancheros"
+  box_version: ">=0.4.1"
+#  hostname: null
+  usable_port_range: 2200..2500
+  network:
+#    private_network:
+#      ip: 192.168.100.100
+    forwarded_ports:
+      # ssh is set by default - overwriting it can lead to unexpected behavior
+      #ssh:
+      #  host: 2222
+      #  guest: 22
+      http_8080:
+        host: 8080
+        guest: 80
+      http_8000:
+        host: 8000
+        guest: 8000
+  provider:
+    virtualbox:
+      gui: false
+      memory: 2048
+      cpus: 2
+      modifyvm:
+        # name: devmachine
+        # natdnsproxy1: true
+        natdnshostresolver1: true
+        # rtcuseutc: true # bugfix ssh connection - https://github.com/mitchellh/vagrant/issues/391
+        memory: 2048
+        # TODO nictype1: virtio # faster network - https://stackoverflow.com/questions/27401513/vagrant-ansible-resolving-super-slow
+      setextradata:
+        VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root: true # enable symlinks for windows # TODO test
+      check_guest_additions: false
+      functional_vboxsf: false
+#  provision: {}
+ssh:
+#  host: null
+#  port: null
+#  username: rancher # https://github.com/Varying-Vagrant-Vagrants/VVV/issues/375
+#  guest_port: null
+#  keep_alive: true
+#  forward_agent: false # http://wildlyinaccurate.com/using-ssh-agent-forwarding-with-vagrant/
+#  insert_key: true
+#  shell: "bash -c 'BASH_ENV=/etc/profile; exec bash'" # default: "bash -l", but this resolves the stdin error
