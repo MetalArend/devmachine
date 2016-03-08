@@ -11,6 +11,7 @@ Vagrant.require_version '>= 1.6.0'
 require 'rbconfig'
 require 'yaml'
 require 'fileutils'
+# require_relative 'vagrant/plugins/vagrant_rancheros_guest_plugin.rb'
 
 # Detect platform
 $platforms = ["windows", "mac", "linux", "unix", "unknown", "all"]
@@ -32,10 +33,13 @@ $platform ||= (
     end
 )
 
+# Detect cwd
+$cwd = File.dirname(File.expand_path(__FILE__))
+
 # Load configuration
 $merger = proc { |_,x,y| x.is_a?(Hash) && y.is_a?(Hash) ? x.merge(y, &$merger) : y }
-$default_config = (YAML::load_file(File.join(File.dirname(File.expand_path(__FILE__)), 'vagrant', 'default.yml')) rescue {}) || {}
-$user_config = (YAML::load_file(File.join(File.dirname(File.expand_path(__FILE__)), 'devmachine.yml')) rescue {}) || {}
+$default_config = (YAML::load_file(File.join($cwd, 'core', 'vagrant', 'default.yml')) rescue {}) || {}
+$user_config = (YAML::load_file(File.join($cwd, 'devmachine.yml')) rescue {}) || {}
 $yaml_config = $default_config.merge($user_config, &$merger)
 
 # Optimize configuration
@@ -48,39 +52,180 @@ $plugins = ($yaml_config['devmachine']['plugins'] rescue {}) || {}
 $plugins_to_install = $plugins.select { |plugin, desired_platform| $platforms.include? desired_platform and (desired_platform == $platform or desired_platform == "all") }
 $yaml_config['devmachine']['plugins'] = $plugins_to_install
 
-# Save optimized configuration (for inspection) # TODO only when devmachine.inspect is true?
-File.open(File.join(File.dirname(File.expand_path(__FILE__)), 'devmachine.opt.yml'),'w') do |file| # set perm too
+# Add workspaces
+# if !$yaml_config['workspace'].nil?
+#     $yaml_config['workspace'].each do |workspace_name, workspace_config|
+#         if $yaml_config['vm']['provision']["workspace:#{workspace_name}"].nil?
+#             $yaml_config['vm']['provision']["workspace:#{workspace_name}"] = {}
+#         end
+#         $yaml_config['vm']['provision']["workspace:#{workspace_name}"] = add_defaults(
+#             $yaml_config['workspace']["#{workspace_name}"],
+#             $yaml_config['vm']['provision']["workspace:#{workspace_name}"]
+#         )
+#     end
+#     $yaml_config['devmachine'].delete('workspace')
+# end
+# Dir.glob('./workspace/*').select {|f| File.directory? f}.each do |file|
+#     if File.exist?("#{file}/devmachine.yml")
+#         workspace_name = File.basename(file)
+#         if $yaml_config['vm']['provision']["workspace:#{workspace_name}"].nil?
+#             $yaml_config['vm']['provision']["workspace:#{workspace_name}"] = {}
+#         end
+#         $yaml_config['vm']['provision']["workspace:#{workspace_name}"] = add_defaults(
+#             $yaml_config['vm']['provision']["workspace:#{workspace_name}"],
+#             add_defaults(
+#                 YAML.load_file("#{file}/devmachine.yml"),
+#                 {
+#                     "type"=>"shell",
+#                     "directory"=>"workspace/#{workspace_name}",
+#                     "keep_color"=>true
+#                 }
+#             )
+#         )
+#     end
+# end
+
+#             # Add once to run provision
+#             ARGV.each_with_index do |argument, index|
+#                 if "--provision-with" == argument
+#                     provision_with_array = ARGV[index+1].split(',')
+#                     provision_with_array.each do |provision_with|
+#                         if provision_with.include?(':') && !provision_with.start_with?('workspace:')
+#                             provision_with_arguments = provision_with.split(':')
+#
+#                             # Initialize variables
+#                             inline = "cd \"/env\""
+#                             dos2unix = []
+#
+#                             while provision_with_arguments.any? do
+#                                 # Get type
+#                                 type = provision_with_arguments.first
+#                                 provision_with_arguments = provision_with_arguments.drop(1)
+#
+#                                 # Run docker-compose
+#                                 if "docker-compose" == type || "compose" == type
+#                                     inline += %~
+#                                         echo -e "\e[93mRun docker-compose\e[0m"
+#                                     ~
+#                                     container = provision_with_arguments.at(0)
+#                                     entrypoint = !provision_with_arguments.at(1).empty? ? provision_with_arguments.at(1) : "/bin/bash"
+#                                     command = provision_with_arguments.drop(2).join(':')
+#                                     provision_with_arguments = []
+#                                     inline += %~
+#                                         echo -e "container: \\\"#{container}\\\", entrypoint: \\\"#{entrypoint}\\\", command: \\\"#{command}\\\""
+#                                         docker-compose run --rm --entrypoint "#{entrypoint}" "#{container}" -c "#{command}"
+#                                     ~
+#
+#                                 # Run ansible-playbook
+#                                 elsif "ansible-playbook" == type || "playbook" == type
+#                                     playbook = !provision_with_arguments.at(0).nil? ? provision_with_arguments.at(0) : "playbook.yml"
+#                                     provision_with_arguments = provision_with_arguments.drop(1)
+#                                     inline += %~
+#                                         echo -e "\e[93mRun ansible-playbook\e[0m"
+#                                         export PYTHONUNBUFFERED=1
+#                                         export ANSIBLE_INVENTORY=/etc/ansible/local-hosts
+#                                         export ANSIBLE_FORCE_COLOR=1
+#                                         echo "playbook: \\\"#{playbook}\\\""
+#                                         ansible-playbook "#{playbook}" --connection=local
+#                                     ~
+#
+#                                 # Run bash with dos2unix
+#                                 elsif "#{$yaml_config['devmachine']['shell']}" == type || "script" == type
+#                                     command = provision_with_arguments.at(0)
+#                                     provision_with_arguments = provision_with_arguments.drop(1)
+#                                     inline += %~
+#                                         echo -e "\e[93mRun command (dos2unix)\e[0m"
+#                                         echo "command: \\\"#{$yaml_config['devmachine']['shell']} \\\"#{command}\\\"\\\""
+#                                         #{$yaml_config['devmachine']['shell']} "#{command}"
+#                                     ~
+#                                     dos2unix.push("echo \\\"#{command}\\\"")
+#
+#                                 # Run command
+#                                 elsif "run" == type || "command" == type
+#                                     command = provision_with_arguments.at(0)
+#                                     provision_with_arguments = provision_with_arguments.drop(1)
+#                                     inline += %~
+#                                         echo -e "\e[93mRun command\e[0m"
+#                                         echo "command: \\\"#{command}\\\""
+#                                         #{command}
+#                                     ~
+#
+#                                 # Run anything
+#                                 else
+#                                     command = provision_with_arguments.at(0)
+#                                     provision_with_arguments = provision_with_arguments.drop(1)
+#                                     inline += %~
+#                                         echo -e "\e[93mRun command\e[0m"
+#                                         echo "command: \\\"#{type} #{command}\\\""
+#                                         #{type} #{command}
+#                                     ~
+#
+#                                 end
+#
+#                             end
+#
+#                             # Add once to run provision
+#                             $yaml_config['vm']['provision'][provision_with] = {
+#                                 "type"=>"shell",
+#                                 "keep_color"=>true,
+#                                 "inline"=>inline,
+#                                 "dos2unix"=>dos2unix
+#                             }
+#                         end
+#                     end
+#                     break
+#                 end
+#             end
+
+# Save optimized configuration (for inspection)
+File.open(File.join($cwd, 'devmachine.opt.yml'),'w') do |file| # set perm too
     file.write $yaml_config.to_yaml
+end
+
+# Write all files to a local cache directory
+## puts File.expand_path('~')
+## require 'etc'
+## puts Etc.getpwuid.dir
+$cache = File.join($cwd, 'cache')
+if ENV['VAGRANT_HOME'] != $cache
+    Dir.rmdir(File.join($cwd, '.vagrant'))
+    ENV['VAGRANT_DOTFILE_PATH'] = $cache;
+    exec "export VAGRANT_HOME=#{$cache} && export VAGRANT_DOTFILE_PATH=#{$cache} && vagrant #{ARGV.join' '}"
+end
+
+# Install plugins
+if (['provision', 'reload', 'resume', 'up'].include? ARGV[0])
+    $plugins = $yaml_config['devmachine']['plugins'] rescue {}
+    $plugins_to_install = $plugins.select { |plugin, desired_platform| not Vagrant.has_plugin? plugin }
+    $restart = false
+    if not $plugins_to_install.empty?
+        $stdout.send(:puts, "Installing missing plugins...")
+        $plugins_to_install.each do |plugin, desired_platform|
+            if system "vagrant plugin install #{plugin}"
+                $restart = true
+            else
+                abort "Installation has failed."
+            end
+        end
+        if true === $restart
+            $stdout.send(:puts, "Restarting \"vagrant #{ARGV.join' '}\"...")
+            exec "vagrant #{ARGV.join' '}"
+        end
+    end
 end
 
 # Print branding
 if (['provision', 'reload', 'resume', 'up'].include? ARGV[0])
     $branding = ($yaml_config['devmachine']['branding'] + "\n" rescue "") \
-        + "(CC BY-SA 4.0) 2016 MetalArend \n\n" \
-        + "DevMachine" + (" v" + $yaml_config['devmachine']['version'] rescue "") + " on " + $platform
-    $stdout.send(:puts, "\n\e[92m" + $branding + "\e[0m\n\n")
+        + "DevMachine (CC BY-SA 4.0) 2016 MetalArend"
+    $stdout.send(:puts, "\n\e[92m" + $branding + "\e[0m\n")
+    $debug = ("v" + $yaml_config['devmachine']['version'] rescue "version unknown") + " | " \
+        + $platform + " | " \
+        + $cache
+    $stdout.send(:puts, "\e[2m" + $debug + "\e[0m\n\n")
 end
 
-# Install plugins
-$plugins = $yaml_config['devmachine']['plugins'] rescue {}
-$plugins_to_install = $plugins.select { |plugin, desired_platform| not Vagrant.has_plugin? plugin }
-$restart = false
-if not $plugins_to_install.empty?
-    $stdout.send(:puts, "Installing missing plugins...")
-    $plugins_to_install.each do |plugin, desired_platform|
-        if system "vagrant plugin install #{plugin}"
-            $restart = true
-        else
-            abort "Installation has failed."
-        end
-    end
-    if true === $restart
-        $stdout.send(:puts, "Executing \"vagrant #{ARGV.join' '}\" again...")
-        exec "vagrant #{ARGV.join' '}"
-    end
-end
-
-# Auto-update DevMachine (only when internet is available)
+# TODO Auto-update DevMachine (only when internet is available)
 
 # Build configuration
 Vagrant.configure($yaml_config['vagrant']['api_version']) do |config|
@@ -115,12 +260,48 @@ Vagrant.configure($yaml_config['vagrant']['api_version']) do |config|
                 node.vagrant.host = $yaml_config['vagrant']['host'].gsub(":", "").intern
             end
 
+            # Disabling compression because OS X has an ancient version of rsync installed.
+            # Add -z or remove rsync__args below if you have a newer version of rsync on your machine.
+            node.vm.synced_folder ".", "/opt/devmachine", type: "rsync",
+                rsync__exclude: [".git/", ".gitignore", ".cache/", ".idea/", "core", "workspace", "devmachine.opt.yml", "devmachine.yml", "README.md", "Vagrantfile"],
+                rsync__args: ["--verbose", "--archive", "--delete", "--copy-links"],
+                rsync__auto: true,
+                rsync__verbose: true,
+                disabled: false
+
+            node.vm.provision "shell", inline: %~
+                # Exit on error
+                set -e
+
+                # Download docker-compose
+                mkdir -p /opt/bin/
+                DOCKER_COMPOSE_FILENAME="docker-compose-`uname -s`-`uname -m`"
+                DOCKER_COMPOSE_VERSION="1.6.0"
+                DOCKER_COMPOSE_PATH="/opt/bin/docker-compose/${DOCKER_COMPOSE_VERSION}/docker-compose"
+                if test ! -f ${DOCKER_COMPOSE_PATH}; then
+                    mkdir -p "$(dirname "${DOCKER_COMPOSE_PATH}")"
+                    wget -O ${DOCKER_COMPOSE_PATH} https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/${DOCKER_COMPOSE_FILENAME}
+                fi
+                chmod +x ${DOCKER_COMPOSE_PATH}
+                sudo ln -sfn /${DOCKER_COMPOSE_PATH} /usr/bin/docker-compose
+
+                # Run docker-compose
+#                 echo -e "\e[33mRun docker-compose\e[0m"
+#                 cd "/opt/devmachine/gui"
+#                 docker-compose stop && docker-compose rm -f && docker-compose build && docker-compose up -d
+
+                # Logs
+                docker --version
+#                 docker-compose --version
+#                 docker-compose ps
+            ~
+
             # Load vm configuration
             if !$yaml_config['vm'].nil? && !$yaml_config['vm'].empty?
 
                 $yaml_config['vm'].each do |vm_name, vm_value|
 
-                    if !vm_value.nil? && !vm_value.empty?
+                    if !vm_value.nil?
 
                         if 'usable_port_range' == vm_name
                             if !vm_value[/^[0-9]+\.\.[0-9]+$/].nil?
@@ -289,3 +470,9 @@ Vagrant.configure($yaml_config['vagrant']['api_version']) do |config|
     end
 end
 
+# if (['provision', 'reload', 'resume', 'up'].include? ARGV[0])
+#     rsync = fork do
+#         exec "vagrant rsync-auto"
+#     end
+#     Process.detach(rsync)
+# end
