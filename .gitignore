@@ -1,4 +1,4 @@
-/.vagrant
+/cache
 /workspace/*
 !/workspace/.gitkeep
-!/workspace/devmachine
+/devmachine.opt.yml
