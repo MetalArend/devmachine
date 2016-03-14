@@ -11,7 +11,7 @@ Vagrant.require_version '>= 1.6.0'
 require 'rbconfig'
 require 'yaml'
 require 'fileutils'
-# require_relative 'vagrant/plugins/vagrant_rancheros_guest_plugin.rb'
+require_relative 'core/vagrant/plugins/vagrant_rancheros_guest_plugin.rb'
 
 # Detect platform
 $platforms = ["windows", "mac", "linux", "unix", "unknown", "all"]
