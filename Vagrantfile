@@ -4,8 +4,12 @@
 # TODO composer create-project phpmyadmin/phpmyadmin --repository-url=https://www.phpmyadmin.net/packages.json
 # docker exec -it $(docker inspect --format="{{.Id}}" "$(docker-compose ps -q "php")") /bin/bash
 
+# $stdout.sync = true
+
 # Check vagrant version
 Vagrant.require_version '>= 1.6.0'
+vagrant_default_home = '~/.vagrant.d'
+vagrant_default_dotfile_path = '.vagrant'
 
 # Load dependencies
 require 'rbconfig'
@@ -14,65 +18,113 @@ require 'fileutils'
 require_relative 'core/vagrant/plugins/vagrant_rancheros_guest_plugin.rb'
 
 # Detect platform
-$platforms = ["windows", "mac", "linux", "unix", "unknown", "all"]
-$platform ||= (
-    $host_os = RbConfig::CONFIG['host_os']
+platforms = [:windows, :mac, :linux, :unix, :unknown, :all]
+platform ||= (
+    host_os = RbConfig::CONFIG['host_os']
     case
     when ENV['OS'] == 'Windows_NT'
-        "windows"
-    when $host_os =~ /mswin|msys|mingw|cygwin|bccwin|wince|emc/
-        "windows"
-    when $host_os =~ /darwin|mac os/
-        "mac"
-    when $host_os =~ /linux/
-        "linux"
-    when $host_os =~ /solaris|bsd/
-        "unix"
+        :windows
+    when host_os =~ /mswin|msys|mingw|cygwin|bccwin|wince|emc/
+        :windows
+    when host_os =~ /darwin|mac os/
+        :mac
+    when host_os =~ /linux/
+        :linux
+    when host_os =~ /solaris|bsd/
+        :unix
     else
-        "unknown"
+        :unknown
     end
 )
 
 # Detect cwd
-$cwd = File.dirname(File.expand_path(__FILE__))
+cwd = File.dirname(File.expand_path(__FILE__))
 
 # Load configuration
-$merger = proc { |_,x,y| x.is_a?(Hash) && y.is_a?(Hash) ? x.merge(y, &$merger) : y }
-$default_config = (YAML::load_file(File.join($cwd, 'core', 'vagrant', 'default.yml')) rescue {}) || {}
-$user_config = (YAML::load_file(File.join($cwd, 'devmachine.yml')) rescue {}) || {}
-$yaml_config = $default_config.merge($user_config, &$merger)
+merger = proc { |_,x,y| x.is_a?(Hash) && y.is_a?(Hash) ? x.merge(y, &merger) : y }
+default_config = (YAML::load_file(File.expand_path('core/vagrant/default.yml', cwd)) rescue {}) || {}
+user_config = (YAML::load_file(File.expand_path('devmachine.yml', cwd)) rescue {}) || {}
+yaml_config = default_config.merge(user_config, &merger)
 
 # Optimize configuration
-$yaml_config['devmachine'] = !$yaml_config['devmachine'].nil? ? $yaml_config['devmachine'] : $default_config['devmachine']
-if $yaml_config['devmachine']['hostname'].nil?
-    $default_hostname = "#{`hostname`[0..-2]}".sub(/\..*$/,'')+"-devmachine" rescue "devmachine"
-    $yaml_config['devmachine']['hostname'] = $default_hostname
+yaml_config['devmachine'] = !yaml_config['devmachine'].nil? ? yaml_config['devmachine'] : default_config['devmachine']
+## Hostname
+if yaml_config['devmachine']['hostname'].nil?
+    yaml_config['devmachine']['hostname'] = "#{`hostname`[0..-2]}".sub(/\..*$/,'')+"-devmachine" rescue "devmachine"
 end
-$plugins = ($yaml_config['devmachine']['plugins'] rescue {}) || {}
-$plugins_to_install = $plugins.select { |plugin, desired_platform| $platforms.include? desired_platform and (desired_platform == $platform or desired_platform == "all") }
-$yaml_config['devmachine']['plugins'] = $plugins_to_install
+## Plugins
+plugins = (yaml_config['devmachine']['plugins'] rescue {}) || {}
+plugins_to_install = plugins.select { |plugin, desired_platform| platforms.include? desired_platform.to_sym and (desired_platform.to_sym == platform or desired_platform.to_sym == :all) }
+yaml_config['devmachine']['plugins'] = plugins_to_install
+## Vagrant Home
+if yaml_config['devmachine']['directories']['home'].nil?
+    yaml_config['devmachine']['directories']['home'] = yaml_config['devmachine']['directories']['cache']
+elsif false == yaml_config['devmachine']['directories']['home']
+    yaml_config['devmachine']['directories']['home'] = vagrant_default_home
+end
+## Vagrant Dotfile Path
+if yaml_config['devmachine']['directories']['dotfile_path'].nil?
+    yaml_config['devmachine']['directories']['dotfile_path'] = yaml_config['devmachine']['directories']['cache']
+elsif false == yaml_config['devmachine']['directories']['dotfile_path']
+    yaml_config['devmachine']['directories']['dotfile_path'] = vagrant_default_dotfile_path
+end
+
+# If you find that your VirtualBox VMs seem slow when you try to SSH into them or when you point a web browser at them, then try adding these lines to your Vagrantfile:
+#
+# Vagrant.configure("2") do |config|
+#   config.vm.provider :virtualbox do |vb|
+#
+#     # change the network card hardware for better performance
+#     vb.customize ["modifyvm", :id, "--nictype1", "virtio" ]
+#     vb.customize ["modifyvm", :id, "--nictype2", "virtio" ]
+#
+#     # suggested fix for slow network performance
+#     # see https://github.com/mitchellh/vagrant/issues/1807
+#     vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+#     vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+#   end
+# end
+
+# config.vm.provider "virtualbox" do |v|
+#   host = RbConfig::CONFIG['host_os']
+#
+#   # Give VM 1/4 system memory
+#   if host =~ /darwin/
+#     # sysctl returns Bytes and we need to convert to MB
+#     mem = `sysctl -n hw.memsize`.to_i / 1024
+#   elsif host =~ /linux/
+#     # meminfo shows KB and we need to convert to MB
+#     mem = `grep 'MemTotal' /proc/meminfo | sed -e 's/MemTotal://' -e 's/ kB//'`.to_i
+#   elsif host =~ /mswin|mingw|cygwin/
+#     # Windows code via https://github.com/rdsubhas/vagrant-faster
+#     mem = `wmic computersystem Get TotalPhysicalMemory`.split[1].to_i / 1024
+#   end
+#
+#   mem = mem / 1024 / 4
+#   v.customize ["modifyvm", :id, "--memory", mem]
+# end
 
 # Add workspaces
-# if !$yaml_config['workspace'].nil?
-#     $yaml_config['workspace'].each do |workspace_name, workspace_config|
-#         if $yaml_config['vm']['provision']["workspace:#{workspace_name}"].nil?
-#             $yaml_config['vm']['provision']["workspace:#{workspace_name}"] = {}
+# if !yaml_config['workspace'].nil?
+#     yaml_config['workspace'].each do |workspace_name, workspace_config|
+#         if yaml_config['vm']['provision']["workspace:#{workspace_name}"].nil?
+#             yaml_config['vm']['provision']["workspace:#{workspace_name}"] = {}
 #         end
-#         $yaml_config['vm']['provision']["workspace:#{workspace_name}"] = add_defaults(
-#             $yaml_config['workspace']["#{workspace_name}"],
-#             $yaml_config['vm']['provision']["workspace:#{workspace_name}"]
+#         yaml_config['vm']['provision']["workspace:#{workspace_name}"] = add_defaults(
+#             yaml_config['workspace']["#{workspace_name}"],
+#             yaml_config['vm']['provision']["workspace:#{workspace_name}"]
 #         )
 #     end
-#     $yaml_config['devmachine'].delete('workspace')
+#     yaml_config['devmachine'].delete('workspace')
 # end
 # Dir.glob('./workspace/*').select {|f| File.directory? f}.each do |file|
 #     if File.exist?("#{file}/devmachine.yml")
 #         workspace_name = File.basename(file)
-#         if $yaml_config['vm']['provision']["workspace:#{workspace_name}"].nil?
-#             $yaml_config['vm']['provision']["workspace:#{workspace_name}"] = {}
+#         if yaml_config['vm']['provision']["workspace:#{workspace_name}"].nil?
+#             yaml_config['vm']['provision']["workspace:#{workspace_name}"] = {}
 #         end
-#         $yaml_config['vm']['provision']["workspace:#{workspace_name}"] = add_defaults(
-#             $yaml_config['vm']['provision']["workspace:#{workspace_name}"],
+#         yaml_config['vm']['provision']["workspace:#{workspace_name}"] = add_defaults(
+#             yaml_config['vm']['provision']["workspace:#{workspace_name}"],
 #             add_defaults(
 #                 YAML.load_file("#{file}/devmachine.yml"),
 #                 {
@@ -130,13 +182,13 @@ $yaml_config['devmachine']['plugins'] = $plugins_to_install
 #                                     ~
 #
 #                                 # Run bash with dos2unix
-#                                 elsif "#{$yaml_config['devmachine']['shell']}" == type || "script" == type
+#                                 elsif "#{yaml_config['devmachine']['shell']}" == type || "script" == type
 #                                     command = provision_with_arguments.at(0)
 #                                     provision_with_arguments = provision_with_arguments.drop(1)
 #                                     inline += %~
 #                                         echo -e "\e[93mRun command (dos2unix)\e[0m"
-#                                         echo "command: \\\"#{$yaml_config['devmachine']['shell']} \\\"#{command}\\\"\\\""
-#                                         #{$yaml_config['devmachine']['shell']} "#{command}"
+#                                         echo "command: \\\"#{yaml_config['devmachine']['shell']} \\\"#{command}\\\"\\\""
+#                                         #{yaml_config['devmachine']['shell']} "#{command}"
 #                                     ~
 #                                     dos2unix.push("echo \\\"#{command}\\\"")
 #
@@ -165,7 +217,7 @@ $yaml_config['devmachine']['plugins'] = $plugins_to_install
 #                             end
 #
 #                             # Add once to run provision
-#                             $yaml_config['vm']['provision'][provision_with] = {
+#                             yaml_config['vm']['provision'][provision_with] = {
 #                                 "type"=>"shell",
 #                                 "keep_color"=>true,
 #                                 "inline"=>inline,
@@ -178,37 +230,49 @@ $yaml_config['devmachine']['plugins'] = $plugins_to_install
 #             end
 
 # Save optimized configuration (for inspection)
-File.open(File.join($cwd, 'devmachine.opt.yml'),'w') do |file| # set perm too
-    file.write $yaml_config.to_yaml
+File.open(File.expand_path('devmachine.opt.yml', cwd),'w') do |file| # set perm too
+    file.write yaml_config.to_yaml
 end
 
-# Write all files to a local cache directory
+# Assure environment variables are set
 ## puts File.expand_path('~')
 ## require 'etc'
 ## puts Etc.getpwuid.dir
-$cache = File.join($cwd, 'cache')
-if ENV['VAGRANT_HOME'] != $cache
-    Dir.rmdir(File.join($cwd, '.vagrant'))
-    ENV['VAGRANT_DOTFILE_PATH'] = $cache;
-    exec "export VAGRANT_HOME=#{$cache} && export VAGRANT_DOTFILE_PATH=#{$cache} && vagrant #{ARGV.join' '}"
+# TODO this makes vagrant behave strangely during vagrant version
+log = yaml_config['devmachine']['log']
+cache = File.expand_path(yaml_config['devmachine']['directories']['cache'], cwd)
+home = (! ENV['VAGRANT_HOME'].nil? ? ENV['VAGRANT_HOME'] : File.expand_path(yaml_config['devmachine']['directories']['home'], cwd))
+dotfile_path = (! ENV['VAGRANT_DOTFILE_PATH'].nil? ? ENV['VAGRANT_DOTFILE_PATH'] : File.expand_path(yaml_config['devmachine']['directories']['dotfile_path'], cwd))
+if dotfile_path != ENV['VAGRANT_DOTFILE_PATH'] or home != ENV['VAGRANT_HOME']
+    if ENV['VAGRANT_DOTFILE_PATH'].nil?
+        Dir.rmdir(File.expand_path(vagrant_default_dotfile_path, cwd))
+    end
+    ENV['VAGRANT_HOME'] = home
+    ENV['VAGRANT_DOTFILE_PATH'] = dotfile_path
+    if platform == :windows
+        # TODO test this on windows
+        exec "SET VAGRANT_LOG=#{log} && SET VAGRANT_HOME=#{home} && SET VAGRANT_DOTFILE_PATH=#{dotfile_path} && vagrant #{ARGV.join' '}"
+    else
+        exec "export VAGRANT_LOG=#{log} && export VAGRANT_HOME=#{home} && export VAGRANT_DOTFILE_PATH=#{dotfile_path} && vagrant #{ARGV.join' '}"
+    end
 end
 
 # Install plugins
 if (['provision', 'reload', 'resume', 'up'].include? ARGV[0])
-    $plugins = $yaml_config['devmachine']['plugins'] rescue {}
-    $plugins_to_install = $plugins.select { |plugin, desired_platform| not Vagrant.has_plugin? plugin }
-    $restart = false
-    if not $plugins_to_install.empty?
+    plugins = yaml_config['devmachine']['plugins'] rescue {}
+    plugins_to_install = plugins.select { |plugin, desired_platform| not Vagrant.has_plugin? plugin }
+    restart = false
+    if not plugins_to_install.empty?
         $stdout.send(:puts, "Installing missing plugins...")
-        $plugins_to_install.each do |plugin, desired_platform|
+        plugins_to_install.each do |plugin, desired_platform|
             if system "vagrant plugin install #{plugin}"
-                $restart = true
+                restart = true
             else
                 abort "Installation has failed."
             end
         end
-        if true === $restart
-            $stdout.send(:puts, "Restarting \"vagrant #{ARGV.join' '}\"...")
+        if true === restart
+            $stdout.send(:puts, "Running \"vagrant #{ARGV.join' '}\" again...")
             exec "vagrant #{ARGV.join' '}"
         end
     end
@@ -216,28 +280,40 @@ end
 
 # Print branding
 if (['provision', 'reload', 'resume', 'up'].include? ARGV[0])
-    $branding = ($yaml_config['devmachine']['branding'] + "\n" rescue "") \
-        + "DevMachine (CC BY-SA 4.0) 2016 MetalArend"
-    $stdout.send(:puts, "\n\e[92m" + $branding + "\e[0m\n")
-    $debug = ("v" + $yaml_config['devmachine']['version'] rescue "version unknown") + " | " \
-        + $platform + " | " \
-        + $cache
-    $stdout.send(:puts, "\e[2m" + $debug + "\e[0m\n\n")
+    branding = (yaml_config['devmachine']['branding'] + "\n" rescue "") + "DevMachine (CC BY-SA 4.0) 2016 MetalArend"
+    $stdout.send(:puts, "\n\e[92m" + branding + "\e[0m\n")
+    version = ("v" + yaml_config['devmachine']['version'] rescue "version unknown") + " | " + platform.to_s
+    $stdout.send(:puts, "\e[2m" + version + "\e[0m")
+end
+
+# Print information
+if (['provision', 'reload', 'resume', 'up'].include? ARGV[0])
+    if File.expand_path('cache', $cwd) != cache
+        $stdout.send(:puts, "\e[2mcache: " + Pathname.new(cache).relative_path_from(Pathname.new(cwd)).to_s + "\e[0m")
+    end
+    if home != cache
+        $stdout.send(:puts, "\e[2mhome: " + Pathname.new(home).relative_path_from(Pathname.new(cwd)).to_s + "\e[0m")
+    end
+    if dotfile_path != cache
+        $stdout.send(:puts, "\e[2mdotfile_path: " + Pathname.new(dotfile_path).relative_path_from(Pathname.new(cwd)).to_s + "\e[0m")
+    end
+    $stdout.send(:puts, "\n")
 end
 
 # TODO Auto-update DevMachine (only when internet is available)
 
 # Build configuration
-Vagrant.configure($yaml_config['vagrant']['api_version']) do |config|
-    (1..$yaml_config['devmachine']['nodes']).each do |i|
-        $node_hostname = $yaml_config['devmachine']['hostname'] + (($yaml_config['devmachine']['node_suffix'] % i) rescue ($yaml_config['devmachine']['node_suffix'] + i.to_s))
+Vagrant.configure(yaml_config['vagrant']['api_version']) do |config|
+    (1..yaml_config['devmachine']['nodes']).each do |i|
+        node_hostname = yaml_config['devmachine']['hostname'] + ((yaml_config['devmachine']['node_suffix'] % i) rescue (yaml_config['devmachine']['node_suffix'] + i.to_s))
 
-        config.vm.define $node_hostname do |node|
+        config.vm.define node_hostname do |node|
 
             # Host
-            #ip = "172.20.100.#{i+99}" # TODO use $yaml_config['vm']['ip']?
-            #node.vm.network "private_network", ip: ip # TODO this triggers configure_networks
-            #node.vm.hostname = $node_hostname # TODO use $yaml_config['vm']['hostname']? # TODO this triggers change_host_name
+#             node.vm.network :private_network, ip: "192.168.100.100"
+#             ip = "172.20.100.#{i+99}" # TODO use yaml_config['vm']['ip']?
+#             node.vm.network :private_network, ip: ip # TODO this triggers configure_networks
+#             node.vm.hostname = node_hostname # TODO use yaml_config['vm']['hostname']? # TODO this triggers change_host_name
 
             # Disable auto mounting vagrant directory
             node.vm.synced_folder ".", "/vagrant", disabled: true
@@ -256,40 +332,54 @@ Vagrant.configure($yaml_config['vagrant']['api_version']) do |config|
 #             node.vm.synced_folder "~/.ssh", "/ssh", type: "nfs"
 
             # Set the host if given
-            if !$yaml_config['vagrant']['host'].nil?
-                node.vagrant.host = $yaml_config['vagrant']['host'].gsub(":", "").intern
+            if !yaml_config['vagrant']['host'].nil?
+                node.vagrant.host = yaml_config['vagrant']['host'].gsub(":", "").intern
             end
 
             # Disabling compression because OS X has an ancient version of rsync installed.
             # Add -z or remove rsync__args below if you have a newer version of rsync on your machine.
-            node.vm.synced_folder ".", "/opt/devmachine", type: "rsync",
-                rsync__exclude: [".git/", ".gitignore", ".cache/", ".idea/", "core", "workspace", "devmachine.opt.yml", "devmachine.yml", "README.md", "Vagrantfile"],
+            node.vm.synced_folder "./core/docker", "/home/rancher/docker", type: :rsync,
+#                 rsync__exclude: [".git/", ".gitignore", ".idea/", "cache/", "core/", "workspace/", "devmachine.opt.yml", "devmachine.yml", "README.md", "Vagrantfile"],
                 rsync__args: ["--verbose", "--archive", "--delete", "--copy-links"],
                 rsync__auto: true,
                 rsync__verbose: true,
                 disabled: false
 
+#             config.vm.provision :docker do |docker|
+#                 docker.pull_images "busybox"
+#                 docker.run "simple-echo",
+#                     image: "busybox",
+#                     args: "-p 8080:8080 --restart=always",
+#                     cmd: "nc -p 8080 -l -l -e echo hello world!"
+#             end
+
+#             node.vm.provider "virtualbox" do |vb|
+#                 config.vm.network "private_network", :type => 'dhcp', :name => 'vboxnet0', :adapter => 2
+#             end
+#
+#             node.vm.synced_folder ".", "/test", type: "nfs"
+
             node.vm.provision "shell", inline: %~
                 # Exit on error
                 set -e
 
-                # Download docker-compose
-                mkdir -p /opt/bin/
-                DOCKER_COMPOSE_FILENAME="docker-compose-`uname -s`-`uname -m`"
-                DOCKER_COMPOSE_VERSION="1.6.0"
-                DOCKER_COMPOSE_PATH="/opt/bin/docker-compose/${DOCKER_COMPOSE_VERSION}/docker-compose"
-                if test ! -f ${DOCKER_COMPOSE_PATH}; then
-                    mkdir -p "$(dirname "${DOCKER_COMPOSE_PATH}")"
-                    wget -O ${DOCKER_COMPOSE_PATH} https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/${DOCKER_COMPOSE_FILENAME}
-                fi
-                chmod +x ${DOCKER_COMPOSE_PATH}
-                sudo ln -sfn /${DOCKER_COMPOSE_PATH} /usr/bin/docker-compose
-
-                # Run docker-compose
-#                 echo -e "\e[33mRun docker-compose\e[0m"
-#                 cd "/opt/devmachine/gui"
-#                 docker-compose stop && docker-compose rm -f && docker-compose build && docker-compose up -d
-
+#                 # Download docker-compose
+#                 mkdir -p /opt/bin/
+#                 DOCKER_COMPOSE_FILENAME="docker-compose-`uname -s`-`uname -m`"
+#                 DOCKER_COMPOSE_VERSION="1.6.0"
+#                 DOCKER_COMPOSE_PATH="/opt/bin/docker-compose/${DOCKER_COMPOSE_VERSION}/docker-compose"
+#                 if test ! -f ${DOCKER_COMPOSE_PATH}; then
+#                     mkdir -p "$(dirname "${DOCKER_COMPOSE_PATH}")"
+#                     wget -O ${DOCKER_COMPOSE_PATH} https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/${DOCKER_COMPOSE_FILENAME}
+#                 fi
+#                 chmod +x ${DOCKER_COMPOSE_PATH}
+#                 sudo ln -sfn /${DOCKER_COMPOSE_PATH} /usr/bin/docker-compose
+#
+#                 # Run docker-compose
+# #                 echo -e "\e[33mRun docker-compose\e[0m"
+# #                 cd "/opt/devmachine/gui"
+# #                 docker-compose stop && docker-compose rm -f && docker-compose build && docker-compose up -d
+#
                 # Logs
                 docker --version
 #                 docker-compose --version
@@ -297,9 +387,9 @@ Vagrant.configure($yaml_config['vagrant']['api_version']) do |config|
             ~
 
             # Load vm configuration
-            if !$yaml_config['vm'].nil? && !$yaml_config['vm'].empty?
+            if !yaml_config['vm'].nil? && !yaml_config['vm'].empty?
 
-                $yaml_config['vm'].each do |vm_name, vm_value|
+                yaml_config['vm'].each do |vm_name, vm_value|
 
                     if !vm_value.nil?
 
@@ -458,8 +548,8 @@ Vagrant.configure($yaml_config['vagrant']['api_version']) do |config|
             end
 
             # Load ssh configuration
-            if $yaml_config.has_key?('ssh') && !$yaml_config['ssh'].nil? && !$yaml_config['ssh'].empty?
-                $yaml_config['ssh'].each do |ssh_name, ssh_value|
+            if yaml_config.has_key?('ssh') && !yaml_config['ssh'].nil? && !yaml_config['ssh'].empty?
+                yaml_config['ssh'].each do |ssh_name, ssh_value|
                     if !ssh_value.nil?
                         node.ssh.send("#{ssh_name}=", "#{ssh_value}")
                     end
