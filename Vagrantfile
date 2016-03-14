@@ -558,6 +558,13 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |config|
 
         end
     end
+
+    config.trigger.after :destroy do
+        Dir.glob("#{cache}/**/*").select { |d| File.directory? d }.reverse_each { |d2| Dir.rmdir d2 if (Dir.entries(d2) - %w[ . .. ]).empty? }
+        Dir.glob("#{home}/**/*").select { |d| File.directory? d }.reverse_each { |d2| Dir.rmdir d2 if (Dir.entries(d2) - %w[ . .. ]).empty? }
+        Dir.glob("#{dotfile_path}/**/*").select { |d| File.directory? d }.reverse_each { |d2| Dir.rmdir d2 if (Dir.entries(d2) - %w[ . .. ]).empty? }
+    end
+#     puts config.inspect
 end
 
 # if (['provision', 'reload', 'resume', 'up'].include? ARGV[0])
