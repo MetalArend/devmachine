@@ -1,3 +1,4 @@
+- add git to composer php image
 - cache docker builds in repository, based on md5 from files
 - do a docker-compose build --no-cache for instances where docker files are changed
 - remove 10000 port and find a way to run phpspec and stuff without installing it to the php container
