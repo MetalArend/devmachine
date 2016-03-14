@@ -1,0 +1,3 @@
+based on https://github.com/flaccid/docker-nfs-client
+
+"Try to add label io.rancher.os.after: wait-for-network to the container"
