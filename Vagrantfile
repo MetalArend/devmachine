@@ -260,6 +260,57 @@ if dotfile_path != ENV['VAGRANT_DOTFILE_PATH'] or home != ENV['VAGRANT_HOME']
     end
 end
 
+# Trying to cleanup within the official Vagrant boundaries
+module VagrantPlugins
+    module DevMachine
+        class GatherPaths
+            def initialize(app, env)
+                @app = app
+            end
+            def call(env)
+                # Adding to a cleanup "namespace"
+                env[:cleanup_home_path] = env[:home_path]
+                # As the environment will always be the same for the whole Vagrantfile, this is okay for multiple vms
+                env[:machine_index].each do |entry|
+                    # Why is local_data_path not a symbol?
+                    env[:cleanup_local_data_path] = entry.local_data_path
+                end
+                @app.call(env)
+            end
+        end
+        class CleanupPaths
+            def initialize(app, env)
+                @app = app
+            end
+            def call(env)
+                # List all directories, including the root folder: {.,**/*}
+                # Avoid problems with special characters in path by using chdir and expand_path
+                # Use reverse_each to start in the deepest directory, and cleanup empty directories recursively going up
+                # Don't check . or .. directories
+                # Default settings will have same path for home and local_data, but we'll ignore that for now
+                Dir.chdir(env[:cleanup_home_path]) { Dir.glob('{.,**/*}').map {|path| File.expand_path(path) }.select { |dir| File.directory? dir }.reverse_each { |dir| Dir.rmdir dir if (Dir.entries(dir) - %w[ . .. ]).empty? } }
+                Dir.chdir(env[:cleanup_local_data_path]) { Dir.glob('{.,**/*}').map {|path| File.expand_path(path) }.select { |dir| File.directory? dir }.reverse_each { |dir| Dir.rmdir dir if (Dir.entries(dir) - %w[ . .. ]).empty? } }
+                @app.call(env)
+            end
+        end
+        # Creating a plugin only for the cleanup - extending this for the rest?
+        class Plugin < Vagrant.plugin('2')
+            name "cleanup"
+            description <<-DESC
+                Cleanup after destroy
+            DESC
+            # https://www.vagrantup.com/docs/plugins/action-hooks.html
+            action_hook(:remove_empty_directories, :machine_action_destroy) do |hook|
+                # First gather the paths, as after the destroy the machine will not be listed anymore
+                hook.before(VagrantPlugins::ProviderVirtualBox::Action::Destroy, DevMachine::GatherPaths)
+                # Cleanup with the cached paths - the most interesting is actually the local_data_path, as it is empty
+                hook.append(DevMachine::CleanupPaths)
+                # Why can't we use one class instance with two methods here?
+            end
+        end
+    end
+end
+
 # Install plugins
 if (['provision', 'reload', 'resume', 'up'].include? ARGV[0])
     plugins = yaml_config['devmachine']['plugins'] rescue {}
@@ -560,12 +611,6 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |config|
             end
 
         end
-    end
-
-    config.trigger.after :destroy do
-        Dir.glob("#{cache}/**/*").select { |d| File.directory? d }.reverse_each { |d2| Dir.rmdir d2 if (Dir.entries(d2) - %w[ . .. ]).empty? }
-        Dir.glob("#{home}/**/*").select { |d| File.directory? d }.reverse_each { |d2| Dir.rmdir d2 if (Dir.entries(d2) - %w[ . .. ]).empty? }
-        Dir.glob("#{dotfile_path}/**/*").select { |d| File.directory? d }.reverse_each { |d2| Dir.rmdir d2 if (Dir.entries(d2) - %w[ . .. ]).empty? }
     end
 #     puts config.inspect
 end
