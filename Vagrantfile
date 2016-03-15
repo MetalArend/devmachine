@@ -8,8 +8,6 @@
 
 # Check vagrant version
 Vagrant.require_version '>= 1.6.0'
-vagrant_default_home = '~/.vagrant.d'
-vagrant_default_dotfile_path = '.vagrant'
 
 # Load dependencies
 require 'rbconfig'
@@ -60,13 +58,18 @@ yaml_config['devmachine']['plugins'] = plugins_to_install
 if yaml_config['devmachine']['directories']['home'].nil?
     yaml_config['devmachine']['directories']['home'] = yaml_config['devmachine']['directories']['cache']
 elsif false == yaml_config['devmachine']['directories']['home']
-    yaml_config['devmachine']['directories']['home'] = vagrant_default_home
+    # Taken from the Vagrant source: check for USERPROFILE on Windows, for compatibility
+    if ENV["USERPROFILE"]
+        yaml_config['devmachine']['directories']['home'] = "#{ENV["USERPROFILE"]}/.vagrant.d"
+    else
+        yaml_config['devmachine']['directories']['home'] = '~/.vagrant.d'
+    end
 end
 ## Vagrant Dotfile Path
 if yaml_config['devmachine']['directories']['dotfile_path'].nil?
     yaml_config['devmachine']['directories']['dotfile_path'] = yaml_config['devmachine']['directories']['cache']
 elsif false == yaml_config['devmachine']['directories']['dotfile_path']
-    yaml_config['devmachine']['directories']['dotfile_path'] = vagrant_default_dotfile_path
+    yaml_config['devmachine']['directories']['dotfile_path'] = '.vagrant'
 end
 
 # If you find that your VirtualBox VMs seem slow when you try to SSH into them or when you point a web browser at them, then try adding these lines to your Vagrantfile:
@@ -245,7 +248,7 @@ home = (! ENV['VAGRANT_HOME'].nil? ? ENV['VAGRANT_HOME'] : File.expand_path(yaml
 dotfile_path = (! ENV['VAGRANT_DOTFILE_PATH'].nil? ? ENV['VAGRANT_DOTFILE_PATH'] : File.expand_path(yaml_config['devmachine']['directories']['dotfile_path'], cwd))
 if dotfile_path != ENV['VAGRANT_DOTFILE_PATH'] or home != ENV['VAGRANT_HOME']
     if ENV['VAGRANT_DOTFILE_PATH'].nil?
-        Dir.rmdir(File.expand_path(vagrant_default_dotfile_path, cwd))
+        Dir.rmdir(File.expand_path('.vagrant', cwd))
     end
     ENV['VAGRANT_HOME'] = home
     ENV['VAGRANT_DOTFILE_PATH'] = dotfile_path
