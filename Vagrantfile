@@ -413,6 +413,7 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |config|
 #
 #             node.vm.synced_folder ".", "/test", type: "nfs"
 
+            vagrant_version = Vagrant::VERSION
             node.vm.provision "shell", inline: %~
                 # Exit on error
                 set -e
@@ -435,7 +436,8 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |config|
 # #                 docker-compose stop && docker-compose rm -f && docker-compose build && docker-compose up -d
 #
                 # Logs
-                docker --version
+                echo -e "\e[0m\e[92mVagrant version #{vagrant_version}\e[0m"
+                echo -e "\e[0m\e[92m$(docker --version)\e[0m"
 #                 docker-compose --version
 #                 docker-compose ps
             ~
