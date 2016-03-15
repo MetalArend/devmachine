@@ -312,7 +312,7 @@ module VagrantPlugins
 end
 
 # Install plugins
-if (['provision', 'reload', 'resume', 'up'].include? ARGV[0])
+if ['provision', 'reload', 'resume', 'up'].include? ARGV[0]
     plugins = yaml_config['devmachine']['plugins'] rescue {}
     plugins_to_install = plugins.select { |plugin, desired_platform| not Vagrant.has_plugin? plugin }
     restart = false
@@ -333,7 +333,7 @@ if (['provision', 'reload', 'resume', 'up'].include? ARGV[0])
 end
 
 # Print branding
-if (['provision', 'reload', 'resume', 'up'].include? ARGV[0])
+if ['provision', 'reload', 'resume', 'up'].include? ARGV[0]
     branding = (yaml_config['devmachine']['branding'] + "\n" rescue "") + "DevMachine (CC BY-SA 4.0) 2016 MetalArend"
     $stdout.send(:puts, "\n\e[92m" + branding + "\e[0m\n")
     version = ("v" + yaml_config['devmachine']['version'] rescue "version unknown") + " | " + platform.to_s
@@ -341,7 +341,7 @@ if (['provision', 'reload', 'resume', 'up'].include? ARGV[0])
 end
 
 # Print information
-if (['provision', 'reload', 'resume', 'up'].include? ARGV[0])
+if ['provision', 'reload', 'resume', 'up'].include? ARGV[0]
     if File.expand_path('cache', $cwd) != cache
         $stdout.send(:puts, "\e[2mcache: " + Pathname.new(cache).relative_path_from(Pathname.new(cwd)).to_s + "\e[0m")
     end
@@ -615,7 +615,7 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |config|
 #     puts config.inspect
 end
 
-# if (['provision', 'reload', 'resume', 'up'].include? ARGV[0])
+# if ['provision', 'reload', 'resume', 'up'].include? ARGV[0]
 #     rsync = fork do
 #         exec "vagrant rsync-auto"
 #     end
