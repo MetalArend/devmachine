@@ -242,7 +242,6 @@ end
 ## require 'etc'
 ## puts Etc.getpwuid.dir
 # TODO this makes vagrant behave strangely during vagrant version
-log = yaml_config['devmachine']['log']
 cache = File.expand_path(yaml_config['devmachine']['directories']['cache'], cwd)
 home = (! ENV['VAGRANT_HOME'].nil? ? ENV['VAGRANT_HOME'] : File.expand_path(yaml_config['devmachine']['directories']['home'], cwd))
 dotfile_path = (! ENV['VAGRANT_DOTFILE_PATH'].nil? ? ENV['VAGRANT_DOTFILE_PATH'] : File.expand_path(yaml_config['devmachine']['directories']['dotfile_path'], cwd))
@@ -254,10 +253,9 @@ if dotfile_path != ENV['VAGRANT_DOTFILE_PATH'] or home != ENV['VAGRANT_HOME']
     ENV['VAGRANT_DOTFILE_PATH'] = dotfile_path
     if platform == :windows
         # TODO test this on windows
-	    # TODO VAGRANT_LOG may not be empty on windows
         exec "SET \"VAGRANT_HOME=#{home}\" && SET \"VAGRANT_DOTFILE_PATH=#{dotfile_path}\" && vagrant #{ARGV.join' '}"
     else
-        exec "export VAGRANT_LOG=#{log} && export VAGRANT_HOME=#{home} && export VAGRANT_DOTFILE_PATH=#{dotfile_path} && vagrant #{ARGV.join' '}"
+        exec "export VAGRANT_HOME=#{home} && export VAGRANT_DOTFILE_PATH=#{dotfile_path} && vagrant #{ARGV.join' '}"
     end
 end
 

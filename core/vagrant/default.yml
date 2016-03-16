@@ -16,7 +16,6 @@ devmachine:
     cache: "cache"
     home: # defaults to "cache"
     dotfile_path: # defaults to "cache"
-  log: # can be error (very quiet), warn (quiet), info (loud) or debug (very loud)
   #timezone: Europe/Brussels
   #locale: en_US.UTF-8
   #ip: 172.20.100.#{i+99}
