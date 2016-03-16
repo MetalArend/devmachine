@@ -252,7 +252,6 @@ if dotfile_path != ENV['VAGRANT_DOTFILE_PATH'] or home != ENV['VAGRANT_HOME']
     ENV['VAGRANT_HOME'] = home
     ENV['VAGRANT_DOTFILE_PATH'] = dotfile_path
     if platform == :windows
-        # TODO test this on windows
         exec "SET \"VAGRANT_HOME=#{home}\" && SET \"VAGRANT_DOTFILE_PATH=#{dotfile_path}\" && vagrant #{ARGV.join' '}"
     else
         exec "export VAGRANT_HOME=#{home} && export VAGRANT_DOTFILE_PATH=#{dotfile_path} && vagrant #{ARGV.join' '}"
