@@ -289,6 +289,7 @@ module VagrantPlugins
                 # Use reverse_each to start in the deepest directory, and cleanup empty directories recursively going up
                 # Don't check . or .. directories
                 # Default settings will have same path for home and local_data, but we'll ignore that for now
+                # TODO errors on doing vagrant destroy twice
                 Dir.chdir(env[:cleanup_home_path]) { Dir.glob('{.,**/*}').map {|path| File.expand_path(path) }.select { |dir| File.directory? dir }.reverse_each { |dir| Dir.rmdir dir if (Dir.entries(dir) - %w[ . .. ]).empty? } }
                 Dir.chdir(env[:cleanup_local_data_path]) { Dir.glob('{.,**/*}').map {|path| File.expand_path(path) }.select { |dir| File.directory? dir }.reverse_each { |dir| Dir.rmdir dir if (Dir.entries(dir) - %w[ . .. ]).empty? } }
                 @app.call(env)
