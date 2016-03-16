@@ -1,3 +1,4 @@
+/.idea
 /cache
 /workspace/*
 !/workspace/.gitkeep
