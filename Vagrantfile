@@ -393,12 +393,12 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |config|
 
             # Disabling compression because OS X has an ancient version of rsync installed.
             # Add -z or remove rsync__args below if you have a newer version of rsync on your machine.
-            node.vm.synced_folder "./core/docker", "/home/rancher/docker", type: :rsync,
-#                 rsync__exclude: [".git/", ".gitignore", ".idea/", "cache/", "core/", "workspace/", "devmachine.opt.yml", "devmachine.yml", "README.md", "Vagrantfile"],
-                rsync__args: ["--verbose", "--archive", "--delete", "--copy-links"],
-                rsync__auto: true,
-                rsync__verbose: true,
-                disabled: false
+#            node.vm.synced_folder "./core/docker", "/home/rancher/docker", type: :rsync,
+##                 rsync__exclude: [".git/", ".gitignore", ".idea/", "cache/", "core/", "workspace/", "devmachine.opt.yml", "devmachine.yml", "README.md", "Vagrantfile"],
+#                rsync__args: ["--verbose", "--archive", "--delete", "--copy-links"],
+#                rsync__auto: true,
+#                rsync__verbose: true,
+#                disabled: false
 
 #             config.vm.provision :docker do |docker|
 #                 docker.pull_images "busybox"
