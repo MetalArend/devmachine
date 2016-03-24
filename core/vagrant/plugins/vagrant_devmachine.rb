@@ -5,45 +5,52 @@ require 'yaml'
 require 'fileutils'
 
 module VagrantPlugins
+
     module DevMachine
+
+        AVAILABLE_PLATFORMS = [:windows, :mac, :linux, :unix, :unknown, :all]
+        PLATFORM ||= (
+            host_os = RbConfig::CONFIG['host_os']
+            case
+                when ENV['OS'] == 'Windows_NT'
+                    :windows
+                when host_os =~ /mswin|msys|mingw|cygwin|bccwin|wince|emc/
+                    :windows
+                when host_os =~ /darwin|mac os/
+                    :mac
+                when host_os =~ /linux/
+                    :linux
+                when host_os =~ /solaris|bsd/
+                    :unix
+                else
+                    :unknown
+            end
+        )
+
         class PrintHook
+
             def initialize(app, env)
                 @app = app
             end
+
             def call(env)
                 puts "before hook #{env[:action_name]}"
                 @app.call(env)
                 puts "after hook #{env[:action_name]}"
             end
+
         end
         class LoadYamlConfig
+
             def initialize(app, env)
                 @app = app
             end
+
             def call(env)
                 @app.call(env)
             end
-            def self.load()
-                # Detect platform
-                platforms = [:windows, :mac, :linux, :unix, :unknown, :all]
-                platform ||= (
-                    host_os = RbConfig::CONFIG['host_os']
-                    case
-                        when ENV['OS'] == 'Windows_NT'
-                            :windows
-                        when host_os =~ /mswin|msys|mingw|cygwin|bccwin|wince|emc/
-                            :windows
-                        when host_os =~ /darwin|mac os/
-                            :mac
-                        when host_os =~ /linux/
-                            :linux
-                        when host_os =~ /solaris|bsd/
-                            :unix
-                        else
-                            :unknown
-                    end
-                )
 
+            def self.load()
                 # Load configuration
                 cwd = File.expand_path('.') # TODO use vagrantfile_path from env
                 merger = proc { |_,x,y| x.is_a?(Hash) && y.is_a?(Hash) ? x.merge(y, &merger) : y }
@@ -53,17 +60,14 @@ module VagrantPlugins
 
                 # Optimize configuration
                 yaml_config['devmachine'] = !yaml_config['devmachine'].nil? ? yaml_config['devmachine'] : default_config['devmachine']
-                ## Current working directory
-                yaml_config['devmachine']['cwd'] = cwd # TODO use the Vagrantfile path from the environment
-                ## Platform
-                yaml_config['devmachine']['platform'] = platform # TODO use underscore to show this is a hidden config
                 ## Hostname
                 if yaml_config['devmachine']['hostname'].nil?
                     yaml_config['devmachine']['hostname'] = "#{`hostname`[0..-2]}".sub(/\..*$/,'')+"-devmachine" rescue "devmachine"
                 end
                 ## Plugins
+                # TODO make it possible to have multiple platforms to install to
                 plugins = (yaml_config['devmachine']['plugins'] rescue {}) || {}
-                plugins_to_install = plugins.select { |plugin, desired_platform| platforms.include? desired_platform.to_sym and (desired_platform.to_sym == platform or desired_platform.to_sym == :all) }
+                plugins_to_install = plugins.select { |plugin, desired_platform| AVAILABLE_PLATFORMS.include? desired_platform.to_sym and (desired_platform.to_sym == PLATFORM or desired_platform.to_sym == :all) }
                 yaml_config['devmachine']['plugins'] = plugins_to_install
                 ## Vagrant Home
                 if yaml_config['devmachine']['directories']['home_path'].nil?
@@ -250,18 +254,22 @@ module VagrantPlugins
 
                 return yaml_config
             end
+
         end
+
         class PrintInformation
+
             def initialize(app, env)
                 @app = app
             end
+
             def call(env)
                 yaml_config = DevMachine::LoadYamlConfig::load()
 
                 # Branding
                 branding = (yaml_config['devmachine']['branding'] + "\n" rescue "") + "(CC BY-SA 4.0) 2016 MetalArend"
                 $stdout.send(:puts, "\n\e[92m" + branding + "\e[0m\n")
-                version = "DevMachine " + ("version " + yaml_config['devmachine']['version'] rescue "version unknown") + ", " + yaml_config['devmachine']['platform'].to_s
+                version = "DevMachine " + ("version " + yaml_config['devmachine']['version'] rescue "version unknown") + ", " + PLATFORM.to_s
                 $stdout.send(:puts, "\e[92m" + version + "\e[0m")
 
                 # Paths
@@ -281,11 +289,15 @@ module VagrantPlugins
                 $stdout.send(:puts, "\n")
                 @app.call(env)
             end
+
         end
+
         class InstallPlugins
+
             def initialize(app, env)
                 @app = app
             end
+
             def call(env)
                 yaml_config = DevMachine::LoadYamlConfig::load()
                 plugins = yaml_config['devmachine']['plugins'] rescue {}
@@ -307,11 +319,15 @@ module VagrantPlugins
                 end
                 @app.call(env)
             end
+
         end
+
         class CleanCache
+
             def initialize(app, env)
                 @app = app
             end
+
             def call(env)
                 # List all directories, including the root folder: {.,**/*}
                 # Avoid problems with special characters in path by using chdir and expand_path
@@ -332,12 +348,16 @@ module VagrantPlugins
                     Dir.chdir(@clean_local_data_path) { Dir.glob('{.,**/*}').map {|path| File.expand_path(path) }.select { |dir| File.directory? dir }.reverse_each { |dir| Dir.rmdir dir if (Dir.entries(dir) - %w[ . .. ]).empty? } }
                 end
             end
+
         end
+
         class Plugin < Vagrant.plugin('2')
+
             name "devmachine"
             description <<-DESC
                 Cleanup after destroy
             DESC
+
             # https://www.vagrantup.com/docs/plugins/action-hooks.html
             # Print hooks
             # action_hook(self::ALL_ACTIONS) do |hook|
@@ -362,6 +382,9 @@ module VagrantPlugins
             action_hook(:clean_cache, :machine_action_destroy) do |hook|
                 hook.prepend(DevMachine::CleanCache)
             end
+
         end
+
     end
+
 end

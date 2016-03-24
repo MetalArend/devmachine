@@ -15,25 +15,27 @@ require 'fileutils'
 require_relative 'core/vagrant/plugins/vagrant_devmachine.rb'
 
 yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load()
-# Assure environment variables are set
-## File.expand_path('~')
-## require 'etc'
-## puts Etc.getpwuid.dir
-# TODO this makes vagrant behave strangely during vagrant version
-home_path = (! ENV['VAGRANT_HOME'].nil? ? ENV['VAGRANT_HOME'] : File.expand_path(yaml_config['devmachine']['directories']['home_path'], yaml_config['devmachine']['cwd']))
-local_data_path = (! ENV['VAGRANT_DOTFILE_PATH'].nil? ? ENV['VAGRANT_DOTFILE_PATH'] : File.expand_path(yaml_config['devmachine']['directories']['local_data_path'], yaml_config['devmachine']['cwd']))
-if home_path != ENV['VAGRANT_HOME'] or local_data_path != ENV['VAGRANT_DOTFILE_PATH']
-    if ENV['VAGRANT_DOTFILE_PATH'].nil?
-        Dir.rmdir(File.expand_path('.vagrant', yaml_config['devmachine']['cwd']))
-    end
-    ENV['VAGRANT_HOME'] = home_path
-    ENV['VAGRANT_DOTFILE_PATH'] = local_data_path
-    if yaml_config['devmachine']['platform'] == :windows
-        exec "SET \"VAGRANT_HOME=#{home_path}\" && SET \"VAGRANT_DOTFILE_PATH=#{local_data_path}\" && vagrant #{ARGV.join' '}"
-    else
-        exec "export VAGRANT_HOME=#{home_path} && export VAGRANT_DOTFILE_PATH=#{local_data_path} && vagrant #{ARGV.join' '}"
-    end
-end
+
+# # Assure environment variables are set
+# ## File.expand_path('~')
+# ## require 'etc'
+# ## puts Etc.getpwuid.dir
+# # TODO this makes vagrant behave strangely during vagrant version
+# cwd = File.dirname(File.expand_path(__FILE__))
+# home_path = (! ENV['VAGRANT_HOME'].nil? ? ENV['VAGRANT_HOME'] : File.expand_path(yaml_config['devmachine']['directories']['home_path'], cwd))
+# local_data_path = (! ENV['VAGRANT_DOTFILE_PATH'].nil? ? ENV['VAGRANT_DOTFILE_PATH'] : File.expand_path(yaml_config['devmachine']['directories']['local_data_path'], cwd))
+# if home_path != ENV['VAGRANT_HOME'] or local_data_path != ENV['VAGRANT_DOTFILE_PATH']
+#     if ENV['VAGRANT_DOTFILE_PATH'].nil?
+#         Dir.rmdir(File.expand_path('.vagrant', cwd))
+#     end
+#     ENV['VAGRANT_HOME'] = home_path
+#     ENV['VAGRANT_DOTFILE_PATH'] = local_data_path
+#     if VagrantPlugins::DevMachine::PLATFORM == :windows
+#         exec "SET \"VAGRANT_HOME=#{home_path}\" && SET \"VAGRANT_DOTFILE_PATH=#{local_data_path}\" && vagrant #{ARGV.join' '}"
+#     else
+#         exec "export VAGRANT_HOME=#{home_path} && export VAGRANT_DOTFILE_PATH=#{local_data_path} && vagrant #{ARGV.join' '}"
+#     end
+# end
 
 # Build configuration
 Vagrant.configure(yaml_config['vagrant']['api_version']) do |config|
