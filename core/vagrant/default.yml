@@ -42,17 +42,17 @@ vm:
   network:
 #    private_network:
 #      ip: 192.168.100.100
-    forwarded_ports:
-      # ssh is set by default - overwriting it can lead to unexpected behavior
-      #ssh:
-      #  host: 2222
-      #  guest: 22
-      http_8080:
-        host: 8080
-        guest: 80
-      http_8000:
-        host: 8000
-        guest: 8000
+#    forwarded_ports:
+#      # ssh is set by default - overwriting it can lead to unexpected behavior
+#      #ssh:
+#      #  host: 2222
+#      #  guest: 22
+#      http_8080:
+#        host: 8080
+#        guest: 80
+#      http_8000:
+#        host: 8000
+#        guest: 8000
   provider:
     virtualbox:
       gui: false
