@@ -1,4 +1,7 @@
 # TODO auto-update DevMachine? (only when internet is available)
+# https://www.vagrantup.com/docs/plugins/development-basics.html
+# TODO nice errors
+# TODO use :ui for input and output
 
 require 'rbconfig'
 require 'yaml'
