@@ -40,6 +40,45 @@ module VagrantPlugins
             end
 
         end
+
+        class AssureLocalEnvironment
+
+            def initialize(app, env)
+                @app = app
+            end
+
+            def call(env)
+                yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load()
+                # Assure environment variables are set
+                ## File.expand_path('~')
+                ## require 'etc'
+                ## puts Etc.getpwuid.dir
+                # TODO this makes vagrant behave strangely during vagrant version
+                #cwd = File.dirname(File.expand_path(__FILE__))
+                cwd = File.expand_path('.') # TODO use vagrantfile_path from env
+                home_path = (! ENV['VAGRANT_HOME'].nil? ? ENV['VAGRANT_HOME'] : File.expand_path(yaml_config['devmachine']['directories']['home_path'], cwd))
+                local_data_path = (! ENV['VAGRANT_DOTFILE_PATH'].nil? ? ENV['VAGRANT_DOTFILE_PATH'] : File.expand_path(yaml_config['devmachine']['directories']['local_data_path'], cwd))
+                if home_path != ENV['VAGRANT_HOME'] or local_data_path != ENV['VAGRANT_DOTFILE_PATH']
+                    # TODO also cleanup default vagrant path
+                    # TODO make cleanup command
+                    # if ENV['VAGRANT_DOTFILE_PATH'].nil?
+                    #     Dir.rmdir(File.expand_path('.vagrant', cwd))
+                    # end
+                    $stdout.send(:puts, "Assuring environment...")
+                    ENV['VAGRANT_HOME'] = home_path
+                    ENV['VAGRANT_DOTFILE_PATH'] = local_data_path
+                    if PLATFORM == :windows
+                        exec "SET \"VAGRANT_HOME=#{home_path}\" && SET \"VAGRANT_DOTFILE_PATH=#{local_data_path}\" && vagrant #{ARGV.join' '}"
+                    else
+                        exec "export VAGRANT_HOME=#{home_path} && export VAGRANT_DOTFILE_PATH=#{local_data_path} && vagrant #{ARGV.join' '}"
+                    end
+                else
+                    @app.call(env)
+                end
+            end
+
+        end
+
         class LoadYamlConfig
 
             def initialize(app, env)
@@ -365,7 +404,7 @@ module VagrantPlugins
             # end
             # Load configuration
             action_hook(self::ALL_ACTIONS) do |hook|
-                hook.prepend(DevMachine::LoadYamlConfig)
+                hook.prepend(DevMachine::AssureLocalEnvironment)
             end
             # Print information (including branding)
             action_hook(:print_information, :authenticate_box_url) do |hook|
