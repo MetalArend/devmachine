@@ -60,11 +60,16 @@ vm:
       cpus: 1
 #      modifyvm:
 #        # name: devmachine
-#        # natdnsproxy1: true
-#        natdnshostresolver1: true
-#        # rtcuseutc: true # bugfix ssh connection - https://github.com/mitchellh/vagrant/issues/391
 #        memory: 2048
-#        # TODO nictype1: virtio # faster network - https://stackoverflow.com/questions/27401513/vagrant-ansible-resolving-super-slow
+#        # Fix: bugfix ssh connection - https://github.com/mitchellh/vagrant/issues/391
+#        # rtcuseutc: true
+#        # Fix: change the network card hardware for better performance - https://stackoverflow.com/questions/27401513/vagrant-ansible-resolving-super-slow
+#        # nictype1: virtio
+#        # nictype2: virtio
+#        # Fix: slow network performance - https://github.com/mitchellh/vagrant/issues/1807
+#        # natdnshostresolver1: on
+#        # natdnsproxy1: on
+
       setextradata:
         VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root: true # enable symlinks for windows # TODO test
       check_guest_additions: false
