@@ -254,8 +254,7 @@ module VagrantPlugins
             def call(env)
                 yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load()
 
-                cwd = File.expand_path('.') # TODO use vagrantfile_path from env
-
+                cwd = env[:root_path]
                 env_home_path = ENV['VAGRANT_HOME']
                 env_local_data_path = ENV['VAGRANT_DOTFILE_PATH']
                 home_path = (! ENV['VAGRANT_HOME'].nil? ? ENV['VAGRANT_HOME'] : File.expand_path(yaml_config['devmachine']['directories']['home_path'], cwd))
@@ -265,11 +264,6 @@ module VagrantPlugins
 #                 $stdout.send(:puts, "\e[2menvironment: #{env_local_data_path} / #{local_data_path}\e[0m")
 
                 # Assure environment variables are set
-                ## File.expand_path('~')
-                ## require 'etc'
-                ## puts Etc.getpwuid.dir
-                # TODO this makes vagrant behave strangely during vagrant version
-                #cwd = File.dirname(File.expand_path(__FILE__))
                 if home_path != ENV['VAGRANT_HOME'] or local_data_path != ENV['VAGRANT_DOTFILE_PATH']
                     # TODO also cleanup default vagrant path
                     # TODO make cleanup command
@@ -279,7 +273,8 @@ module VagrantPlugins
                     $stdout.send(:puts, "Assuring environment...")
                     ENV['VAGRANT_HOME'] = home_path
                     ENV['VAGRANT_DOTFILE_PATH'] = local_data_path
-                    # TODO restart vagrant with all VAGRANT_ variables set
+                    # TODO restart vagrant with all VAGRANT_ variables that are already present
+                    # TODO also set VAGRANT_CWD
                     if PLATFORM == :windows
                         exec "SET \"VAGRANT_HOME=#{home_path}\" && SET \"VAGRANT_DOTFILE_PATH=#{local_data_path}\" && vagrant #{ARGV.join' '}"
                     else
