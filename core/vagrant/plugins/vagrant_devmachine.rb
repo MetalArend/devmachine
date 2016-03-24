@@ -30,58 +30,6 @@ module VagrantPlugins
             end
         )
 
-        class PrintHook
-
-            def initialize(app, env)
-                @app = app
-            end
-
-            def call(env)
-                puts "before hook #{env[:action_name]}"
-                @app.call(env)
-                puts "after hook #{env[:action_name]}"
-            end
-
-        end
-
-        class AssureLocalEnvironment
-
-            def initialize(app, env)
-                @app = app
-            end
-
-            def call(env)
-                yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load()
-                # Assure environment variables are set
-                ## File.expand_path('~')
-                ## require 'etc'
-                ## puts Etc.getpwuid.dir
-                # TODO this makes vagrant behave strangely during vagrant version
-                #cwd = File.dirname(File.expand_path(__FILE__))
-                cwd = File.expand_path('.') # TODO use vagrantfile_path from env
-                home_path = (! ENV['VAGRANT_HOME'].nil? ? ENV['VAGRANT_HOME'] : File.expand_path(yaml_config['devmachine']['directories']['home_path'], cwd))
-                local_data_path = (! ENV['VAGRANT_DOTFILE_PATH'].nil? ? ENV['VAGRANT_DOTFILE_PATH'] : File.expand_path(yaml_config['devmachine']['directories']['local_data_path'], cwd))
-                if home_path != ENV['VAGRANT_HOME'] or local_data_path != ENV['VAGRANT_DOTFILE_PATH']
-                    # TODO also cleanup default vagrant path
-                    # TODO make cleanup command
-                    # if ENV['VAGRANT_DOTFILE_PATH'].nil?
-                    #     Dir.rmdir(File.expand_path('.vagrant', cwd))
-                    # end
-                    $stdout.send(:puts, "Assuring environment...")
-                    ENV['VAGRANT_HOME'] = home_path
-                    ENV['VAGRANT_DOTFILE_PATH'] = local_data_path
-                    if PLATFORM == :windows
-                        exec "SET \"VAGRANT_HOME=#{home_path}\" && SET \"VAGRANT_DOTFILE_PATH=#{local_data_path}\" && vagrant #{ARGV.join' '}"
-                    else
-                        exec "export VAGRANT_HOME=#{home_path} && export VAGRANT_DOTFILE_PATH=#{local_data_path} && vagrant #{ARGV.join' '}"
-                    end
-                else
-                    @app.call(env)
-                end
-            end
-
-        end
-
         class LoadYamlConfig
 
             def initialize(app, env)
@@ -283,6 +231,67 @@ module VagrantPlugins
 
         end
 
+        class PrintHook
+
+            def initialize(app, env)
+                @app = app
+            end
+
+            def call(env)
+                $stdout.send(:puts, "\e[2mbefore hook #{env[:action_name]}\e[0m")
+                @app.call(env)
+                $stdout.send(:puts, "\e[2mafter hook #{env[:action_name]}\e[0m")
+            end
+
+        end
+
+        class AssureEnvironment
+
+            def initialize(app, env)
+                @app = app
+            end
+
+            def call(env)
+                yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load()
+
+                cwd = File.expand_path('.') # TODO use vagrantfile_path from env
+
+                env_home_path = ENV['VAGRANT_HOME']
+                env_local_data_path = ENV['VAGRANT_DOTFILE_PATH']
+                home_path = (! ENV['VAGRANT_HOME'].nil? ? ENV['VAGRANT_HOME'] : File.expand_path(yaml_config['devmachine']['directories']['home_path'], cwd))
+                local_data_path = (! ENV['VAGRANT_DOTFILE_PATH'].nil? ? ENV['VAGRANT_DOTFILE_PATH'] : File.expand_path(yaml_config['devmachine']['directories']['local_data_path'], cwd))
+
+#                 $stdout.send(:puts, "\e[2menvironment: #{env_home_path} / #{home_path}\e[0m")
+#                 $stdout.send(:puts, "\e[2menvironment: #{env_local_data_path} / #{local_data_path}\e[0m")
+
+                # Assure environment variables are set
+                ## File.expand_path('~')
+                ## require 'etc'
+                ## puts Etc.getpwuid.dir
+                # TODO this makes vagrant behave strangely during vagrant version
+                #cwd = File.dirname(File.expand_path(__FILE__))
+                if home_path != ENV['VAGRANT_HOME'] or local_data_path != ENV['VAGRANT_DOTFILE_PATH']
+                    # TODO also cleanup default vagrant path
+                    # TODO make cleanup command
+                    if ENV['VAGRANT_DOTFILE_PATH'].nil?
+                        Dir.chdir(File.expand_path('.vagrant', yaml_config['devmachine']['cwd'])) { Dir.glob('{.,**/*}').map {|path| File.expand_path(path) }.select { |dir| File.directory? dir }.reverse_each { |dir| Dir.rmdir dir if (Dir.entries(dir) - %w[ . .. ]).empty? } }
+                    end
+                    $stdout.send(:puts, "Assuring environment...")
+                    ENV['VAGRANT_HOME'] = home_path
+                    ENV['VAGRANT_DOTFILE_PATH'] = local_data_path
+                    # TODO restart vagrant with all VAGRANT_ variables set
+                    if PLATFORM == :windows
+                        exec "SET \"VAGRANT_HOME=#{home_path}\" && SET \"VAGRANT_DOTFILE_PATH=#{local_data_path}\" && vagrant #{ARGV.join' '}"
+                    else
+                        exec "export VAGRANT_HOME=#{home_path} && export VAGRANT_DOTFILE_PATH=#{local_data_path} && vagrant #{ARGV.join' '}"
+                    end
+                else
+                    @app.call(env)
+                end
+            end
+
+        end
+
         class PrintInformation
 
             def initialize(app, env)
@@ -381,33 +390,41 @@ module VagrantPlugins
 
             name "devmachine"
             description <<-DESC
-                Cleanup after destroy
+                DevMachine
             DESC
 
             # https://www.vagrantup.com/docs/plugins/action-hooks.html
+            action_hook(self::ALL_ACTIONS) do |hook|
+                hook.prepend(DevMachine::LoadYamlConfig) # TODO remove
+            end
+            action_hook(:print_information, :authenticate_box_url) do |hook|
+                # Print information (including branding)
+                hook.prepend(DevMachine::PrintInformation)
+                # Assure environment - prepend before anything else
+                hook.prepend(DevMachine::AssureEnvironment)
+            end
+            action_hook(:install_plugins, :machine_action_up) do |hook|
+                # Install plugins
+                hook.prepend(DevMachine::InstallPlugins)
+                # Assure environment - prepend before anything else
+                hook.prepend(DevMachine::AssureEnvironment)
+            end
+            action_hook(:install_plugins, :machine_action_provision) do |hook|
+                # Install plugins
+                hook.prepend(DevMachine::InstallPlugins)
+                # Assure environment - prepend before anything else
+                hook.prepend(DevMachine::AssureEnvironment)
+            end
+            action_hook(:clean_cache, :machine_action_destroy) do |hook|
+                # Clean cache after destroy
+                hook.prepend(DevMachine::CleanCache)
+                # Assure environment - prepend before anything else
+                hook.prepend(DevMachine::AssureEnvironment)
+            end
             # Print hooks
             # action_hook(self::ALL_ACTIONS) do |hook|
             #     hook.prepend(DevMachine::PrintHook)
             # end
-            # Load configuration
-            action_hook(self::ALL_ACTIONS) do |hook|
-                hook.prepend(DevMachine::AssureLocalEnvironment)
-            end
-            # Print information (including branding)
-            action_hook(:print_information, :authenticate_box_url) do |hook|
-                hook.prepend(DevMachine::PrintInformation)
-            end
-            # Install plugins
-            action_hook(:install_plugins, :machine_action_up) do |hook|
-                hook.prepend(DevMachine::InstallPlugins)
-            end
-            action_hook(:install_plugins, :machine_action_provision) do |hook|
-                hook.prepend(DevMachine::InstallPlugins)
-            end
-            # Clean cache after destroy
-            action_hook(:clean_cache, :machine_action_destroy) do |hook|
-                hook.prepend(DevMachine::CleanCache)
-            end
 
         end
 
