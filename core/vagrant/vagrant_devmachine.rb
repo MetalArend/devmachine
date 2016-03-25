@@ -353,6 +353,7 @@ module VagrantPlugins
 
             def call(env)
                 # Default settings will have same path for home and local_data, but we'll ignore that for now
+                @clean_data_path = env[:machine].data_dir
                 @clean_home_path = env[:home_path]
                 # As the environment will always be the same for the whole Vagrantfile, this is okay for multiple vms
                 env[:machine_index].each do |entry|
@@ -360,6 +361,7 @@ module VagrantPlugins
                     @clean_local_data_path = entry.local_data_path
                 end
                 @app.call(env)
+                File.delete(File.expand_path('devmachine.opt.yml', env[:root_path]))
                 # List all directories, including the root folder: {.,**/*}
                 # Avoid problems with special characters in path by using chdir and expand_path
                 # Use reverse_each to start in the deepest directory, and cleanup empty directories recursively going up
