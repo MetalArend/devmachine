@@ -230,9 +230,9 @@ module VagrantPlugins
             end
 
             def call(env)
-                $stdout.send(:puts, "\e[2mbefore hook #{env[:action_name]}\e[0m")
+                env[:ui].info("before hook #{env[:action_name]}")
                 @app.call(env)
-                $stdout.send(:puts, "\e[2mafter hook #{env[:action_name]}\e[0m")
+                env[:ui].info("after hook #{env[:action_name]}")
             end
 
         end
@@ -252,8 +252,8 @@ module VagrantPlugins
                 home_path = (! ENV['VAGRANT_HOME'].nil? ? ENV['VAGRANT_HOME'] : File.expand_path(yaml_config['devmachine']['directories']['home_path'], cwd))
                 local_data_path = (! ENV['VAGRANT_DOTFILE_PATH'].nil? ? ENV['VAGRANT_DOTFILE_PATH'] : File.expand_path(yaml_config['devmachine']['directories']['local_data_path'], cwd))
 
-#                 $stdout.send(:puts, "\e[2menvironment: #{env_home_path} / #{home_path}\e[0m")
-#                 $stdout.send(:puts, "\e[2menvironment: #{env_local_data_path} / #{local_data_path}\e[0m")
+#                 env[:ui].info("environment: #{env_home_path} / #{home_path}")
+#                 env[:ui].info("environment: #{env_local_data_path} / #{local_data_path}")
 
                 # Assure environment variables are set
                 if home_path != ENV['VAGRANT_HOME'] or local_data_path != ENV['VAGRANT_DOTFILE_PATH']
@@ -262,7 +262,7 @@ module VagrantPlugins
                     if ENV['VAGRANT_DOTFILE_PATH'].nil?
                         Dir.chdir(File.expand_path('.vagrant', yaml_config['devmachine']['cwd'])) { Dir.glob('{.,**/*}').map {|path| File.expand_path(path) }.select { |dir| File.directory? dir }.reverse_each { |dir| Dir.rmdir dir if (Dir.entries(dir) - %w[ . .. ]).empty? } }
                     end
-                    $stdout.send(:puts, "Assuring environment...")
+                    env[:ui].say(:info, "Assuring environment...")
                     ENV['VAGRANT_HOME'] = home_path
                     ENV['VAGRANT_DOTFILE_PATH'] = local_data_path
                     # TODO restart vagrant with all VAGRANT_ variables that are already present
@@ -290,9 +290,9 @@ module VagrantPlugins
 
                 # Branding
                 branding = (yaml_config['devmachine']['branding'] + "\n" rescue "") + "(CC BY-SA 4.0) 2016 MetalArend"
-                $stdout.send(:puts, "\n\e[92m" + branding + "\e[0m\n")
+                env[:ui].success(branding)
                 version = "DevMachine " + ("version " + yaml_config['devmachine']['version'] rescue "version unknown") + ", " + PLATFORM.to_s
-                $stdout.send(:puts, "\e[92m" + version + "\e[0m")
+                env[:ui].success(version)
 
                 # Paths
                 # As the environment will always be the same for the whole Vagrantfile, this should be okay for multiple vms
@@ -300,15 +300,15 @@ module VagrantPlugins
                     vagrantfile_path = entry.vagrantfile_path.to_s
                     home_path = env[:home_path].to_s
                     if home_path != File.expand_path('cache', vagrantfile_path)
-                        $stdout.send(:puts, "\e[2mhome_path: " + Pathname.new(home_path).relative_path_from(Pathname.new(vagrantfile_path)).to_s + "\e[0m")
+                        env[:ui].warn("home_path: " + Pathname.new(home_path).relative_path_from(Pathname.new(vagrantfile_path)).to_s)
                     end
                     local_data_path = entry.local_data_path.to_s
                     if local_data_path != File.expand_path('cache', vagrantfile_path)
-                        $stdout.send(:puts, "\e[2mlocal_data_path: " + Pathname.new(local_data_path).relative_path_from(Pathname.new(vagrantfile_path)).to_s + "\e[0m")
+                        env[:ui].warn("local_data_path: " + Pathname.new(local_data_path).relative_path_from(Pathname.new(vagrantfile_path)).to_s)
                     end
                 end
 
-                $stdout.send(:puts, "\n")
+                env[:ui].info("\n")
                 @app.call(env)
             end
 
@@ -327,7 +327,7 @@ module VagrantPlugins
                 plugins_to_install = plugins.select { |plugin, desired_platform| not Vagrant.has_plugin? plugin }
                 restart = false
                 if not plugins_to_install.empty?
-                    $stdout.send(:puts, "Installing missing plugins...")
+                    env[:ui].info("Installing missing plugins...")
                     plugins_to_install.each do |plugin, desired_platform|
                         if system "vagrant plugin install #{plugin}"
                             restart = true
@@ -336,7 +336,7 @@ module VagrantPlugins
                         end
                     end
                     if true === restart
-                        $stdout.send(:puts, "Running \"vagrant #{ARGV.join' '}\" again...")
+                        env[:ui].info("Running \"vagrant #{ARGV.join' '}\" again...")
                         exec "vagrant #{ARGV.join' '}"
                     end
                 end
