@@ -358,7 +358,7 @@ module VagrantPlugins
                 # As the environment will always be the same for the whole Vagrantfile, this is okay for multiple vms
                 env[:machine_index].each do |entry|
                     # Why is local_data_path not a symbol?
-                    @clean_local_data_path = entry.local_data_path
+                    @clean_local_data_path = entry.local_data_path if entry.name == env[:machine].name.to_s
                 end
                 @app.call(env)
                 File.delete(File.expand_path('devmachine.opt.yml', env[:root_path]))
