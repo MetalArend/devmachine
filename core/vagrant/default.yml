@@ -31,8 +31,7 @@ devmachine:
   #    version: 1.9.2
   #    playbook: /env/ansible/playbook.yml
   #    extra_vars: {}
-vagrant:
-  api_version: 2
+vagrant: ~
 vm:
   box: "rancherio/rancheros"
   box_version: ">=0.4.1"
