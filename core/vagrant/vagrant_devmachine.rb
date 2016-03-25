@@ -352,10 +352,6 @@ module VagrantPlugins
             end
 
             def call(env)
-                # List all directories, including the root folder: {.,**/*}
-                # Avoid problems with special characters in path by using chdir and expand_path
-                # Use reverse_each to start in the deepest directory, and cleanup empty directories recursively going up
-                # Don't check . or .. directories
                 # Default settings will have same path for home and local_data, but we'll ignore that for now
                 @clean_home_path = env[:home_path]
                 # As the environment will always be the same for the whole Vagrantfile, this is okay for multiple vms
@@ -364,6 +360,10 @@ module VagrantPlugins
                     @clean_local_data_path = entry.local_data_path
                 end
                 @app.call(env)
+                # List all directories, including the root folder: {.,**/*}
+                # Avoid problems with special characters in path by using chdir and expand_path
+                # Use reverse_each to start in the deepest directory, and cleanup empty directories recursively going up
+                # Don't check . or .. directories
                 if not @clean_home_path.nil? and Dir.exists?(@clean_home_path)
                     Dir.chdir(@clean_home_path) { Dir.glob('{.,**/*}').map {|path| File.expand_path(path) }.select { |dir| File.directory? dir }.reverse_each { |dir| Dir.rmdir dir if (Dir.entries(dir) - %w[ . .. ]).empty? } }
                 end
