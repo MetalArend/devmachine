@@ -32,20 +32,12 @@ module VagrantPlugins
 
         class LoadYamlConfig
 
-            def initialize(app, env)
-                @app = app
-            end
+            def self.load(config)
 
-            def call(env)
-                @app.call(env)
-            end
-
-            def self.load()
                 # Load configuration
-                cwd = File.expand_path('.') # TODO use vagrantfile_path from env
                 merger = proc { |_,x,y| x.is_a?(Hash) && y.is_a?(Hash) ? x.merge(y, &merger) : y }
-                default_config = (YAML::load_file(File.expand_path('core/vagrant/default.yml', cwd)) rescue {}) || {}
-                user_config = (YAML::load_file(File.expand_path('devmachine.yml', cwd)) rescue {}) || {}
+                default_config = (YAML::load_file(File.expand_path('default.yml', File.dirname(__FILE__))) rescue {}) || {}
+                user_config = (YAML::load_file(config) rescue {}) || {}
                 yaml_config = default_config.merge(user_config, &merger)
 
                 # Optimize configuration
@@ -78,7 +70,7 @@ module VagrantPlugins
                 end
 
                 # Save optimized configuration (for inspection)
-                File.open(File.expand_path('devmachine.opt.yml', cwd),'w') do |file| # set perm too
+                File.open(File.expand_path('devmachine.opt.yml', File.dirname(config)),'w') do |file| # set perm too
                     file.write yaml_config.to_yaml
                 end
 
@@ -252,7 +244,7 @@ module VagrantPlugins
             end
 
             def call(env)
-                yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load()
+                yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load(File.expand_path('devmachine.yml', env[:root_path]))
 
                 cwd = env[:root_path]
                 env_home_path = ENV['VAGRANT_HOME']
@@ -294,7 +286,7 @@ module VagrantPlugins
             end
 
             def call(env)
-                yaml_config = DevMachine::LoadYamlConfig::load()
+                yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load(File.expand_path('devmachine.yml', env[:root_path]))
 
                 # Branding
                 branding = (yaml_config['devmachine']['branding'] + "\n" rescue "") + "(CC BY-SA 4.0) 2016 MetalArend"
@@ -329,7 +321,8 @@ module VagrantPlugins
             end
 
             def call(env)
-                yaml_config = DevMachine::LoadYamlConfig::load()
+                yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load(File.expand_path('devmachine.yml', env[:root_path]))
+
                 plugins = yaml_config['devmachine']['plugins'] rescue {}
                 plugins_to_install = plugins.select { |plugin, desired_platform| not Vagrant.has_plugin? plugin }
                 restart = false
@@ -389,9 +382,6 @@ module VagrantPlugins
             DESC
 
             # https://www.vagrantup.com/docs/plugins/action-hooks.html
-            action_hook(self::ALL_ACTIONS) do |hook|
-                hook.prepend(DevMachine::LoadYamlConfig) # TODO remove
-            end
             action_hook(:print_information, :authenticate_box_url) do |hook|
                 # Print information (including branding)
                 hook.prepend(DevMachine::PrintInformation)

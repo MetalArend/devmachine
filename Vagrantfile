@@ -12,33 +12,12 @@ Vagrant.require_version '>= 1.6.0'
 require 'rbconfig'
 require 'yaml'
 require 'fileutils'
-require_relative 'core/vagrant/plugins/vagrant_devmachine.rb'
+require_relative 'core/vagrant/vagrant_devmachine.rb'
 
-yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load()
-
-# # Assure environment variables are set
-# ## File.expand_path('~')
-# ## require 'etc'
-# ## puts Etc.getpwuid.dir
-# # TODO this makes vagrant behave strangely during vagrant version
-# cwd = File.dirname(File.expand_path(__FILE__))
-# home_path = (! ENV['VAGRANT_HOME'].nil? ? ENV['VAGRANT_HOME'] : File.expand_path(yaml_config['devmachine']['directories']['home_path'], cwd))
-# local_data_path = (! ENV['VAGRANT_DOTFILE_PATH'].nil? ? ENV['VAGRANT_DOTFILE_PATH'] : File.expand_path(yaml_config['devmachine']['directories']['local_data_path'], cwd))
-# if home_path != ENV['VAGRANT_HOME'] or local_data_path != ENV['VAGRANT_DOTFILE_PATH']
-#     if ENV['VAGRANT_DOTFILE_PATH'].nil?
-#         Dir.rmdir(File.expand_path('.vagrant', cwd))
-#     end
-#     ENV['VAGRANT_HOME'] = home_path
-#     ENV['VAGRANT_DOTFILE_PATH'] = local_data_path
-#     if VagrantPlugins::DevMachine::PLATFORM == :windows
-#         exec "SET \"VAGRANT_HOME=#{home_path}\" && SET \"VAGRANT_DOTFILE_PATH=#{local_data_path}\" && vagrant #{ARGV.join' '}"
-#     else
-#         exec "export VAGRANT_HOME=#{home_path} && export VAGRANT_DOTFILE_PATH=#{local_data_path} && vagrant #{ARGV.join' '}"
-#     end
-# end
+yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load(File.expand_path('devmachine.yml', File.dirname(__FILE__)))
 
 # Build configuration
-Vagrant.configure(yaml_config['vagrant']['api_version']) do |config|
+Vagrant.configure('2') do |config|
     (1..yaml_config['devmachine']['nodes']).each do |i|
         node_hostname = yaml_config['devmachine']['hostname'] + ((yaml_config['devmachine']['node_suffix'] % i) rescue (yaml_config['devmachine']['node_suffix'] + i.to_s))
 
@@ -67,7 +46,7 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |config|
 #             node.vm.synced_folder "~/.ssh", "/ssh", type: "nfs"
 
             # Set the host if given
-            if !yaml_config['vagrant']['host'].nil?
+            if !yaml_config['vagrant'].nil? && !yaml_config['vagrant']['host'].nil?
                 node.vagrant.host = yaml_config['vagrant']['host'].gsub(":", "").intern
             end
 
