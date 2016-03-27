@@ -297,14 +297,16 @@ module VagrantPlugins
                 # Paths
                 # As the environment will always be the same for the whole Vagrantfile, this should be okay for multiple vms
                 env[:machine_index].each do |entry|
-                    vagrantfile_path = entry.vagrantfile_path.to_s
-                    home_path = env[:home_path].to_s
-                    if home_path != File.expand_path('cache', vagrantfile_path)
-                        env[:ui].warn("home_path: " + Pathname.new(home_path).relative_path_from(Pathname.new(vagrantfile_path)).to_s)
-                    end
-                    local_data_path = entry.local_data_path.to_s
-                    if local_data_path != File.expand_path('cache', vagrantfile_path)
-                        env[:ui].warn("local_data_path: " + Pathname.new(local_data_path).relative_path_from(Pathname.new(vagrantfile_path)).to_s)
+                    if entry.name == env[:machine].name.to_s
+                        vagrantfile_path = entry.vagrantfile_path.to_s
+                        home_path = env[:home_path].to_s
+                        if home_path != File.expand_path('cache', vagrantfile_path)
+                            env[:ui].warn("home_path: " + Pathname.new(home_path).relative_path_from(Pathname.new(vagrantfile_path)).to_s)
+                        end
+                        local_data_path = entry.local_data_path.to_s
+                        if local_data_path != File.expand_path('cache', vagrantfile_path)
+                            env[:ui].warn("local_data_path: " + Pathname.new(local_data_path).relative_path_from(Pathname.new(vagrantfile_path)).to_s)
+                        end
                     end
                 end
 
