@@ -32,12 +32,12 @@ module VagrantPlugins
 
         class LoadYamlConfig
 
-            def self.load(config)
+            def self.load(config_path)
 
                 # Load configuration
                 merger = proc { |_,x,y| x.is_a?(Hash) && y.is_a?(Hash) ? x.merge(y, &merger) : y }
                 default_config = (YAML::load_file(File.expand_path('default.yml', File.dirname(__FILE__))) rescue {}) || {}
-                user_config = (YAML::load_file(config) rescue {}) || {}
+                user_config = (YAML::load_file(config_path) rescue {}) || {}
                 yaml_config = default_config.merge(user_config, &merger)
 
                 # Optimize configuration
@@ -70,7 +70,7 @@ module VagrantPlugins
                 end
 
                 # Save optimized configuration (for inspection)
-                File.open(File.expand_path('devmachine.opt.yml', File.dirname(config)),'w') do |file| # TODO set perm too
+                File.open(File.expand_path('devmachine.opt.yml', File.dirname(config_path)),'w') do |file| # TODO set perm too
                     file.write yaml_config.to_yaml
                 end
 
