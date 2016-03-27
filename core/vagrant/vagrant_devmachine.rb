@@ -298,16 +298,17 @@ module VagrantPlugins
                 # Paths
                 # As the environment will always be the same for the whole Vagrantfile, this should be okay for multiple vms
                 env[:machine_index].each do |entry|
-                    if entry.name == env[:machine].name.to_s
+                    if !env[:machine].nil? && entry.name == env[:machine].name.to_s
+                        env[:ui].info("machine: " + entry.name)
                         vagrantfile_path = entry.vagrantfile_path.to_s
                         home_path = env[:home_path].to_s
-                        if home_path != File.expand_path('cache', vagrantfile_path)
-                            env[:ui].warn("home_path: " + Pathname.new(home_path).relative_path_from(Pathname.new(vagrantfile_path)).to_s)
-                        end
+                        # if home_path != File.expand_path('cache', vagrantfile_path)
+                            env[:ui].info("home_path: " + Pathname.new(home_path).relative_path_from(Pathname.new(vagrantfile_path)).to_s)
+                        # end
                         local_data_path = entry.local_data_path.to_s
-                        if local_data_path != File.expand_path('cache', vagrantfile_path)
-                            env[:ui].warn("local_data_path: " + Pathname.new(local_data_path).relative_path_from(Pathname.new(vagrantfile_path)).to_s)
-                        end
+                        # if local_data_path != File.expand_path('cache', vagrantfile_path)
+                            env[:ui].info("local_data_path: " + Pathname.new(local_data_path).relative_path_from(Pathname.new(vagrantfile_path)).to_s)
+                        # end
                     end
                 end
 
@@ -432,20 +433,22 @@ module VagrantPlugins
             action_hook(:print_information, :authenticate_box_url) do |hook|
                 # Assure environment - prepend before anything else
                 hook.prepend(DevMachine::AssureEnvironment)
-                # Print information (including branding)
-                hook.append(DevMachine::PrintInformation)
             end
             action_hook(:install_plugins, :machine_action_up) do |hook|
                 # Assure environment - prepend before anything else
                 hook.prepend(DevMachine::AssureEnvironment)
                 # Install plugins
                 hook.append(DevMachine::InstallPlugins)
+                # Print information (including branding)
+                hook.append(DevMachine::PrintInformation)
             end
             action_hook(:install_plugins, :machine_action_provision) do |hook|
                 # Assure environment - prepend before anything else
                 hook.prepend(DevMachine::AssureEnvironment)
                 # Install plugins
                 hook.append(DevMachine::InstallPlugins)
+                # Print information (including branding)
+                hook.append(DevMachine::PrintInformation)
             end
             action_hook(:clean_cache, :machine_action_destroy) do |hook|
                 # Clean cache after destroy
