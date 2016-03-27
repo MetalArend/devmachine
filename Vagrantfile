@@ -75,6 +75,7 @@ Vagrant.configure('2') do |config|
 #             node.vm.synced_folder ".", "/test", type: "nfs"
 
             vagrant_version = Vagrant::VERSION
+            devmachine_version = VagrantPlugins::DevMachine::VERSION + " on " + VagrantPlugins::DevMachine::PLATFORM.to_s
             node.vm.provision "shell", inline: %~
                 # Exit on error
                 set -e
@@ -97,6 +98,7 @@ Vagrant.configure('2') do |config|
 # #                 docker-compose stop && docker-compose rm -f && docker-compose build && docker-compose up -d
 #
                 # Logs
+                echo -e "\e[0m\e[92mDevMachine version #{devmachine_version}\e[0m"
                 echo -e "\e[0m\e[92mVagrant version #{vagrant_version}\e[0m"
                 echo -e "\e[0m\e[92m$(docker --version)\e[0m"
 #                 docker-compose --version
