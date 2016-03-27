@@ -388,7 +388,8 @@ module VagrantPlugins
             DESC
 
             config "devmachine" do
-                DevMachine::Config
+                require_relative 'vagrant-devmachine/config'
+                Config
             end
 
             # https://www.vagrantup.com/docs/plugins/action-hooks.html

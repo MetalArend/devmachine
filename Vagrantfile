@@ -12,7 +12,7 @@ Vagrant.require_version '>= 1.6.0'
 require 'rbconfig'
 require 'yaml'
 require 'fileutils'
-require_relative 'core/vagrant/vagrant_devmachine.rb'
+require_relative 'core/vagrant/vagrant-devmachine/lib/vagrant-devmachine.rb'
 
 yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load(File.expand_path('devmachine.yml', File.dirname(__FILE__)))
 
