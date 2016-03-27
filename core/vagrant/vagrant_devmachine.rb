@@ -10,6 +10,7 @@ module VagrantPlugins
 
     module DevMachine
 
+        VERSION = '0.0.1'
         AVAILABLE_PLATFORMS = [:windows, :mac, :linux, :unix, :unknown, :all]
         PLATFORM ||= (
             host_os = RbConfig::CONFIG['host_os']
@@ -293,8 +294,6 @@ module VagrantPlugins
                 # Branding
                 branding = (yaml_config['devmachine']['branding'] + "\n" rescue "") + "(CC BY-SA 4.0) 2016 MetalArend"
                 env[:ui].success(branding)
-                version = "DevMachine " + ("version " + yaml_config['devmachine']['version'] rescue "version unknown") + ", " + PLATFORM.to_s
-                env[:ui].success(version)
 
                 # Paths
                 # As the environment will always be the same for the whole Vagrantfile, this should be okay for multiple vms
