@@ -366,7 +366,6 @@ module VagrantPlugins
                     @clean_local_data_path = entry.local_data_path if entry.name == env[:machine].name.to_s
                 end
                 @app.call(env)
-                File.delete(File.expand_path('devmachine.opt.yml', env[:root_path]))
                 # List all directories, including the root folder: {.,**/*}
                 # Avoid problems with special characters in path by using chdir and expand_path
                 # Use reverse_each to start in the deepest directory, and cleanup empty directories recursively going up
@@ -377,6 +376,45 @@ module VagrantPlugins
                 if not @clean_local_data_path.nil? and Dir.exists?(@clean_local_data_path)
                     Dir.chdir(@clean_local_data_path) { Dir.glob('{.,**/*}').map {|path| File.expand_path(path) }.select { |dir| File.directory? dir }.reverse_each { |dir| Dir.rmdir dir if (Dir.entries(dir) - %w[ . .. ]).empty? } }
                 end
+                File.delete(File.expand_path('devmachine.opt.yml', env[:root_path]))
+            end
+
+        end
+
+        class Config < Vagrant.plugin('2', :config)
+
+            attr_accessor :config_path
+
+            def initialize
+
+                @config_path = UNSET_VALUE
+
+            end
+
+#             def merge(other)
+#
+# #                 super.tap do |result|
+# #                     result.widgets = @widgets + other.widgets
+# #                 end
+#
+#             end
+
+            def validate(machine)
+
+                errors = _detected_errors
+
+#                 if @widgets <= 5
+#                     errors << "widgets must be greater than 5"
+#                 end
+
+                { "devmachine" => errors }
+
+            end
+
+            def finalize!
+
+                @config_path = 'devmachine.yml' if @config_path == UNSET_VALUE
+
             end
 
         end
@@ -387,6 +425,10 @@ module VagrantPlugins
             description <<-DESC
                 DevMachine
             DESC
+
+            config "devmachine" do
+                DevMachine::Config
+            end
 
             # https://www.vagrantup.com/docs/plugins/action-hooks.html
             action_hook(:print_information, :authenticate_box_url) do |hook|

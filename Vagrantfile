@@ -18,6 +18,7 @@ yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load(File.expand_path(
 
 # Build configuration
 Vagrant.configure('2') do |config|
+    config.devmachine.config_path = 'devmachine.yml'
     (1..yaml_config['devmachine']['nodes']).each do |i|
         node_hostname = yaml_config['devmachine']['hostname'] + ((yaml_config['devmachine']['node_suffix'] % i) rescue (yaml_config['devmachine']['node_suffix'] + i.to_s))
 
