@@ -380,44 +380,6 @@ module VagrantPlugins
 
         end
 
-        class Config < Vagrant.plugin('2', :config)
-
-            attr_accessor :config_path
-
-            def initialize
-
-                @config_path = UNSET_VALUE
-
-            end
-
-#             def merge(other)
-#
-# #                 super.tap do |result|
-# #                     result.widgets = @widgets + other.widgets
-# #                 end
-#
-#             end
-
-            def validate(machine)
-
-                errors = _detected_errors
-
-#                 if @widgets <= 5
-#                     errors << "widgets must be greater than 5"
-#                 end
-
-                { "devmachine" => errors }
-
-            end
-
-            def finalize!
-
-                @config_path = 'devmachine.yml' if @config_path == UNSET_VALUE
-
-            end
-
-        end
-
         class Plugin < Vagrant.plugin('2')
 
             name "devmachine"
