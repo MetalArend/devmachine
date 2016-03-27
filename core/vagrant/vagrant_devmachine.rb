@@ -265,7 +265,7 @@ module VagrantPlugins
                     if ENV['VAGRANT_DOTFILE_PATH'].nil?
                         Dir.chdir(File.expand_path('.vagrant', yaml_config['devmachine']['cwd'])) { Dir.glob('{.,**/*}').map {|path| File.expand_path(path) }.select { |dir| File.directory? dir }.reverse_each { |dir| Dir.rmdir dir if (Dir.entries(dir) - %w[ . .. ]).empty? } }
                     end
-                    env[:ui].say(:info, "Assuring environment...")
+                    env[:ui].info("Assuring environment...")
                     ENV['VAGRANT_HOME'] = home_path
                     ENV['VAGRANT_DOTFILE_PATH'] = local_data_path
                     # TODO restart vagrant with all VAGRANT_ variables that are already present
