@@ -1,7 +1,6 @@
 # TODO auto-update DevMachine? (only when internet is available)
 # https://www.vagrantup.com/docs/plugins/development-basics.html
 # TODO nice errors
-# TODO use :ui for input and output
 
 require 'rbconfig'
 require 'yaml'
@@ -432,22 +431,22 @@ module VagrantPlugins
 
             # https://www.vagrantup.com/docs/plugins/action-hooks.html
             action_hook(:print_information, :authenticate_box_url) do |hook|
-                # Print information (including branding)
-                hook.prepend(DevMachine::PrintInformation)
                 # Assure environment - prepend before anything else
                 hook.prepend(DevMachine::AssureEnvironment)
+                # Print information (including branding)
+                hook.append(DevMachine::PrintInformation)
             end
             action_hook(:install_plugins, :machine_action_up) do |hook|
-                # Install plugins
-                hook.prepend(DevMachine::InstallPlugins)
                 # Assure environment - prepend before anything else
                 hook.prepend(DevMachine::AssureEnvironment)
+                # Install plugins
+                hook.append(DevMachine::InstallPlugins)
             end
             action_hook(:install_plugins, :machine_action_provision) do |hook|
-                # Install plugins
-                hook.prepend(DevMachine::InstallPlugins)
                 # Assure environment - prepend before anything else
                 hook.prepend(DevMachine::AssureEnvironment)
+                # Install plugins
+                hook.append(DevMachine::InstallPlugins)
             end
             action_hook(:clean_cache, :machine_action_destroy) do |hook|
                 # Clean cache after destroy
