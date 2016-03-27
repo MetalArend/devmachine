@@ -70,7 +70,7 @@ module VagrantPlugins
                 end
 
                 # Save optimized configuration (for inspection)
-                File.open(File.expand_path('devmachine.opt.yml', File.dirname(config)),'w') do |file| # set perm too
+                File.open(File.expand_path('devmachine.opt.yml', File.dirname(config)),'w') do |file| # TODO set perm too
                     file.write yaml_config.to_yaml
                 end
 
@@ -251,6 +251,9 @@ module VagrantPlugins
                 env_local_data_path = ENV['VAGRANT_DOTFILE_PATH']
                 home_path = (! ENV['VAGRANT_HOME'].nil? ? ENV['VAGRANT_HOME'] : File.expand_path(yaml_config['devmachine']['directories']['home_path'], cwd))
                 local_data_path = (! ENV['VAGRANT_DOTFILE_PATH'].nil? ? ENV['VAGRANT_DOTFILE_PATH'] : File.expand_path(yaml_config['devmachine']['directories']['local_data_path'], cwd))
+
+                # TODO use env.setup_home_path
+                # TODO use env.setup_local_data_path
 
 #                 env[:ui].info("environment: #{env_home_path} / #{home_path}")
 #                 env[:ui].info("environment: #{env_local_data_path} / #{local_data_path}")
