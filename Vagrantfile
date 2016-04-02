@@ -1,20 +1,15 @@
 # TODO https://github.com/ailispaw/rancheros-lite
 # TODO https://www.snip2code.com/Snippet/374178/Vagrantfile-including-patches-for-Ranche
-
 # TODO composer create-project phpmyadmin/phpmyadmin --repository-url=https://www.phpmyadmin.net/packages.json
-
-# $stdout.sync = true
 
 # Check versions
 Vagrant.require_version '>= 1.6.0'
 VAGRANTFILE_API_VERSION = '2'
 
 # Load dependencies
-require 'rbconfig'
-require 'yaml'
-require 'fileutils'
 require_relative 'core/vagrant/vagrant-devmachine/lib/vagrant-devmachine.rb'
 
+require_relative 'core/vagrant/vagrant-devmachine/lib/vagrant-devmachine/classes/load_yaml_config.rb'
 yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load(File.expand_path('devmachine.yml', File.dirname(__FILE__)))
 
 # Build configuration
