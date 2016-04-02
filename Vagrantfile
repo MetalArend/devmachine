@@ -19,9 +19,9 @@ yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load(File.expand_path(
 
 # Build configuration
     config.devmachine.config_path = 'devmachine.yml'
-    (1..yaml_config['devmachine']['nodes']).each do |i|
-        node_hostname = yaml_config['devmachine']['hostname'] + ((yaml_config['devmachine']['node_suffix'] % i) rescue (yaml_config['devmachine']['node_suffix'] + i.to_s))
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+    (1..1).each do |i| # TODO add multiple nodes
+        node_hostname = ("#{`hostname`[0..-2]}".sub(/\..*$/,'')+"-devmachine" rescue "devmachine") + ("-%02d" % i)
 
         config.vm.define node_hostname do |node|
 
