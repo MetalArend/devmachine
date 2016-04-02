@@ -5,8 +5,9 @@
 
 # $stdout.sync = true
 
-# Check vagrant version
+# Check versions
 Vagrant.require_version '>= 1.6.0'
+VAGRANTFILE_API_VERSION = '2'
 
 # Load dependencies
 require 'rbconfig'
@@ -17,10 +18,10 @@ require_relative 'core/vagrant/vagrant-devmachine/lib/vagrant-devmachine.rb'
 yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load(File.expand_path('devmachine.yml', File.dirname(__FILE__)))
 
 # Build configuration
-Vagrant.configure('2') do |config|
     config.devmachine.config_path = 'devmachine.yml'
     (1..yaml_config['devmachine']['nodes']).each do |i|
         node_hostname = yaml_config['devmachine']['hostname'] + ((yaml_config['devmachine']['node_suffix'] % i) rescue (yaml_config['devmachine']['node_suffix'] + i.to_s))
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
         config.vm.define node_hostname do |node|
 
