@@ -27,7 +27,19 @@ module VagrantPlugins::DevMachine
             # Print information (including branding)
             hook.append(PrintInformation)
         end
+        action_hook(:install_plugins, :machine_action_reload) do |hook|
+            # Assure environment - prepend before anything else
+            hook.prepend(AssureEnvironment)
+            # Print information (including branding)
+            hook.append(PrintInformation)
+        end
         action_hook(:install_plugins, :machine_action_provision) do |hook|
+            # Assure environment - prepend before anything else
+            hook.prepend(AssureEnvironment)
+            # Print information (including branding)
+            hook.append(PrintInformation)
+        end
+        action_hook(:install_plugins, :machine_action_ssh) do |hook|
             # Assure environment - prepend before anything else
             hook.prepend(AssureEnvironment)
             # Print information (including branding)

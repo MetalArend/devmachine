@@ -6,6 +6,17 @@
 Vagrant.require_version '>= 1.6.0'
 VAGRANTFILE_API_VERSION = '2'
 
+# Borrowing from http://stackoverflow.com/questions/1825928/netmask-to-cidr-in-ruby
+require 'ipaddr'
+IPAddr.class_eval do
+  def to_cidr
+    self.to_i.to_s(2).count("1")
+  end
+end
+
+# Enable RancherOS functionalities
+require_relative 'core/vagrant/plugins/vagrant_rancheros_guest_plugin.rb'
+
 # Load dependencies
 require_relative 'core/vagrant/vagrant-devmachine/lib/vagrant-devmachine.rb'
 
@@ -13,8 +24,21 @@ require_relative 'core/vagrant/vagrant-devmachine/lib/vagrant-devmachine/classes
 yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load(File.expand_path('devmachine.yml', File.dirname(__FILE__)))
 
 # Build configuration
-    config.devmachine.config_path = 'devmachine.yml'
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+    config.devmachine.config_path = 'devmachine.yml'
+
+    # Forward the Docker port
+    config.vm.network :forwarded_port, guest: 2375, host: 2375
+
+    # Disable auto mounting vagrant directory
+    config.vm.synced_folder ".", "/vagrant", disabled: true
+
+    # Disable virtualbox checks
+    config.vm.provider :virtualbox do |vb|
+        vb.check_guest_additions = false
+        vb.functional_vboxsf     = false
+    end
+
     (1..1).each do |i| # TODO add multiple nodes
         node_hostname = ("#{`hostname`[0..-2]}".sub(/\..*$/,'')+"-devmachine" rescue "devmachine") + ("-%02d" % i)
 
@@ -24,10 +48,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 #             node.vm.network :private_network, ip: "192.168.100.100"
 #             ip = "172.20.100.#{i+99}" # TODO use yaml_config['vm']['ip']?
 #             node.vm.network :private_network, ip: ip # TODO this triggers configure_networks
-#             node.vm.hostname = node_hostname # TODO use yaml_config['vm']['hostname']? # TODO this triggers change_host_name
-
-            # Disable auto mounting vagrant directory
-            node.vm.synced_folder ".", "/vagrant", disabled: true
+            node.vm.hostname = node_hostname # TODO use yaml_config['vm']['hostname']? # TODO this triggers change_host_name
 
 #             # Having the /env folder with the same group setting as that
 #             # of the apache2 process' group ensures that Apache2 can access and modify

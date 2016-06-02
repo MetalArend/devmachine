@@ -15,10 +15,6 @@ module VagrantPlugins::DevMachine
                 return
             end
 
-            # env[:ui].info("Config available during hook #{env[:action_name]}: #{@config.inspect}")
-            require_relative 'load_yaml_config.rb'
-            yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load(File.expand_path('devmachine.yml', env[:root_path]))
-
             cwd = env[:root_path]
             env_home_path = ENV['VAGRANT_HOME']
             env_local_data_path = ENV['VAGRANT_DOTFILE_PATH']
@@ -49,6 +45,8 @@ module VagrantPlugins::DevMachine
                 end
             else
                 # TODO make it possible to have multiple platforms to install to
+                require_relative 'load_yaml_config.rb'
+                yaml_config = VagrantPlugins::DevMachine::LoadYamlConfig::load(File.expand_path('devmachine.yml', env[:root_path]))
                 plugins = (yaml_config['devmachine']['plugins'] rescue {}) || {}
                 plugins_for_platform = plugins.select { |plugin, desired_platform| AVAILABLE_PLATFORMS.include? desired_platform.to_sym and (desired_platform.to_sym == PLATFORM or desired_platform.to_sym == :all) }
                 plugins_to_install = plugins_for_platform.select { |plugin, desired_platform| not Vagrant.has_plugin? plugin }
