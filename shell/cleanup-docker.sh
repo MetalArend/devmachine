@@ -114,9 +114,8 @@ else
         # Remove container
         if test true == ${REMOVE}; then
             sudo docker rm -f "${CONTAINER_ID}"
+            echo " "
         fi
-
-        echo " "
 
     done
 fi

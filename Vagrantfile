@@ -3,17 +3,43 @@ require 'yaml'
 # Require latest vagrant version
 Vagrant.require_version '>= 1.6.0'
 
-# Print branding
-$stdout.send(:puts, " ")
-$stdout.send(:puts, "\e[92;40m                                                                    \e[0m")
-$stdout.send(:puts, "\e[92;40m________            ______  ___            ______ _____             \e[0m")
-$stdout.send(:puts, "\e[92;40m___  __ \\_______   ____   |/  /_____ _________  /____(_)___________ \e[0m")
-$stdout.send(:puts, "\e[92;40m__  / / /  _ \\_ | / /_  /|_/ /_  __ `/  ___/_  __ \\_  /__  __ \\  _ \\\e[0m")
-$stdout.send(:puts, "\e[92;40m_  /_/ //  __/_ |/ /_  /  / / / /_/ // /__ _  / / /  / _  / / /  __/\e[0m")
-$stdout.send(:puts, "\e[92;40m/_____/ \\___/_____/ /_/  /_/  \\__,_/ \\___/ /_/ /_//_/  /_/ /_/\\___/ \e[0m")
-$stdout.send(:puts, "\e[92;40m                    DevMachine (CC BY-SA 4.0) 2014-2015 MetalArend  \e[0m")
-$stdout.send(:puts, "\e[92;40m                                                                    \e[0m")
-$stdout.send(:puts, " ")
+# Check command
+if (['provision', 'reload', 'resume', 'up'].include? ARGV[0])
+
+    # Print branding
+    $stdout.send(:puts, " ")
+    $stdout.send(:puts, "\e[92;40m                                                                    \e[0m")
+    $stdout.send(:puts, "\e[92;40m________            ______  ___            ______ _____             \e[0m")
+    $stdout.send(:puts, "\e[92;40m___  __ \\_______   ____   |/  /_____ _________  /____(_)___________ \e[0m")
+    $stdout.send(:puts, "\e[92;40m__  / / /  _ \\_ | / /_  /|_/ /_  __ `/  ___/_  __ \\_  /__  __ \\  _ \\\e[0m")
+    $stdout.send(:puts, "\e[92;40m_  /_/ //  __/_ |/ /_  /  / / / /_/ // /__ _  / / /  / _  / / /  __/\e[0m")
+    $stdout.send(:puts, "\e[92;40m/_____/ \\___/_____/ /_/  /_/  \\__,_/ \\___/ /_/ /_//_/  /_/ /_/\\___/ \e[0m")
+    $stdout.send(:puts, "\e[92;40m                    DevMachine (CC BY-SA 4.0) 2014-2015 MetalArend  \e[0m")
+    $stdout.send(:puts, "\e[92;40m                                                                    \e[0m")
+    $stdout.send(:puts, " ")
+
+    # Check required plugins
+    plugins_required = []
+    if (Vagrant::Util::Platform.windows?)
+        plugins_required << 'vagrant-winnfsd'
+    end
+
+    plugins_to_install = plugins_required.select { |plugin| not Vagrant.has_plugin? plugin }
+    has_new_plugin = false
+    if not plugins_to_install.empty?
+        plugins_to_install.each do |plugin|
+            if system "vagrant plugin install #{plugin}"
+                has_new_plugin = true
+            else
+                abort "Installation has failed."
+            end
+        end
+        if true === has_new_plugin
+            exec "vagrant #{ARGV.join' '}"
+        end
+    end
+
+end
 
 # Define recursive replace function
 def add_defaults(a,b)
@@ -86,6 +112,9 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |vagrant_config|
     # Check http://jeremykendall.net/2013/08/09/vagrant-synced-folders-permissions/
     # Check http://www.sebastien-han.fr/blog/2012/12/18/noac-performance-impact-on-web-applications/
     vagrant_config.vm.synced_folder ".", "/env", type: "nfs"
+
+    # Add ssh keys
+    vagrant_config.vm.synced_folder "~/.ssh", "/ssh", type: "nfs"
 
     # Set the host if given
     if !yaml_config['vagrant']['host'].nil?
