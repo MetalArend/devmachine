@@ -51,20 +51,6 @@ end
 # Load yaml configuration
 yaml_config = File.exist?('./devmachine.yml') ? YAML.load_file('./devmachine.yml') : {}
 yaml_config = add_defaults(yaml_config, YAML.load_file('./vagrant/default.yml'))
-yaml_config = add_defaults(yaml_config, {
-    "devmachine"=>{
-        "ansible"=>{
-            "extra_vars"=>{
-                "timezone"=>yaml_config['devmachine']['timezone'],
-                "locale"=>yaml_config['devmachine']['locale'],
-                "docker_version"=>yaml_config['devmachine']['docker']['version'],
-                "docker_options"=>yaml_config['devmachine']['docker']['options'],
-                "docker_compose_version"=>yaml_config['devmachine']['docker-compose']['version'],
-                "docker_group_members"=>yaml_config['devmachine']['docker']['group_members']
-            }
-        }
-    }
-})
 if !yaml_config['workspace'].nil?
     yaml_config['workspace'].each do |workspace_name, workspace_config|
         if yaml_config['vm']['provision']["workspace:#{workspace_name}"].nil?
@@ -127,36 +113,24 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |vagrant_config|
         (grep -q -F "#{bashrc}" "/home/vagrant/.bashrc" || echo -e "\n#{bashrc}" >> "/home/vagrant/.bashrc")
     ~
 
-    # Add provision "system": install ansible and run playbook
-    ansible_version = yaml_config['devmachine']['ansible']['version']
-    ansible_playbook = yaml_config['devmachine']['ansible']['playbook']
-    ansible_extra_vars = yaml_config['devmachine']['ansible']['extra_vars'].map { |key, value| [key.to_sym, '\"' + value + '\"'] * "=" } * " "
-    vagrant_config.vm.provision "system", type: "shell", keep_color: true, run: "always", inline: %~
-        if ! which pip &> /dev/null; then
-            echo -e "\e[93mInstall pip\e[0m"
-            export DEBIAN_FRONTEND=noninteractive
-            apt-get -y update
-            apt-get -y install python-pip python-dev build-essential
-            pip install --upgrade pip
-            pip install --upgrade distribute
-            hash -r
-        fi
-        if test -z "$(pip list | grep "ansible" | grep "#{ansible_version}")"; then
-            echo -e "\e[93mInstall ansible\e[0m"
-            pip install ansible==#{ansible_version}
-        fi
-        sudo mkdir -p /etc/ansible/ /usr/share/ansible_plugins/callback_plugins/
-        sudo cp /env/ansible/plugins/* /usr/share/ansible_plugins/callback_plugins/
-        echo "localhost ansible_connection=local" > /etc/ansible/local-hosts
-
-        PLAYBOOK_DIRECTORY=$(dirname "#{ansible_playbook}")
-        PLAYBOOK_FILENAME=$(basename "#{ansible_playbook}")
-        echo -e "\e[93mRun ansible playbook \"#{ansible_playbook}\" \e[0m"
-        cd "${PLAYBOOK_DIRECTORY}"
-        export PYTHONUNBUFFERED=1
-        export ANSIBLE_INVENTORY=/etc/ansible/local-hosts
-        export ANSIBLE_FORCE_COLOR=1
-        ansible-playbook "${PLAYBOOK_FILENAME}" --connection=local --extra-vars "#{ansible_extra_vars}"
+    # Add provision "docker": install docker and docker-compose
+    vagrant_config.vm.provision "docker", type: "shell", keep_color: true, inline: %~
+        sudo apt-get update && sudo apt-get install apt-transport-https ca-certificates
+        sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+        sudo touch "/etc/apt/sources.list.d/docker.list"
+        echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" | sudo tee "/etc/apt/sources.list.d/docker.list"
+        sudo apt-get update
+        sudo apt-get purge lxc-docker
+        sudo apt-get install -y linux-image-extra-$(uname -r)
+        apt-cache policy docker-engine
+        sudo apt-get install -y docker-engine
+        sudo service docker start
+        sudo groupadd docker
+        sudo usermod -aG docker vagrant
+        curl -L https://github.com/docker/compose/releases/download/1.8.0-rc1/docker-compose-`uname -s`-`uname -m` > /tmp/docker-compose
+        #curl -L https://github.com/docker/compose/releases/download/1.8.0-rc1/run.sh > /tmp/docker-compose
+        sudo cp /tmp/docker-compose /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
     ~
 
     # Add provision "cleanup": add shell script to cleanup docker containers
@@ -191,19 +165,6 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |vagrant_config|
                             inline += %~
                                 echo -e "container: \\\"#{container}\\\", entrypoint: \\\"#{entrypoint}\\\", command: \\\"#{command}\\\""
                                 docker-compose run --rm --entrypoint "#{entrypoint}" "#{container}" -c "#{command}"
-                            ~
-
-                        # Run ansible-playbook
-                        elsif "ansible-playbook" == type || "playbook" == type
-                            playbook = !provision_with_arguments.at(0).nil? ? provision_with_arguments.at(0) : "playbook.yml"
-                            provision_with_arguments = provision_with_arguments.drop(1)
-                            inline += %~
-                                echo -e "\e[93mRun ansible-playbook\e[0m"
-                                export PYTHONUNBUFFERED=1
-                                export ANSIBLE_INVENTORY=/etc/ansible/local-hosts
-                                export ANSIBLE_FORCE_COLOR=1
-                                echo "playbook: \\\"#{playbook}\\\""
-                                ansible-playbook "#{playbook}" --connection=local
                             ~
 
                         # Run bash with dos2unix
