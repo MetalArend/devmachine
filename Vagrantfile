@@ -109,7 +109,7 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |vagrant_config|
 
     # Add provision "bashrc": add default login location
     bashrc = yaml_config['devmachine']['bashrc']
-    vagrant_config.vm.provision "bashrc", type: "shell", keep_color: true, run: "always", inline: %~
+    vagrant_config.vm.provision "bashrc", type: "shell", keep_color: true, inline: %~
         (grep -q -F "#{bashrc}" "/home/vagrant/.bashrc" || echo -e "\n#{bashrc}" >> "/home/vagrant/.bashrc")
     ~
 
@@ -135,93 +135,6 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |vagrant_config|
 
     # Add provision "cleanup": add shell script to cleanup docker containers
     vagrant_config.vm.provision "cleanup", type: "shell", keep_color: true, run: "always", path: "./shell/cleanup-docker.sh"
-
-    # Add once to run provision
-    ARGV.each_with_index do |argument, index|
-        if "--provision-with" == argument
-            provision_with_array = ARGV[index+1].split(',')
-            provision_with_array.each do |provision_with|
-                if provision_with.include?(':') && !provision_with.start_with?('workspace:')
-                    provision_with_arguments = provision_with.split(':')
-
-                    # Initialize variables
-                    inline = "cd \"/env\""
-                    dos2unix = []
-
-                    while provision_with_arguments.any? do
-                        # Get type
-                        type = provision_with_arguments.first
-                        provision_with_arguments = provision_with_arguments.drop(1)
-
-                        # Run docker-compose
-                        if "docker-compose" == type || "compose" == type
-                            inline += %~
-                                echo -e "\e[93mRun docker-compose\e[0m"
-                            ~
-                            container = provision_with_arguments.at(0)
-                            entrypoint = !provision_with_arguments.at(1).empty? ? provision_with_arguments.at(1) : "/bin/bash"
-                            command = provision_with_arguments.drop(2).join(':')
-                            provision_with_arguments = []
-                            inline += %~
-                                echo -e "container: \\\"#{container}\\\", entrypoint: \\\"#{entrypoint}\\\", command: \\\"#{command}\\\""
-                                docker-compose run --rm --entrypoint "#{entrypoint}" "#{container}" -c "#{command}"
-                            ~
-
-                        # Run bash with dos2unix
-                        elsif "#{yaml_config['devmachine']['shell']}" == type || "script" == type
-                            command = provision_with_arguments.at(0)
-                            provision_with_arguments = provision_with_arguments.drop(1)
-                            inline += %~
-                                echo -e "\e[93mRun command (dos2unix)\e[0m"
-                                echo "command: \\\"#{yaml_config['devmachine']['shell']} \\\"#{command}\\\"\\\""
-                                #{yaml_config['devmachine']['shell']} "#{command}"
-                            ~
-                            dos2unix.push("echo \\\"#{command}\\\"")
-
-                        # Run command
-                        elsif "run" == type || "command" == type
-                            command = provision_with_arguments.at(0)
-                            provision_with_arguments = provision_with_arguments.drop(1)
-                            inline += %~
-                                echo -e "\e[93mRun command\e[0m"
-                                echo "command: \\\"#{command}\\\""
-                                #{command}
-                            ~
-
-                        # Run anything
-                        else
-                            command = provision_with_arguments.at(0)
-                            provision_with_arguments = provision_with_arguments.drop(1)
-                            inline += %~
-                                echo -e "\e[93mRun command\e[0m"
-                                echo "command: \\\"#{type} #{command}\\\""
-                                #{type} #{command}
-                            ~
-
-                        end
-
-                    end
-
-                    # Add once to run provision
-                    yaml_config['vm']['provision'][provision_with] = {
-                        "type"=>"shell",
-                        "keep_color"=>true,
-                        "inline"=>inline,
-                        "dos2unix"=>dos2unix
-                    }
-                end
-            end
-            break
-        end
-    end
-
-    # Add provision "report": report versions of installed programs
-    yaml_config['vm']['provision']['report'] = {
-        "type"=>"shell",
-        "path"=>"./shell/report.sh",
-        "keep_color"=>true,
-        "run"=>"always"
-    }
 
     # Load vm configuration
     if !yaml_config['vm'].empty?
@@ -392,5 +305,64 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |vagrant_config|
             end
         end
     end
+
+    # Add provision "report": report versions of installed programs
+    vagrant_config.vm.provision "report", type: "shell", keep_color: true, run: "always", inline: %~
+        # Detect OS
+        OS=$(uname)
+        ID='unknown'
+        CODENAME='unknown'
+        RELEASE='unknown'
+        ARCH='unknown'
+
+        # detect centos
+        grep 'centos' /etc/issue -i -q
+        if [ $? = '0' ]; then
+            ID='centos'
+            RELEASE=$(cat /etc/redhat-release | grep -o 'release [0-9]' | cut -d " " -f2)
+        elif [ -f '/etc/redhat-release' ]; then
+            ID='centos'
+            RELEASE=$(cat /etc/redhat-release | grep -o 'release [0-9]' | cut -d " " -f2)
+        # could be debian or ubuntu
+        elif [ $(which lsb_release) ]; then
+            ID=$(lsb_release -i | cut -f2)
+            CODENAME=$(lsb_release -c | cut -f2)
+            RELEASE=$(lsb_release -r | cut -f2)
+        elif [ -f '/etc/lsb-release' ]; then
+            ID=$(cat /etc/lsb-release | grep DISTRIB_ID | cut -d "=" -f2)
+            CODENAME=$(cat /etc/lsb-release | grep DISTRIB_CODENAME | cut -d "=" -f2)
+            RELEASE=$(cat /etc/lsb-release | grep DISTRIB_RELEASE | cut -d "=" -f2)
+        elif [ -f '/etc/issue' ]; then
+            ID=$(head -1 /etc/issue | cut -d " " -f1)
+            if [ -f '/etc/debian_version' ]; then
+              RELEASE=$(</etc/debian_version)
+            else
+              RELEASE=$(head -1 /etc/issue | cut -d " " -f2)
+            fi
+        fi
+
+        ID=$(echo "${ID}" | tr '[A-Z]' '[a-z]')
+        CODENAME=$(echo "${CODENAME}" | tr '[A-Z]' '[a-z]')
+        RELEASE=$(echo "${RELEASE}" | tr '[A-Z]' '[a-z]')
+        ARCH=$(uname -m)
+
+        #IP=$(ifconfig eth1 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
+        IP=$(ip addr show | grep "state UP" -A2 | grep "scope global" | grep -v "docker" | awk '{print $2}' | cut -f1 -d'/' | tr '\n' ' ')
+
+        echo -e "\e[92m$(date +"%d/%m/%Y %H:%M:%S")\e[0m"
+        echo -e "\e[92m${ID} ${RELEASE} (${CODENAME}) on ${IP}\e[0m"
+
+        # Detect programs
+        if which docker &> /dev/null; then
+          echo -e "\e[92m- $(docker --version)\e[0m";
+        else
+          echo -e "\e[91m- docker not found\e[0m";
+        fi
+        if which docker-compose &> /dev/null; then
+          echo -e "\e[92m- $(docker-compose --version)\e[0m";
+        else
+          echo -e "\e[91m- docker-compose not found\e[0m";
+        fi
+    ~
 
 end
