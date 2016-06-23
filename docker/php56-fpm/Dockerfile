@@ -16,8 +16,7 @@ RUN apt-get update \
         zip \
         mbstring \
         intl \
-        mysql mysqli pdo_mysql \
-        opcache
+        mysql mysqli pdo_mysql
 
 # Clean image
 RUN apt-get autoremove -yq --purge \
