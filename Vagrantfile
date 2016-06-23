@@ -51,20 +51,6 @@ end
 # Load yaml configuration
 yaml_config = File.exist?('./devmachine.yml') ? YAML.load_file('./devmachine.yml') : {}
 yaml_config = add_defaults(yaml_config, YAML.load_file('./vagrant/default.yml'))
-yaml_config = add_defaults(yaml_config, {
-    "devmachine"=>{
-        "ansible"=>{
-            "extra_vars"=>{
-                "timezone"=>yaml_config['devmachine']['timezone'],
-                "locale"=>yaml_config['devmachine']['locale'],
-                "docker_version"=>yaml_config['devmachine']['docker']['version'],
-                "docker_options"=>yaml_config['devmachine']['docker']['options'],
-                "docker_compose_version"=>yaml_config['devmachine']['docker-compose']['version'],
-                "docker_group_members"=>yaml_config['devmachine']['docker']['group_members']
-            }
-        }
-    }
-})
 if !yaml_config['workspace'].nil?
     yaml_config['workspace'].each do |workspace_name, workspace_config|
         if yaml_config['vm']['provision']["workspace:#{workspace_name}"].nil?
@@ -123,144 +109,32 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |vagrant_config|
 
     # Add provision "bashrc": add default login location
     bashrc = yaml_config['devmachine']['bashrc']
-    vagrant_config.vm.provision "bashrc", type: "shell", keep_color: true, run: "always", inline: %~
+    vagrant_config.vm.provision "bashrc", type: "shell", keep_color: true, inline: %~
         (grep -q -F "#{bashrc}" "/home/vagrant/.bashrc" || echo -e "\n#{bashrc}" >> "/home/vagrant/.bashrc")
     ~
 
-    # Add provision "system": install ansible and run playbook
-    ansible_version = yaml_config['devmachine']['ansible']['version']
-    ansible_playbook = yaml_config['devmachine']['ansible']['playbook']
-    ansible_extra_vars = yaml_config['devmachine']['ansible']['extra_vars'].map { |key, value| [key.to_sym, '\"' + value + '\"'] * "=" } * " "
-    vagrant_config.vm.provision "system", type: "shell", keep_color: true, run: "always", inline: %~
-        if ! which pip &> /dev/null; then
-            echo -e "\e[93mInstall pip\e[0m"
-            export DEBIAN_FRONTEND=noninteractive
-            apt-get -y update
-            apt-get -y install python-pip python-dev build-essential
-            pip install --upgrade pip
-            pip install --upgrade distribute
-            hash -r
-        fi
-        if test -z "$(pip list | grep "ansible" | grep "#{ansible_version}")"; then
-            echo -e "\e[93mInstall ansible\e[0m"
-            pip install ansible==#{ansible_version}
-        fi
-        sudo mkdir -p /etc/ansible/ /usr/share/ansible_plugins/callback_plugins/
-        sudo cp /env/ansible/plugins/* /usr/share/ansible_plugins/callback_plugins/
-        echo "localhost ansible_connection=local" > /etc/ansible/local-hosts
-
-        PLAYBOOK_DIRECTORY=$(dirname "#{ansible_playbook}")
-        PLAYBOOK_FILENAME=$(basename "#{ansible_playbook}")
-        echo -e "\e[93mRun ansible playbook \"#{ansible_playbook}\" \e[0m"
-        cd "${PLAYBOOK_DIRECTORY}"
-        export PYTHONUNBUFFERED=1
-        export ANSIBLE_INVENTORY=/etc/ansible/local-hosts
-        export ANSIBLE_FORCE_COLOR=1
-        ansible-playbook "${PLAYBOOK_FILENAME}" --connection=local --extra-vars "#{ansible_extra_vars}"
+    # Add provision "docker": install docker and docker-compose
+    vagrant_config.vm.provision "docker", type: "shell", keep_color: true, inline: %~
+        sudo apt-get update && sudo apt-get install apt-transport-https ca-certificates
+        sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+        sudo touch "/etc/apt/sources.list.d/docker.list"
+        echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" | sudo tee "/etc/apt/sources.list.d/docker.list"
+        sudo apt-get update
+        sudo apt-get purge lxc-docker
+        sudo apt-get install -y linux-image-extra-$(uname -r)
+        apt-cache policy docker-engine
+        sudo apt-get install -y docker-engine
+        sudo service docker start
+        sudo groupadd docker
+        sudo usermod -aG docker vagrant
+        curl -L https://github.com/docker/compose/releases/download/1.8.0-rc1/docker-compose-`uname -s`-`uname -m` > /tmp/docker-compose
+        #curl -L https://github.com/docker/compose/releases/download/1.8.0-rc1/run.sh > /tmp/docker-compose
+        sudo cp /tmp/docker-compose /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
     ~
 
     # Add provision "cleanup": add shell script to cleanup docker containers
     vagrant_config.vm.provision "cleanup", type: "shell", keep_color: true, run: "always", path: "./shell/cleanup-docker.sh"
-
-    # Add once to run provision
-    ARGV.each_with_index do |argument, index|
-        if "--provision-with" == argument
-            provision_with_array = ARGV[index+1].split(',')
-            provision_with_array.each do |provision_with|
-                if provision_with.include?(':') && !provision_with.start_with?('workspace:')
-                    provision_with_arguments = provision_with.split(':')
-
-                    # Initialize variables
-                    inline = "cd \"/env\""
-                    dos2unix = []
-
-                    while provision_with_arguments.any? do
-                        # Get type
-                        type = provision_with_arguments.first
-                        provision_with_arguments = provision_with_arguments.drop(1)
-
-                        # Run docker-compose
-                        if "docker-compose" == type || "compose" == type
-                            inline += %~
-                                echo -e "\e[93mRun docker-compose\e[0m"
-                            ~
-                            container = provision_with_arguments.at(0)
-                            entrypoint = !provision_with_arguments.at(1).empty? ? provision_with_arguments.at(1) : "/bin/bash"
-                            command = provision_with_arguments.drop(2).join(':')
-                            provision_with_arguments = []
-                            inline += %~
-                                echo -e "container: \\\"#{container}\\\", entrypoint: \\\"#{entrypoint}\\\", command: \\\"#{command}\\\""
-                                docker-compose run --rm --entrypoint "#{entrypoint}" "#{container}" -c "#{command}"
-                            ~
-
-                        # Run ansible-playbook
-                        elsif "ansible-playbook" == type || "playbook" == type
-                            playbook = !provision_with_arguments.at(0).nil? ? provision_with_arguments.at(0) : "playbook.yml"
-                            provision_with_arguments = provision_with_arguments.drop(1)
-                            inline += %~
-                                echo -e "\e[93mRun ansible-playbook\e[0m"
-                                export PYTHONUNBUFFERED=1
-                                export ANSIBLE_INVENTORY=/etc/ansible/local-hosts
-                                export ANSIBLE_FORCE_COLOR=1
-                                echo "playbook: \\\"#{playbook}\\\""
-                                ansible-playbook "#{playbook}" --connection=local
-                            ~
-
-                        # Run bash with dos2unix
-                        elsif "#{yaml_config['devmachine']['shell']}" == type || "script" == type
-                            command = provision_with_arguments.at(0)
-                            provision_with_arguments = provision_with_arguments.drop(1)
-                            inline += %~
-                                echo -e "\e[93mRun command (dos2unix)\e[0m"
-                                echo "command: \\\"#{yaml_config['devmachine']['shell']} \\\"#{command}\\\"\\\""
-                                #{yaml_config['devmachine']['shell']} "#{command}"
-                            ~
-                            dos2unix.push("echo \\\"#{command}\\\"")
-
-                        # Run command
-                        elsif "run" == type || "command" == type
-                            command = provision_with_arguments.at(0)
-                            provision_with_arguments = provision_with_arguments.drop(1)
-                            inline += %~
-                                echo -e "\e[93mRun command\e[0m"
-                                echo "command: \\\"#{command}\\\""
-                                #{command}
-                            ~
-
-                        # Run anything
-                        else
-                            command = provision_with_arguments.at(0)
-                            provision_with_arguments = provision_with_arguments.drop(1)
-                            inline += %~
-                                echo -e "\e[93mRun command\e[0m"
-                                echo "command: \\\"#{type} #{command}\\\""
-                                #{type} #{command}
-                            ~
-
-                        end
-
-                    end
-
-                    # Add once to run provision
-                    yaml_config['vm']['provision'][provision_with] = {
-                        "type"=>"shell",
-                        "keep_color"=>true,
-                        "inline"=>inline,
-                        "dos2unix"=>dos2unix
-                    }
-                end
-            end
-            break
-        end
-    end
-
-    # Add provision "report": report versions of installed programs
-    yaml_config['vm']['provision']['report'] = {
-        "type"=>"shell",
-        "path"=>"./shell/report.sh",
-        "keep_color"=>true,
-        "run"=>"always"
-    }
 
     # Load vm configuration
     if !yaml_config['vm'].empty?
@@ -431,5 +305,64 @@ Vagrant.configure(yaml_config['vagrant']['api_version']) do |vagrant_config|
             end
         end
     end
+
+    # Add provision "report": report versions of installed programs
+    vagrant_config.vm.provision "report", type: "shell", keep_color: true, run: "always", inline: %~
+        # Detect OS
+        OS=$(uname)
+        ID='unknown'
+        CODENAME='unknown'
+        RELEASE='unknown'
+        ARCH='unknown'
+
+        # detect centos
+        grep 'centos' /etc/issue -i -q
+        if [ $? = '0' ]; then
+            ID='centos'
+            RELEASE=$(cat /etc/redhat-release | grep -o 'release [0-9]' | cut -d " " -f2)
+        elif [ -f '/etc/redhat-release' ]; then
+            ID='centos'
+            RELEASE=$(cat /etc/redhat-release | grep -o 'release [0-9]' | cut -d " " -f2)
+        # could be debian or ubuntu
+        elif [ $(which lsb_release) ]; then
+            ID=$(lsb_release -i | cut -f2)
+            CODENAME=$(lsb_release -c | cut -f2)
+            RELEASE=$(lsb_release -r | cut -f2)
+        elif [ -f '/etc/lsb-release' ]; then
+            ID=$(cat /etc/lsb-release | grep DISTRIB_ID | cut -d "=" -f2)
+            CODENAME=$(cat /etc/lsb-release | grep DISTRIB_CODENAME | cut -d "=" -f2)
+            RELEASE=$(cat /etc/lsb-release | grep DISTRIB_RELEASE | cut -d "=" -f2)
+        elif [ -f '/etc/issue' ]; then
+            ID=$(head -1 /etc/issue | cut -d " " -f1)
+            if [ -f '/etc/debian_version' ]; then
+              RELEASE=$(</etc/debian_version)
+            else
+              RELEASE=$(head -1 /etc/issue | cut -d " " -f2)
+            fi
+        fi
+
+        ID=$(echo "${ID}" | tr '[A-Z]' '[a-z]')
+        CODENAME=$(echo "${CODENAME}" | tr '[A-Z]' '[a-z]')
+        RELEASE=$(echo "${RELEASE}" | tr '[A-Z]' '[a-z]')
+        ARCH=$(uname -m)
+
+        #IP=$(ifconfig eth1 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
+        IP=$(ip addr show | grep "state UP" -A2 | grep "scope global" | grep -v "docker" | awk '{print $2}' | cut -f1 -d'/' | tr '\n' ' ')
+
+        echo -e "\e[92m$(date +"%d/%m/%Y %H:%M:%S")\e[0m"
+        echo -e "\e[92m${ID} ${RELEASE} (${CODENAME}) on ${IP}\e[0m"
+
+        # Detect programs
+        if which docker &> /dev/null; then
+          echo -e "\e[92m- $(docker --version)\e[0m";
+        else
+          echo -e "\e[91m- docker not found\e[0m";
+        fi
+        if which docker-compose &> /dev/null; then
+          echo -e "\e[92m- $(docker-compose --version)\e[0m";
+        else
+          echo -e "\e[91m- docker-compose not found\e[0m";
+        fi
+    ~
 
 end

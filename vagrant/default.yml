@@ -51,17 +51,3 @@ ssh:
 
 devmachine:
     bashrc: "cd /env"
-    ip: 192.168.100.100
-    timezone: Europe/Brussels
-    locale: en_US.UTF-8
-    shell: bash
-    docker:
-        version: 1.9.1*
-        group_members: vagrant
-        options: -s aufs
-    docker-compose:
-        version: 1.5.2
-    ansible:
-        version: 1.9.2
-        playbook: /env/ansible/playbook.yml
-        extra_vars: {}
